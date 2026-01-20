@@ -1,0 +1,19 @@
+bazel_dep(name = "contrib_rules_jvm", version = "0.31.1")
+bazel_dep(name = "platforms", version = "1.0.0")
+bazel_dep(name = "rules_java", version = "9.2.0")
+bazel_dep(name = "rules_jvm_external", version = "6.9")
+
+maven = use_extension("@rules_jvm_external//:extensions.bzl", "maven")
+maven.install(
+    artifacts = [
+        "ch.qos.logback:logback-classic:1.5.22",
+        "com.google.guava:guava:33.5.0-jre",
+        "net.java.dev.jna:jna:5.18.1",
+        "org.slf4j:slf4j-api:2.0.17",
+    ],
+    fetch_sources = True,
+    repositories = [
+        "https://repo1.maven.org/maven2",
+    ],
+)
+use_repo(maven, "maven")
