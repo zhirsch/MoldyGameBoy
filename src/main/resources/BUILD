@@ -1,1 +1,4 @@
-exports_files(["logback.xml"])
+exports_files([
+    "cgb.bin",
+    "logback.xml",
+])

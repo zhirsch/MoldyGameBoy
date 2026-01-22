@@ -12,14 +12,14 @@ config_setting(
     ],
 )
 
-java_import(
-    name = "sdl3",
-    jars = select({
-        ":macos": ["macos-arm64/sdl3.jar"],
-        ":windows": ["win32-x64/sdl3.jar"],
-    }),
-    srcjar = select({
-        ":macos": "macos-arm64/sdl3-sources.jar",
-        ":windows": "win32-x64/sdl3-sources.jar",
-    }),
-)
+# java_import(
+#     name = "sdl3",
+#     jars = select({
+#         ":macos": ["macos-arm64/sdl3.jar"],
+#         ":windows": ["win32-x64/sdl3.jar"],
+#     }),
+#     srcjar = select({
+#         ":macos": "macos-arm64/sdl3-sources.jar",
+#         ":windows": "win32-x64/sdl3-sources.jar",
+#     }),
+# )
