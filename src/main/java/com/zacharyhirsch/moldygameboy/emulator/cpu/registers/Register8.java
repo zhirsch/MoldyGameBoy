@@ -1,12 +1,12 @@
-package com.zacharyhirsch.moldygameboy.emulator.bus;
+package com.zacharyhirsch.moldygameboy.emulator.cpu.registers;
 
 import com.zacharyhirsch.moldygameboy.emulator.arch.UInt8;
 
-public final class DataBus implements UInt8 {
+public final class Register8 implements UInt8 {
 
   private byte value;
 
-  public DataBus() {
+  public Register8() {
     this.value = 0;
   }
 
@@ -22,6 +22,6 @@ public final class DataBus implements UInt8 {
 
   @Override
   public String toString() {
-    return "DataBus{%02x}".formatted(value);
+    return "Register8{%02x}".formatted(value);
   }
 }

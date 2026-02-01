@@ -6,15 +6,15 @@ java_library(
     srcs = glob(["*.java"]),
     visibility = [
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator:__pkg__",
-        "//src/test/java/com/zacharyhirsch/moldygameboy/emulator/cpu:__pkg__",
+        "//src/test/java/com/zacharyhirsch/moldygameboy/emulator:__pkg__",
     ],
     deps = [
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/arch",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/bus",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu/alu",
-        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu/idu",
-        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu/mem",
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu/registers",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/memory",
         artifact("org.jspecify:jspecify"),
+        artifact("com.google.guava:guava"),
     ],
 )

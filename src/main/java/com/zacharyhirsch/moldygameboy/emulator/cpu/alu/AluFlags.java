@@ -15,7 +15,7 @@ public record AluFlags(Boolean z, Boolean n, Boolean h, Boolean c) {
     return (flags & C) != 0;
   }
 
-  static byte apply(byte flags, Boolean z, Boolean n, Boolean h, Boolean c) {
+  public static byte apply(byte flags, Boolean z, Boolean n, Boolean h, Boolean c) {
     int mask = ~(z == null ? 0 : Z) | (n == null ? 0 : N) | (h == null ? 0 : H) | (c == null ? 0 : C);
     byte v = (byte) (flags & mask);
     if (z != null && z) {

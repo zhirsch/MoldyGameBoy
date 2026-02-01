@@ -27,6 +27,7 @@ java_binary(
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/arch",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/bus",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu",
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu/registers",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/memory",
         artifact("com.google.guava:guava"),
         artifact("org.slf4j:slf4j-api"),

@@ -11,9 +11,9 @@ java_library(
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu/alu:__pkg__",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu/idu:__pkg__",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu/mem:__pkg__",
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu/registers:__pkg__",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/memory:__pkg__",
-        "//src/test/java/com/zacharyhirsch/moldygameboy/emulator/arch:__pkg__",
-        "//src/test/java/com/zacharyhirsch/moldygameboy/emulator/cpu:__pkg__",
+        "//src/test/java/com/zacharyhirsch/moldygameboy/emulator:__pkg__",
     ],
     deps = [
         artifact("com.google.guava:guava"),
