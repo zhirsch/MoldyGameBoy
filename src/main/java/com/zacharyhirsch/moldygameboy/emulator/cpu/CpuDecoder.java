@@ -8,39 +8,35 @@ import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 import com.zacharyhirsch.moldygameboy.emulator.memory.MemOperation;
 import com.zacharyhirsch.moldygameboy.emulator.memory.MemRead;
 import com.zacharyhirsch.moldygameboy.emulator.memory.MemWrite;
-import java.util.concurrent.Exchanger;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 final class CpuDecoder {
 
-  private final Exchanger<MemOperation> memSema;
-  private final Exchanger<Byte> cpuSema;
   private final Registers registers;
+  private final Function<MemOperation, Byte> memOperator;
 
   private boolean ime = false;
 
-  CpuDecoder(Exchanger<MemOperation> memSema, Exchanger<Byte> cpuSema, Registers registers) {
-    this.memSema = memSema;
-    this.cpuSema = cpuSema;
+  CpuDecoder(Registers registers, Function<MemOperation, Byte> memOperator) {
     this.registers = registers;
+    this.memOperator = memOperator;
+  }
+
+  public boolean getIme() {
+    return ime;
+  }
+
+  public void setIme(boolean ime) {
+    this.ime = ime;
   }
 
   private byte read(short address) {
-    try {
-      memSema.exchange(new MemRead(address));
-      return cpuSema.exchange(null);
-    } catch (InterruptedException e) {
-      throw new RuntimeException(e);
-    }
+    return memOperator.apply(new MemRead(address));
   }
 
   private void write(short address, byte data) {
-    try {
-      memSema.exchange(new MemWrite(address, data));
-      cpuSema.exchange(null);
-    } catch (InterruptedException e) {
-      throw new RuntimeException(e);
-    }
+    var _ = memOperator.apply(new MemWrite(address, data));
   }
 
   private void adc_r8_indirect_r8(R8 arg0, R8 arg1) {
@@ -252,9 +248,8 @@ final class CpuDecoder {
   }
 
   private void ei() {
-    //    ime = true;
-    //    return fetch();
-    throw new InvalidOpcodeError(registers.ir().get());
+    ime = true;
+    registers.ir().set(read(registers.pc().getAndIncrement()));
   }
 
   private void halt() {
@@ -406,8 +401,27 @@ final class CpuDecoder {
     registers.ir().set(read(registers.pc().getAndIncrement()));
   }
 
-  private void ld_r16_increment_r16_e8(R16 arg0, R16 arg1) {
-    throw new InvalidOpcodeError(registers.ir().get());
+  private void ld_hl_sp_e8() {
+    byte z = read(registers.pc().getAndIncrement());
+
+    {
+      byte lhs = registers.sp().lo().get();
+      byte rhs = z;
+      registers.l().set((byte) (lhs + rhs));
+      registers.f().setZ(false);
+      registers.f().setN(false);
+      registers.f().setH((lhs & 0x0f) + (rhs & 0x0f) > 0x0f);
+      registers.f().setC(Byte.toUnsignedInt(lhs) + Byte.toUnsignedInt(rhs) > 0xff);
+    }
+
+    {
+      byte lhs = registers.sp().hi().get();
+      byte rhs = (byte) (bit8(z, 7) == 1 ? 0xff : 0);
+      byte carry = (byte) (registers.f().getC() ? 1 : 0);
+      registers.h().set((byte) (lhs + rhs + carry));
+    }
+
+    registers.ir().set(read(registers.pc().getAndIncrement()));
   }
 
   private void ld_imm16(Register16<? extends UInt8, ? extends UInt8> register) {
@@ -1075,7 +1089,7 @@ final class CpuDecoder {
       case 0xf5 -> push(registers.af());
       case 0xf6 -> or_r8_n8(R8.A);
       case 0xf7 -> rst_tgt3(0x30);
-      case 0xf8 -> ld_r16_increment_r16_e8(R16.HL, R16.SP);
+      case 0xf8 -> ld_hl_sp_e8();
       case 0xf9 -> ld_r16_r16(R16.SP, R16.HL);
       case 0xfa -> ld_r8_indirect_a16();
       case 0xfb -> ei();

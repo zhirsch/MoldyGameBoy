@@ -1,19 +1,16 @@
 package com.zacharyhirsch.moldygameboy.emulator;
 
-import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.io.Resources;
-import com.zacharyhirsch.moldygameboy.emulator.bus.AddressBus;
-import com.zacharyhirsch.moldygameboy.emulator.bus.DataBus;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.Cpu;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
-import com.zacharyhirsch.moldygameboy.emulator.memory.MemOperation;
 import com.zacharyhirsch.moldygameboy.emulator.memory.Memory;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.net.URL;
 import java.nio.ByteBuffer;
-import java.util.concurrent.Exchanger;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.nio.file.Path;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
@@ -21,6 +18,7 @@ final class BlarggCpuInstrTest {
 
   enum BlarggTest {
     SPECIAL("cpu_instrs/individual/01-special.gb", 1_256_633),
+    INTERRUPTS("cpu_instrs/individual/02-interrupts.gb", 1_256_633),
     ;
 
     private final String path;
@@ -44,14 +42,9 @@ final class BlarggCpuInstrTest {
   @EnumSource(BlarggTest.class)
   void testBlarggTest(BlarggTest test) throws Exception {
     URL romResource = Resources.getResource(test.getPath());
-    Exchanger<MemOperation> memSema = new Exchanger<>();
-    Exchanger<Byte> cpuSema = new Exchanger<>();
-
     ByteBuffer rom = ByteBuffer.wrap(Resources.toByteArray(romResource));
+    Memory memory = new Memory(rom, rom);
 
-    AddressBus addressBus = new AddressBus();
-    DataBus dataBus = new DataBus();
-    Memory memory = new Memory(addressBus, dataBus, rom, rom);
     Registers registers = new Registers();
     registers.ir().set(rom.get(0x0100));
     registers.pc().set((short) 0x0101);
@@ -64,38 +57,25 @@ final class BlarggCpuInstrTest {
     registers.e().set((byte) 0xd8);
     registers.h().set((byte) 0x01);
     registers.l().set((byte) 0x4d);
-    Cpu cpu = new Cpu(memSema, cpuSema, registers, memory);
 
-    Thread cpuThread = Thread.startVirtualThread(() -> cpu.run(test.getCycles() + 10));
-    MyUncaughtExceptionHandler ueh = new MyUncaughtExceptionHandler();
-    cpuThread.setUncaughtExceptionHandler(ueh);
-    while (cpuThread.isAlive()) {
-      MemOperation mem;
-      try {
-        mem = memSema.exchange(null, 10, TimeUnit.MILLISECONDS);
-      } catch (TimeoutException e) {
-        mem = null;
+    Path root = Path.of(System.getenv("TEST_UNDECLARED_OUTPUTS_DIR"));
+    Path path = root.resolve("%s.txt".formatted(test.name().toLowerCase()));
+    try (Writer writer = new OutputStreamWriter(new FileOutputStream(path.toFile()))) {
+      Cpu cpu =
+          new Cpu(
+              registers,
+              memory,
+              mem -> {
+                @SuppressWarnings("UnnecessaryLocalVariable")
+                byte data = mem.execute(memory);
+                // TODO: tick the other components
+                return data;
+              },
+              writer);
+
+      for (int i = 0; i < test.getCycles(); i++) {
+        cpu.tick();
       }
-      if (mem != null) {
-        mem.execute(memory, addressBus, dataBus);
-        cpuSema.exchange(dataBus.get());
-      }
-    }
-
-    assertThat(ueh.getException()).isNull();
-  }
-
-  private static class MyUncaughtExceptionHandler implements Thread.UncaughtExceptionHandler {
-
-    private Throwable exception = null;
-
-    @Override
-    public void uncaughtException(Thread t, Throwable e) {
-      this.exception = e;
-    }
-
-    public Throwable getException() {
-      return exception;
     }
   }
 }

@@ -6,7 +6,8 @@ java_test_suite(
     srcs = glob(["*.java"]),
     jvm_flags = ["-Djava.security.manager=disallow"],
     resources = [
-        "//src/test/resources/cpu_instrs/individual:01-special.gb",
+        "//src/test/resources/cpu_instrs:individual/01-special.gb",
+        "//src/test/resources/cpu_instrs:individual/02-interrupts.gb",
     ],
     runner = "junit5",
     runtime_deps = [
