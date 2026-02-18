@@ -6,7 +6,7 @@ java_library(
     visibility = [
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator:__pkg__",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu:__pkg__",
-        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu/mem:__pkg__",
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu/instructions:__pkg__",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/timer:__pkg__",
         "//src/test/java/com/zacharyhirsch/moldygameboy/emulator:__pkg__",
     ],

@@ -1,0 +1,654 @@
+package com.zacharyhirsch.moldygameboy.emulator.cpu.instructions;
+
+import com.zacharyhirsch.moldygameboy.emulator.arch.Register16;
+import com.zacharyhirsch.moldygameboy.emulator.arch.Register8;
+import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
+import com.zacharyhirsch.moldygameboy.emulator.memory.MemOperation;
+import com.zacharyhirsch.moldygameboy.emulator.memory.MemRead;
+import com.zacharyhirsch.moldygameboy.emulator.memory.MemWrite;
+
+public final class Ld {
+
+  private Ld() {}
+
+  public static final class RegisterRegister extends AbstractInstruction {
+
+    private final Registers registers;
+    private final Register8 src;
+    private final Register8 dst;
+
+    public RegisterRegister(Registers registers, Register8 src, Register8 dst) {
+      this.registers = registers;
+      this.src = src;
+      this.dst = dst;
+    }
+
+    @Override
+    protected MemOperation execute0(byte data) {
+      dst.set(src.get());
+      return new MemRead(registers.pc().getAndIncrement());
+    }
+
+    @Override
+    protected MemOperation execute1(byte data) {
+      registers.ir().set(data);
+      return null;
+    }
+  }
+
+  public static final class RegisterRegister16 extends AbstractInstruction {
+
+    private final Registers registers;
+    private final Register16<Register8, Register8> src;
+    private final Register16<Register8, Register8> dst;
+
+    public RegisterRegister16(
+        Registers registers,
+        Register16<Register8, Register8> src,
+        Register16<Register8, Register8> dst) {
+      this.registers = registers;
+      this.src = src;
+      this.dst = dst;
+    }
+
+    @Override
+    protected MemOperation execute0(byte data) {
+      dst.set(src.get());
+      return new MemRead(registers.pc().getAndIncrement());
+    }
+
+    @Override
+    protected MemOperation execute1(byte data) {
+      registers.ir().set(data);
+      return null;
+    }
+  }
+
+  public static final class RegisterIndirectIncrement extends AbstractInstruction {
+
+    private final Registers registers;
+    private final Register8 dst;
+
+    public RegisterIndirectIncrement(Registers registers, Register8 dst) {
+      this.registers = registers;
+      this.dst = dst;
+    }
+
+    @Override
+    protected MemOperation execute0(byte data) {
+      return new MemRead(registers.hl().getAndIncrement());
+    }
+
+    @Override
+    protected MemOperation execute1(byte data) {
+      dst.set(data);
+      return new MemRead(registers.pc().getAndIncrement());
+    }
+
+    @Override
+    protected MemOperation execute2(byte data) {
+      registers.ir().set(data);
+      return null;
+    }
+  }
+
+  public static final class RegisterIndirect extends AbstractInstruction {
+
+    private final Registers registers;
+    private final Register8 dst;
+
+    public RegisterIndirect(Registers registers, Register8 dst) {
+      this.registers = registers;
+      this.dst = dst;
+    }
+
+    @Override
+    protected MemOperation execute0(byte data) {
+      return new MemRead(registers.hl().get());
+    }
+
+    @Override
+    protected MemOperation execute1(byte data) {
+      dst.set(data);
+      return new MemRead(registers.pc().getAndIncrement());
+    }
+
+    @Override
+    protected MemOperation execute2(byte data) {
+      registers.ir().set(data);
+      return null;
+    }
+  }
+
+  public static final class AccumulatorIndirect extends AbstractInstruction {
+
+    private final Registers registers;
+    private final Register16<Register8, Register8> register;
+
+    public AccumulatorIndirect(Registers registers, Register16<Register8, Register8> register) {
+      this.registers = registers;
+      this.register = register;
+    }
+
+    @Override
+    protected MemOperation execute0(byte data) {
+      return new MemRead(register.get());
+    }
+
+    @Override
+    protected MemOperation execute1(byte data) {
+      registers.a().set(data);
+      return new MemRead(registers.pc().getAndIncrement());
+    }
+
+    @Override
+    protected MemOperation execute2(byte data) {
+      registers.ir().set(data);
+      return null;
+    }
+  }
+  public static final class AccumulatorIndirectDecrement extends AbstractInstruction {
+
+    private final Registers registers;
+    private final Register16<Register8, Register8> register;
+
+    public AccumulatorIndirectDecrement(Registers registers, Register16<Register8, Register8> register) {
+      this.registers = registers;
+      this.register = register;
+    }
+
+    @Override
+    protected MemOperation execute0(byte data) {
+      return new MemRead(register.getAndDecrement());
+    }
+
+    @Override
+    protected MemOperation execute1(byte data) {
+      registers.a().set(data);
+      return new MemRead(registers.pc().getAndIncrement());
+    }
+
+    @Override
+    protected MemOperation execute2(byte data) {
+      registers.ir().set(data);
+      return null;
+    }
+  }
+
+  public static final class AccumulatorIndirectHi extends AbstractInstruction {
+
+    private final Registers registers;
+    private final Register8 register;
+
+    public AccumulatorIndirectHi(Registers registers, Register8 register) {
+      this.registers = registers;
+      this.register = register;
+    }
+
+    @Override
+    protected MemOperation execute0(byte data) {
+      short address = (short) (0xff00 | register.get());
+      return new MemRead(address);
+    }
+
+    @Override
+    protected MemOperation execute1(byte data) {
+      registers.a().set(data);
+      return new MemRead(registers.pc().getAndIncrement());
+    }
+
+    @Override
+    protected MemOperation execute2(byte data) {
+      registers.ir().set(data);
+      return null;
+    }
+  }
+
+  public static final class ImmediateIndirect extends AbstractInstruction {
+
+    private final Registers registers;
+
+    public ImmediateIndirect(Registers registers) {
+      this.registers = registers;
+    }
+
+    @Override
+    protected MemOperation execute0(byte data) {
+      return new MemRead(registers.pc().getAndIncrement());
+    }
+
+    @Override
+    protected MemOperation execute1(byte data) {
+      return new MemWrite(registers.hl().get(), data);
+    }
+
+    @Override
+    protected MemOperation execute2(byte data) {
+      return new MemRead(registers.pc().getAndIncrement());
+    }
+
+    @Override
+    protected MemOperation execute3(byte data) {
+      registers.ir().set(data);
+      return null;
+    }
+  }
+
+  public static final class IndirectRegister extends AbstractInstruction {
+
+    private final Registers registers;
+    private final Register8 src;
+    private final Register16<Register8, Register8> dst;
+
+    public IndirectRegister(
+        Registers registers, Register8 src, Register16<Register8, Register8> dst) {
+      this.registers = registers;
+      this.src = src;
+      this.dst = dst;
+    }
+
+    @Override
+    protected MemOperation execute0(byte data) {
+      return new MemWrite(dst.get(), src.get());
+    }
+
+    @Override
+    protected MemOperation execute1(byte data) {
+      return new MemRead(registers.pc().getAndIncrement());
+    }
+
+    @Override
+    protected MemOperation execute2(byte data) {
+      registers.ir().set(data);
+      return null;
+    }
+  }
+
+  public static final class IndirectIncrementAccumulator extends AbstractInstruction {
+
+    private final Registers registers;
+
+    public IndirectIncrementAccumulator(Registers registers) {
+      this.registers = registers;
+    }
+
+    @Override
+    protected MemOperation execute0(byte data) {
+      return new MemWrite(registers.hl().getAndIncrement(), registers.a().get());
+    }
+
+    @Override
+    protected MemOperation execute1(byte data) {
+      return new MemRead(registers.pc().getAndIncrement());
+    }
+
+    @Override
+    protected MemOperation execute2(byte data) {
+      registers.ir().set(data);
+      return null;
+    }
+  }
+
+  public static final class IndirectDecrementAccumulator extends AbstractInstruction {
+
+    private final Registers registers;
+
+    public IndirectDecrementAccumulator(Registers registers) {
+      this.registers = registers;
+    }
+
+    @Override
+    protected MemOperation execute0(byte data) {
+      return new MemWrite(registers.hl().getAndDecrement(), registers.a().get());
+    }
+
+    @Override
+    protected MemOperation execute1(byte data) {
+      return new MemRead(registers.pc().getAndIncrement());
+    }
+
+    @Override
+    protected MemOperation execute2(byte data) {
+      registers.ir().set(data);
+      return null;
+    }
+  }
+
+  public static final class RegisterImmediate8 extends AbstractInstruction {
+
+    private final Registers registers;
+    private final Register8 register;
+
+    public RegisterImmediate8(Registers registers, Register8 register) {
+      this.registers = registers;
+      this.register = register;
+    }
+
+    @Override
+    protected MemOperation execute0(byte data) {
+      return new MemRead(registers.pc().getAndIncrement());
+    }
+
+    @Override
+    protected MemOperation execute1(byte data) {
+      register.set(data);
+      return new MemRead(registers.pc().getAndIncrement());
+    }
+
+    @Override
+    protected MemOperation execute2(byte data) {
+      registers.ir().set(data);
+      return null;
+    }
+  }
+
+  public static final class RegisterImmediate16 extends AbstractInstruction {
+
+    private final Registers registers;
+    private final Register16<Register8, Register8> register;
+
+    private byte z;
+    private byte w;
+
+    public RegisterImmediate16(Registers registers, Register16<Register8, Register8> register) {
+      this.registers = registers;
+      this.register = register;
+    }
+
+    @Override
+    protected MemOperation execute0(byte data) {
+      return new MemRead(registers.pc().getAndIncrement());
+    }
+
+    @Override
+    protected MemOperation execute1(byte data) {
+      z = data;
+      return new MemRead(registers.pc().getAndIncrement());
+    }
+
+    @Override
+    protected MemOperation execute2(byte data) {
+      w = data;
+      register.set(w, z);
+      return new MemRead(registers.pc().getAndIncrement());
+    }
+
+    @Override
+    protected MemOperation execute3(byte data) {
+      registers.ir().set(data);
+      return null;
+    }
+  }
+
+  public static final class DirectAccumulator extends AbstractInstruction {
+
+    private final Registers registers;
+
+    private byte z;
+    private byte w;
+
+    public DirectAccumulator(Registers registers) {
+      this.registers = registers;
+    }
+
+    @Override
+    protected MemOperation execute0(byte data) {
+      return new MemRead(registers.pc().getAndIncrement());
+    }
+
+    @Override
+    protected MemOperation execute1(byte data) {
+      z = data;
+      return new MemRead(registers.pc().getAndIncrement());
+    }
+
+    @Override
+    protected MemOperation execute2(byte data) {
+      w = data;
+      short address = (short) ((Byte.toUnsignedInt(w) << 8) | Byte.toUnsignedInt(z));
+      return new MemWrite(address, registers.a().get());
+    }
+
+    @Override
+    protected MemOperation execute3(byte data) {
+      return new MemRead(registers.pc().getAndIncrement());
+    }
+
+    @Override
+    protected MemOperation execute4(byte data) {
+      registers.ir().set(data);
+      return null;
+    }
+  }
+
+  public static final class DirectStackPointer extends AbstractInstruction {
+
+    private final Registers registers;
+
+    private byte z;
+    private byte w;
+
+    public DirectStackPointer(Registers registers) {
+      this.registers = registers;
+    }
+
+    @Override
+    protected MemOperation execute0(byte data) {
+      return new MemRead(registers.pc().getAndIncrement());
+    }
+
+    @Override
+    protected MemOperation execute1(byte data) {
+      z = data;
+      return new MemRead(registers.pc().getAndIncrement());
+    }
+
+    @Override
+    protected MemOperation execute2(byte data) {
+      w = data;
+      short address = (short) ((Byte.toUnsignedInt(w) << 8) | Byte.toUnsignedInt(z));
+      return new MemWrite(address, registers.sp().lo().get());
+    }
+
+    @Override
+    protected MemOperation execute3(byte data) {
+      short address = (short) (((Byte.toUnsignedInt(w) << 8) | Byte.toUnsignedInt(z)) + 1);
+      return new MemWrite(address, registers.sp().hi().get());
+    }
+
+    @Override
+    protected MemOperation execute4(byte data) {
+      return new MemRead(registers.pc().getAndIncrement());
+    }
+
+    @Override
+    protected MemOperation execute5(byte data) {
+      registers.ir().set(data);
+      return null;
+    }
+  }
+
+  public static final class DirectHiAccumulator extends AbstractInstruction {
+
+    private final Registers registers;
+
+    public DirectHiAccumulator(Registers registers) {
+      this.registers = registers;
+    }
+
+    @Override
+    protected MemOperation execute0(byte data) {
+      return new MemRead(registers.pc().getAndIncrement());
+    }
+
+    @Override
+    protected MemOperation execute1(byte data) {
+      short address = (short) (0xff00 | Byte.toUnsignedInt(data));
+      return new MemWrite(address, registers.a().get());
+    }
+
+    @Override
+    protected MemOperation execute2(byte data) {
+      return new MemRead(registers.pc().getAndIncrement());
+    }
+
+    @Override
+    protected MemOperation execute3(byte data) {
+      registers.ir().set(data);
+      return null;
+    }
+  }
+
+  public static final class IndirectHiAccumulator extends AbstractInstruction {
+
+    private final Registers registers;
+    private final Register8 register;
+
+    public IndirectHiAccumulator(Registers registers, Register8 register) {
+      this.registers = registers;
+      this.register = register;
+    }
+
+    @Override
+    protected MemOperation execute0(byte data) {
+      short address = (short) (0xff00 | Byte.toUnsignedInt(register.get()));
+      return new MemWrite(address, registers.a().get());
+    }
+
+    @Override
+    protected MemOperation execute1(byte data) {
+      return new MemRead(registers.pc().getAndIncrement());
+    }
+
+    @Override
+    protected MemOperation execute2(byte data) {
+      registers.ir().set(data);
+      return null;
+    }
+  }
+
+  public static final class AccumulatorDirect extends AbstractInstruction {
+
+    private final Registers registers;
+
+    private byte z;
+    private byte w;
+
+    public AccumulatorDirect(Registers registers) {
+      this.registers = registers;
+    }
+
+    /*
+    //    byte z = read(registers.pc().getAndIncrement());
+    //    byte w = read(registers.pc().getAndIncrement());
+    //    registers.a().set(read((short) ((Byte.toUnsignedInt(w) << 8) | Byte.toUnsignedInt(z))));
+    //    registers.ir().set(read(registers.pc().getAndIncrement()));
+       */
+
+    @Override
+    protected MemOperation execute0(byte data) {
+      return new MemRead(registers.pc().getAndIncrement());
+    }
+
+    @Override
+    protected MemOperation execute1(byte data) {
+      z = data;
+      return new MemRead(registers.pc().getAndIncrement());
+    }
+
+    @Override
+    protected MemOperation execute2(byte data) {
+      w = data;
+      short address = (short) ((Byte.toUnsignedInt(w) << 8) | Byte.toUnsignedInt(z));
+      return new MemRead(address);
+    }
+
+    @Override
+    protected MemOperation execute3(byte data) {
+      registers.a().set(data);
+      return new MemRead(registers.pc().getAndIncrement());
+    }
+
+    @Override
+    protected MemOperation execute4(byte data) {
+      registers.ir().set(data);
+      return null;
+    }
+  }
+
+  public static final class AccumulatorDirectHi extends AbstractInstruction {
+
+    private final Registers registers;
+
+    public AccumulatorDirectHi(Registers registers) {
+      this.registers = registers;
+    }
+
+    @Override
+    protected MemOperation execute0(byte data) {
+      return new MemRead(registers.pc().getAndIncrement());
+    }
+
+    @Override
+    protected MemOperation execute1(byte data) {
+      short address = (short) (0xff00 | Byte.toUnsignedInt(data));
+      return new MemRead(address);
+    }
+
+    @Override
+    protected MemOperation execute2(byte data) {
+      registers.a().set(data);
+      return new MemRead(registers.pc().getAndIncrement());
+    }
+
+    @Override
+    protected MemOperation execute3(byte data) {
+      registers.ir().set(data);
+      return null;
+    }
+  }
+
+  public static final class StackOffset extends AbstractInstruction {
+
+    private final Registers registers;
+
+    private byte z;
+
+    public StackOffset(Registers registers) {
+      this.registers = registers;
+    }
+
+    @Override
+    protected MemOperation execute0(byte data) {
+      return new MemRead(registers.pc().getAndIncrement());
+    }
+
+    @Override
+    protected MemOperation execute1(byte data) {
+      z = data;
+      byte lhs = registers.sp().lo().get();
+      byte rhs = z;
+      registers.l().set((byte) (lhs + rhs));
+      registers.f().setZ(false);
+      registers.f().setN(false);
+      registers.f().setH((lhs & 0x0f) + (rhs & 0x0f) > 0x0f);
+      registers.f().setC(Byte.toUnsignedInt(lhs) + Byte.toUnsignedInt(rhs) > 0xff);
+      return new MemRead((short) 0);
+    }
+
+    @Override
+    protected MemOperation execute2(byte data) {
+      byte lhs = registers.sp().hi().get();
+      byte rhs = (byte) ((z & 0x80) != 0 ? 0xff : 0);
+      byte carry = (byte) (registers.f().getC() ? 1 : 0);
+      registers.h().set((byte) (lhs + rhs + carry));
+      return new MemRead(registers.pc().getAndIncrement());
+    }
+
+    @Override
+    protected MemOperation execute3(byte data) {
+      registers.ir().set(data);
+      return null;
+    }
+  }
+}

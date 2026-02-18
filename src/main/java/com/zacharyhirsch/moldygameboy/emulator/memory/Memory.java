@@ -11,32 +11,9 @@ public final class Memory {
   private final ByteBuffer oam;
   private final ByteBuffer hram;
   private final ByteBuffer waveRam;
+  private final IORegisters ioRegisters;
 
-  private byte sb = 0; // ff01
-  private byte sc = 0; // ff02
-  private byte div = 0; // ff04
-  private byte tima = 0; // ff05
-  private byte tma = 0; // ff06
-  private byte tac = 0; // ff07
-  private byte if_ = 0; // ff0f
-  private byte nr11 = 0; // ff11
-  private byte nr12 = 0; // ff12
-  private byte nr50 = 0; // ff24
-  private byte nr51 = 0; // ff25
-  private byte nr52 = 0; // ff26
-  private byte lcdc = 0; // ff40
-  private byte scy = 0; // ff42
-  private byte scx = 0; // ff43
-  private byte bgp = 0; // ff47
-  private byte obp0 = 0; // ff48
-  private byte obp1 = 0; // ff49
-  private byte vbk = 0; // ff4f
-  private byte bank = 1; // ff50
-  private byte bcps = 0; // ff68
-  private byte svbk = 0; // ff70
-  private byte ie = 0; // ffff
-
-  public Memory(ByteBuffer boot, ByteBuffer rom) {
+  public Memory(ByteBuffer boot, ByteBuffer rom, IORegisters ioRegisters) {
     this.boot = boot;
     this.rom = rom;
     this.vram = ByteBuffer.allocate(0x4000);
@@ -44,12 +21,13 @@ public final class Memory {
     this.oam = ByteBuffer.allocate(0xa0);
     this.hram = ByteBuffer.allocate(0x7f);
     this.waveRam = ByteBuffer.allocate(0x10);
+    this.ioRegisters = ioRegisters;
   }
 
   public byte read(short address) {
     int addr = Short.toUnsignedInt(address);
     assert 0x0000 <= addr && addr <= 0xffff;
-    if (bank == 1) {
+    if (ioRegisters.bank().get() == 1) {
       if (0x0000 <= addr && addr <= 0x00ff) {
         // boot rom (lower)
         return boot.get(addr);
@@ -62,14 +40,10 @@ public final class Memory {
         // boot rom (upper)
         return boot.get(addr);
       }
-    } else {
-      if (0x0000 <= addr && addr <= 0x08ff) {
-        // cartridge rom
-        return rom.get(addr);
-      }
     }
-    if (0x0900 <= addr && addr <= 0x3fff) {
-      throw new IllegalStateException("%04x".formatted(address));
+    if (0x0000 <= addr && addr <= 0x3fff) {
+      // cartridge rom
+      return rom.get(addr);
     }
     if (0x4000 <= addr && addr <= 0x7fff) {
       // TODO: switchable bank
@@ -86,11 +60,12 @@ public final class Memory {
       return wram.get(addr - 0xc000);
     }
     if (0xd000 <= addr && addr <= 0xdfff) {
-      return wram.get(svbk * 0x1000 + (addr - 0xd000));
+      return wram.get(getWramBank() * 0x1000 + (addr - 0xd000));
     }
     if (0xe000 <= addr && addr <= 0xfdff) {
       // echo ram (unusable)
-      throw new IllegalStateException("%04x".formatted(address));
+      //      throw new IllegalStateException("%04x".formatted(address));
+      return (byte) 0xff;
     }
     if (0xfe00 <= addr && addr <= 0xfe9f) {
       return oam.get(addr - 0xfe00);
@@ -101,13 +76,15 @@ public final class Memory {
     }
     if (0x0ff00 <= addr && addr <= 0xff7f) {
       // i/o registers
+      // TODO: unreadable bits always return 1.
       return switch (addr) {
-        case 0xff0f -> if_;
-        case 0xff11 -> (byte) (nr11 & 0b1100_0000);
-        case 0xff12 -> nr12;
-        case 0xff24 -> nr50;
-        case 0xff25 -> nr51;
-        case 0xff26 -> nr52;
+        //        case 0xff0f -> (byte) (0b1110_0000 | (ioRegisters.if_().get() & 0b0001_1111));
+        case 0xff0f -> (byte) (ioRegisters.if_().get() & 0b0001_1111);
+        case 0xff11 -> (byte) (ioRegisters.nr11().get() & 0b1100_0000);
+        case 0xff12 -> ioRegisters.nr12().get();
+        case 0xff24 -> ioRegisters.nr50().get();
+        case 0xff25 -> ioRegisters.nr51().get();
+        case 0xff26 -> (byte) (0b0111_0000 | (ioRegisters.nr52().get() & 0b1000_1111));
         case 0xff30 -> waveRam.get(0x0);
         case 0xff31 -> waveRam.get(0x1);
         case 0xff32 -> waveRam.get(0x2);
@@ -125,11 +102,12 @@ public final class Memory {
         case 0xff3e -> waveRam.get(0xe);
         case 0xff3f -> waveRam.get(0xf);
         case 0xff44 -> (byte) 0x90; // TODO;
-        case 0xff47 -> bgp;
-        case 0xff48 -> obp0;
-        case 0xff49 -> obp1;
-        case 0xff4f -> (byte) (0b1111_1110 | vbk);
-        case 0xff70 -> svbk;
+        case 0xff47 -> ioRegisters.bgp().get();
+        case 0xff48 -> ioRegisters.obp0().get();
+        case 0xff49 -> ioRegisters.obp1().get();
+        case 0xff4d -> (byte) 0xff; // TODO // ioRegisters.key1().get();
+        case 0xff4f -> (byte) (0b1111_1100 | (ioRegisters.vbk().get() & 0b0000_0011));
+        case 0xff70 -> (byte) (0b1111_1000 | (ioRegisters.svbk().get() & 0b0000_0111));
         default -> throw new IllegalStateException("%04x".formatted(address));
       };
     }
@@ -137,7 +115,7 @@ public final class Memory {
       return hram.get(addr - 0xff80);
     }
     if (addr == 0xffff) {
-      return ie;
+      return ioRegisters.ie().get();
     }
     throw new IllegalStateException("%04x".formatted(address));
   }
@@ -146,7 +124,8 @@ public final class Memory {
     int addr = Short.toUnsignedInt(address);
     assert 0x0000 <= addr && addr <= 0xffff;
     if (0x0000 <= addr && addr <= 0x7fff) {
-      throw new IllegalStateException("%04x".formatted(address));
+      //      throw new IllegalStateException("%04x".formatted(address));
+      return;
     }
     if (0x8000 <= addr && addr <= 0x9fff) {
       vram.put(addr - 0x8000, data);
@@ -161,7 +140,7 @@ public final class Memory {
       return;
     }
     if (0xd000 <= addr && addr <= 0xdfff) {
-      wram.put(svbk * 0x1000 + (addr - 0xd000), data);
+      wram.put(getWramBank() * 0x1000 + (addr - 0xd000), data);
       return;
     }
     if (0xe000 <= addr && addr <= 0xfdff) {
@@ -180,20 +159,23 @@ public final class Memory {
       // i/o registers
       switch (addr) {
         case 0xff01 -> {
-          sb = data;
-          System.out.printf("%s", (char) sb);
+          ioRegisters.sb().set(data);
+          System.out.printf("%s", (char) data);
         }
-        case 0xff02 -> sc = data;
-        case 0xff04 -> div = 0;
-        case 0xff05 -> tima = data;
-        case 0xff06 -> tma = data;
-        case 0xff07 -> tac = (byte) (data & 0b0000_0111);
-        case 0xff0f -> if_ = (byte) (data & 0b0001_1111);
-        case 0xff11 -> nr11 = data;
-        case 0xff12 -> nr12 = data;
-        case 0xff24 -> nr50 = data;
-        case 0xff25 -> nr51 = data;
-        case 0xff26 -> nr52 = (byte) ((data & 0b1000_0000) | (nr52 & 0b0111_1111));
+        case 0xff02 -> ioRegisters.sc().set(data);
+        case 0xff04 -> ioRegisters.div().set((byte) 0);
+        case 0xff05 -> ioRegisters.tima().set(data);
+        case 0xff06 -> ioRegisters.tma().set(data);
+        case 0xff07 -> ioRegisters.tac().set((byte) (data & 0b0000_0111));
+        case 0xff0f -> ioRegisters.if_().set((byte) (data & 0b0001_1111));
+        case 0xff11 -> ioRegisters.nr11().set(data);
+        case 0xff12 -> ioRegisters.nr12().set(data);
+        case 0xff24 -> ioRegisters.nr50().set(data);
+        case 0xff25 -> ioRegisters.nr51().set(data);
+        case 0xff26 ->
+            ioRegisters
+                .nr52()
+                .set((byte) ((data & 0b1000_0000) | (ioRegisters.nr52().get() & 0b0111_1111)));
         case 0xff30 -> waveRam.put(0x0, data);
         case 0xff31 -> waveRam.put(0x1, data);
         case 0xff32 -> waveRam.put(0x2, data);
@@ -210,16 +192,17 @@ public final class Memory {
         case 0xff3d -> waveRam.put(0xd, data);
         case 0xff3e -> waveRam.put(0xe, data);
         case 0xff3f -> waveRam.put(0xf, data);
-        case 0xff40 -> lcdc = data;
-        case 0xff42 -> scy = data;
-        case 0xff43 -> scx = data;
-        case 0xff47 -> bgp = data;
-        case 0xff48 -> obp0 = data;
-        case 0xff49 -> obp1 = data;
-        case 0xff4f -> vbk = (byte) (data & 0b0000_0001);
-        case 0xff68 -> bcps = (byte) (data & 0b1011_1111);
+        case 0xff40 -> ioRegisters.lcdc().set(data);
+        case 0xff41 -> {} // TODO
+        case 0xff42 -> ioRegisters.scy().set(data);
+        case 0xff43 -> ioRegisters.scx().set(data);
+        case 0xff47 -> ioRegisters.bgp().set(data);
+        case 0xff48 -> ioRegisters.obp0().set(data);
+        case 0xff49 -> ioRegisters.obp1().set(data);
+        case 0xff4f -> ioRegisters.vbk().set((byte) (data & 0b0000_0011));
+        case 0xff68 -> ioRegisters.bcps().set((byte) (data & 0b1011_1111));
         case 0xff69 -> {} // TODO: write background color palette at address in bcps
-        case 0xff70 -> svbk = (byte) (data & 0b0000_0111);
+        case 0xff70 -> ioRegisters.svbk().set((byte) (data & 0b0000_0111));
         default -> throw new IllegalStateException("%04x".formatted(address));
       }
       return;
@@ -229,57 +212,22 @@ public final class Memory {
       return;
     }
     if (addr == 0xffff) {
-      ie = data;
+      ioRegisters.ie().set(data);
       return;
     }
     throw new IllegalStateException("%04x".formatted(address));
   }
 
-  public byte getDiv() {
-    return div;
-  }
-
-  public void setDiv(byte div) {
-    this.div = div;
-  }
-
-  public byte getTac() {
-    return tac;
-  }
-
-  public void setTac(byte tac) {
-    this.tac = tac;
-  }
-
-  public byte getTma() {
-    return tma;
-  }
-
-  public void setTma(byte tma) {
-    this.tma = tma;
-  }
-
-  public byte getTima() {
-    return tima;
-  }
-
-  public void setTima(byte tima) {
-    this.tima = tima;
-  }
-
-  public byte getIf() {
-    return if_;
-  }
-
-  public void setIf(byte if_) {
-    this.if_ = if_;
-  }
-
-  public byte getIe() {
-    return ie;
-  }
-
-  public void setIe(byte ie) {
-    this.ie = ie;
+  private int getWramBank() {
+    return switch (ioRegisters.svbk().get()) {
+      case 0, 1 -> 1;
+      case 2 -> 2;
+      case 3 -> 3;
+      case 4 -> 4;
+      case 5 -> 5;
+      case 6 -> 6;
+      case 7 -> 7;
+      default -> throw new IllegalStateException();
+    };
   }
 }

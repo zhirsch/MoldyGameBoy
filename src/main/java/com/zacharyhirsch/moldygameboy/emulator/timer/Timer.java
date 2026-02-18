@@ -1,23 +1,23 @@
 package com.zacharyhirsch.moldygameboy.emulator.timer;
 
-import com.zacharyhirsch.moldygameboy.emulator.memory.Memory;
+import com.zacharyhirsch.moldygameboy.emulator.memory.IORegisters;
 
 public final class Timer {
 
-  private final Memory memory;
+  private final IORegisters ioRegisters;
 
   private int count = 0;
 
-  public Timer(Memory memory) {
-    this.memory = memory;
+  public Timer(IORegisters ioRegisters) {
+    this.ioRegisters = ioRegisters;
   }
 
   public void tick() {
-    if ((memory.getTac() & 0b0000_0100) == 0) {
+    if ((ioRegisters.tac().get() & 0b0000_0100) == 0) {
       return;
     }
     int period =
-        switch (memory.getTac() & 0b0000_0011) {
+        switch (ioRegisters.tac().get() & 0b0000_0011) {
           case 0 -> 256;
           case 1 -> 4;
           case 2 -> 16;
@@ -28,11 +28,11 @@ public final class Timer {
     if (count != 0) {
       return;
     }
-    if (memory.getTima() == (byte) 0xff) {
-      memory.setIf((byte) (memory.getIf() | 0b0000_0100));
-      memory.setTima(memory.getTma());
+    if (ioRegisters.tima().get() == (byte) 0xff) {
+      ioRegisters.if_().set((byte) (ioRegisters.if_().get() | 0b0000_0100));
+      ioRegisters.tima().set(ioRegisters.tma().get());
       return;
     }
-    memory.setTima((byte) (memory.getTima() + 1));
+    ioRegisters.tima().set((byte) (ioRegisters.tima().get() + 1));
   }
 }

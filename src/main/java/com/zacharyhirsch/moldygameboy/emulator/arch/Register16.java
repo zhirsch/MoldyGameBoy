@@ -1,7 +1,4 @@
-package com.zacharyhirsch.moldygameboy.emulator.cpu.registers;
-
-import com.zacharyhirsch.moldygameboy.emulator.arch.UInt16;
-import com.zacharyhirsch.moldygameboy.emulator.arch.UInt8;
+package com.zacharyhirsch.moldygameboy.emulator.arch;
 
 public record Register16<Hi extends UInt8, Lo extends UInt8>(Hi hi, Lo lo) implements UInt16 {
 

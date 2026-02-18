@@ -1,6 +1,4 @@
-package com.zacharyhirsch.moldygameboy.emulator.cpu.registers;
-
-import com.zacharyhirsch.moldygameboy.emulator.arch.UInt8;
+package com.zacharyhirsch.moldygameboy.emulator.arch;
 
 public final class Register8 implements UInt8 {
 

@@ -1,5 +1,8 @@
 package com.zacharyhirsch.moldygameboy.emulator.cpu.registers;
 
+import com.zacharyhirsch.moldygameboy.emulator.arch.Register16;
+import com.zacharyhirsch.moldygameboy.emulator.arch.Register8;
+
 public record Registers(
     Register8 ir,
     Register8 ie,
@@ -8,7 +11,8 @@ public record Registers(
     Register16<Register8, Register8> de,
     Register16<Register8, Register8> hl,
     Register16<Register8, Register8> pc,
-    Register16<Register8, Register8> sp) {
+    Register16<Register8, Register8> sp,
+    Ime ime) {
 
   public Registers() {
     this(
@@ -19,7 +23,8 @@ public record Registers(
         new Register16<>(new Register8(), new Register8()),
         new Register16<>(new Register8(), new Register8()),
         new Register16<>(new Register8(), new Register8()),
-        new Register16<>(new Register8(), new Register8()));
+        new Register16<>(new Register8(), new Register8()),
+        new Ime());
   }
 
   public Register8 a() {
@@ -53,4 +58,5 @@ public record Registers(
   public Register8 l() {
     return hl().lo();
   }
+
 }
