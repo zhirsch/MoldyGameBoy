@@ -3,7 +3,7 @@ package com.zacharyhirsch.moldygameboy.emulator;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.Cpu;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 import com.zacharyhirsch.moldygameboy.emulator.memory.IORegisters;
-import com.zacharyhirsch.moldygameboy.emulator.memory.Memory;
+import com.zacharyhirsch.moldygameboy.emulator.memory.MemoryMap;
 import com.zacharyhirsch.moldygameboy.emulator.timer.Divider;
 import com.zacharyhirsch.moldygameboy.emulator.timer.Timer;
 import java.io.Writer;
@@ -18,7 +18,7 @@ final class MoldyGameBoy {
       Registers registers,
       IORegisters ioRegisters,
       Writer writer) {
-    Memory memory = new Memory(boot, rom, ioRegisters);
+    MemoryMap memory = new MemoryMap(boot, rom, ioRegisters);
     Divider divider = new Divider(ioRegisters);
     Timer timer = new Timer(ioRegisters);
     Cpu cpu = new Cpu(registers, ioRegisters, memory, writer);

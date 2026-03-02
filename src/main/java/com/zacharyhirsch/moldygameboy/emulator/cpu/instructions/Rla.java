@@ -1,8 +1,7 @@
 package com.zacharyhirsch.moldygameboy.emulator.cpu.instructions;
 
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
-import com.zacharyhirsch.moldygameboy.emulator.memory.MemOperation;
-import com.zacharyhirsch.moldygameboy.emulator.memory.MemRead;
+
 
 public final class Rla extends AbstractInstruction {
 
@@ -13,7 +12,7 @@ public final class Rla extends AbstractInstruction {
   }
 
   @Override
-  protected MemRead execute0(byte data) {
+  protected Mem execute0(byte data) {
     boolean b7 = (registers.a().get() & 0x80) != 0;
     byte carry = (byte) (registers.f().getC() ? 1 : 0);
     registers.a().set((byte) ((registers.a().get() << 1) | carry));
@@ -21,11 +20,11 @@ public final class Rla extends AbstractInstruction {
     registers.f().setN(false);
     registers.f().setH(false);
     registers.f().setC(b7);
-    return new MemRead(registers.pc().getAndIncrement());
+    return Mem.read(registers.pc().getAndIncrement());
   }
 
   @Override
-  protected MemOperation execute1(byte data) {
+  protected Mem execute1(byte data) {
     registers.ir().set(data);
     return null;
   }

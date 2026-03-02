@@ -1,15 +1,13 @@
 package com.zacharyhirsch.moldygameboy.emulator.cpu;
 
+import com.zacharyhirsch.moldygameboy.emulator.cpu.instructions.Mem;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.instructions.AbstractInstruction;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.instructions.Halt;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.instructions.Instruction;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.instructions.Nop;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 import com.zacharyhirsch.moldygameboy.emulator.memory.IORegisters;
-import com.zacharyhirsch.moldygameboy.emulator.memory.MemOperation;
-import com.zacharyhirsch.moldygameboy.emulator.memory.MemRead;
-import com.zacharyhirsch.moldygameboy.emulator.memory.MemWrite;
-import com.zacharyhirsch.moldygameboy.emulator.memory.Memory;
+import com.zacharyhirsch.moldygameboy.emulator.memory.MemoryMap;
 import java.io.IOException;
 import java.io.Writer;
 
@@ -25,7 +23,7 @@ public final class Cpu {
 
   private final Registers registers;
   private final IORegisters ioRegisters;
-  private final Memory memory;
+  private final MemoryMap memory;
   private final CpuDecoder decoder;
   private final Writer writer;
 
@@ -34,7 +32,7 @@ public final class Cpu {
   private boolean halted = false;
   private boolean skipLoggingNextInstruction = false;
 
-  public Cpu(Registers registers, IORegisters ioRegisters, Memory memory, Writer writer) {
+  public Cpu(Registers registers, IORegisters ioRegisters, MemoryMap memory, Writer writer) {
     this.registers = registers;
     this.ioRegisters = ioRegisters;
     this.memory = memory;
@@ -49,7 +47,7 @@ public final class Cpu {
     if (halted) {
       return;
     }
-    MemOperation mem = instruction.tick(data);
+    Mem mem = instruction.tick(data);
     if (mem == null) {
       instruction = next();
       mem = instruction.tick(data);
@@ -61,11 +59,9 @@ public final class Cpu {
     if (!skipLoggingNextInstruction) {
       logState();
     }
-    for (InterruptType interrupt : INTERRUPTS) {
-      if (isInterruptRequested(interrupt)) {
-        skipLoggingNextInstruction = true;
-        return new Isr(registers, ioRegisters, interrupt);
-      }
+    if (registers.ime().get() && (ioRegisters.ie().get() & ioRegisters.if_().get()) != 0) {
+      skipLoggingNextInstruction = true;
+      return new Isr(registers, ioRegisters);
     }
     skipLoggingNextInstruction = !decoder.isPrefixed() && registers.ir().get() == (byte) 0xcb;
     Instruction instruction = decoder.decode();
@@ -77,54 +73,51 @@ public final class Cpu {
 
     private final Registers registers;
     private final IORegisters ioRegisters;
-    private final InterruptType interrupt;
 
-    Isr(Registers registers, IORegisters ioRegisters, InterruptType interrupt) {
+    Isr(Registers registers, IORegisters ioRegisters) {
       this.registers = registers;
       this.ioRegisters = ioRegisters;
-      this.interrupt = interrupt;
     }
 
     @Override
-    protected MemOperation execute0(byte data) {
-      return new MemRead(registers.pc().getAndDecrement());
+    protected Mem execute0(byte data) {
+      return Mem.read(registers.pc().getAndDecrement());
     }
 
     @Override
-    protected MemOperation execute1(byte data) {
-      return new MemRead(registers.sp().getAndDecrement());
+    protected Mem execute1(byte data) {
+      return Mem.read(registers.sp().getAndDecrement());
     }
 
     @Override
-    protected MemOperation execute2(byte data) {
-      return new MemWrite(registers.sp().getAndDecrement(), registers.pc().hi().get());
+    protected Mem execute2(byte data) {
+      return Mem.write(registers.sp().getAndDecrement(), registers.pc().hi().get());
     }
 
     @Override
-    protected MemOperation execute3(byte data) {
-      return new MemWrite(registers.sp().get(), registers.pc().lo().get());
+    protected Mem execute3(byte data) {
+      return Mem.write(registers.sp().get(), registers.pc().lo().get());
     }
 
     @Override
-    protected MemOperation execute4(byte data) {
-      registers.ime().reset();
-      ioRegisters.if_().set((byte) (ioRegisters.if_().get() & ~interrupt.getMask()));
-      registers.pc().set(interrupt.getVector());
-      return new MemRead(registers.pc().getAndIncrement());
+    protected Mem execute4(byte data) {
+      for (InterruptType interrupt : INTERRUPTS) {
+        if ((ioRegisters.ie().get() & ioRegisters.if_().get() & interrupt.getMask()) != 0) {
+          registers.ime().reset();
+          ioRegisters.if_().set((byte) (ioRegisters.if_().get() & ~interrupt.getMask()));
+          registers.pc().set(interrupt.getVector());
+          break;
+        }
+      }
+      return Mem.read(registers.pc().getAndIncrement());
     }
 
     @Override
-    protected MemOperation execute5(byte data) {
+    protected Mem execute5(byte data) {
       registers.ir().set(data);
       return null;
     }
-  }
 
-  private boolean isInterruptRequested(InterruptType interrupt) {
-    // TODO: ime only suppresses the jump and setting `if`. This matters for STOP and HALT?
-    return registers.ime().get()
-        && (ioRegisters.ie().get() & interrupt.getMask()) != 0
-        && (ioRegisters.if_().get() & interrupt.getMask()) != 0;
   }
 
   private void logState() {

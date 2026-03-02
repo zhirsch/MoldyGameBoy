@@ -3,9 +3,7 @@ package com.zacharyhirsch.moldygameboy.emulator.cpu.instructions;
 import com.zacharyhirsch.moldygameboy.emulator.arch.Register16;
 import com.zacharyhirsch.moldygameboy.emulator.arch.Register8;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
-import com.zacharyhirsch.moldygameboy.emulator.memory.MemOperation;
-import com.zacharyhirsch.moldygameboy.emulator.memory.MemRead;
-import com.zacharyhirsch.moldygameboy.emulator.memory.MemWrite;
+
 
 public final class Ld {
 
@@ -24,13 +22,13 @@ public final class Ld {
     }
 
     @Override
-    protected MemOperation execute0(byte data) {
+    protected Mem execute0(byte data) {
       dst.set(src.get());
-      return new MemRead(registers.pc().getAndIncrement());
+      return Mem.read(registers.pc().getAndIncrement());
     }
 
     @Override
-    protected MemOperation execute1(byte data) {
+    protected Mem execute1(byte data) {
       registers.ir().set(data);
       return null;
     }
@@ -52,13 +50,13 @@ public final class Ld {
     }
 
     @Override
-    protected MemOperation execute0(byte data) {
+    protected Mem execute0(byte data) {
       dst.set(src.get());
-      return new MemRead(registers.pc().getAndIncrement());
+      return Mem.read(registers.pc().getAndIncrement());
     }
 
     @Override
-    protected MemOperation execute1(byte data) {
+    protected Mem execute1(byte data) {
       registers.ir().set(data);
       return null;
     }
@@ -75,18 +73,18 @@ public final class Ld {
     }
 
     @Override
-    protected MemOperation execute0(byte data) {
-      return new MemRead(registers.hl().getAndIncrement());
+    protected Mem execute0(byte data) {
+      return Mem.read(registers.hl().getAndIncrement());
     }
 
     @Override
-    protected MemOperation execute1(byte data) {
+    protected Mem execute1(byte data) {
       dst.set(data);
-      return new MemRead(registers.pc().getAndIncrement());
+      return Mem.read(registers.pc().getAndIncrement());
     }
 
     @Override
-    protected MemOperation execute2(byte data) {
+    protected Mem execute2(byte data) {
       registers.ir().set(data);
       return null;
     }
@@ -103,18 +101,18 @@ public final class Ld {
     }
 
     @Override
-    protected MemOperation execute0(byte data) {
-      return new MemRead(registers.hl().get());
+    protected Mem execute0(byte data) {
+      return Mem.read(registers.hl().get());
     }
 
     @Override
-    protected MemOperation execute1(byte data) {
+    protected Mem execute1(byte data) {
       dst.set(data);
-      return new MemRead(registers.pc().getAndIncrement());
+      return Mem.read(registers.pc().getAndIncrement());
     }
 
     @Override
-    protected MemOperation execute2(byte data) {
+    protected Mem execute2(byte data) {
       registers.ir().set(data);
       return null;
     }
@@ -131,18 +129,18 @@ public final class Ld {
     }
 
     @Override
-    protected MemOperation execute0(byte data) {
-      return new MemRead(register.get());
+    protected Mem execute0(byte data) {
+      return Mem.read(register.get());
     }
 
     @Override
-    protected MemOperation execute1(byte data) {
+    protected Mem execute1(byte data) {
       registers.a().set(data);
-      return new MemRead(registers.pc().getAndIncrement());
+      return Mem.read(registers.pc().getAndIncrement());
     }
 
     @Override
-    protected MemOperation execute2(byte data) {
+    protected Mem execute2(byte data) {
       registers.ir().set(data);
       return null;
     }
@@ -158,18 +156,18 @@ public final class Ld {
     }
 
     @Override
-    protected MemOperation execute0(byte data) {
-      return new MemRead(register.getAndDecrement());
+    protected Mem execute0(byte data) {
+      return Mem.read(register.getAndDecrement());
     }
 
     @Override
-    protected MemOperation execute1(byte data) {
+    protected Mem execute1(byte data) {
       registers.a().set(data);
-      return new MemRead(registers.pc().getAndIncrement());
+      return Mem.read(registers.pc().getAndIncrement());
     }
 
     @Override
-    protected MemOperation execute2(byte data) {
+    protected Mem execute2(byte data) {
       registers.ir().set(data);
       return null;
     }
@@ -186,19 +184,19 @@ public final class Ld {
     }
 
     @Override
-    protected MemOperation execute0(byte data) {
+    protected Mem execute0(byte data) {
       short address = (short) (0xff00 | register.get());
-      return new MemRead(address);
+      return Mem.read(address);
     }
 
     @Override
-    protected MemOperation execute1(byte data) {
+    protected Mem execute1(byte data) {
       registers.a().set(data);
-      return new MemRead(registers.pc().getAndIncrement());
+      return Mem.read(registers.pc().getAndIncrement());
     }
 
     @Override
-    protected MemOperation execute2(byte data) {
+    protected Mem execute2(byte data) {
       registers.ir().set(data);
       return null;
     }
@@ -213,22 +211,22 @@ public final class Ld {
     }
 
     @Override
-    protected MemOperation execute0(byte data) {
-      return new MemRead(registers.pc().getAndIncrement());
+    protected Mem execute0(byte data) {
+      return Mem.read(registers.pc().getAndIncrement());
     }
 
     @Override
-    protected MemOperation execute1(byte data) {
-      return new MemWrite(registers.hl().get(), data);
+    protected Mem execute1(byte data) {
+      return Mem.write(registers.hl().get(), data);
     }
 
     @Override
-    protected MemOperation execute2(byte data) {
-      return new MemRead(registers.pc().getAndIncrement());
+    protected Mem execute2(byte data) {
+      return Mem.read(registers.pc().getAndIncrement());
     }
 
     @Override
-    protected MemOperation execute3(byte data) {
+    protected Mem execute3(byte data) {
       registers.ir().set(data);
       return null;
     }
@@ -248,17 +246,17 @@ public final class Ld {
     }
 
     @Override
-    protected MemOperation execute0(byte data) {
-      return new MemWrite(dst.get(), src.get());
+    protected Mem execute0(byte data) {
+      return Mem.write(dst.get(), src.get());
     }
 
     @Override
-    protected MemOperation execute1(byte data) {
-      return new MemRead(registers.pc().getAndIncrement());
+    protected Mem execute1(byte data) {
+      return Mem.read(registers.pc().getAndIncrement());
     }
 
     @Override
-    protected MemOperation execute2(byte data) {
+    protected Mem execute2(byte data) {
       registers.ir().set(data);
       return null;
     }
@@ -273,17 +271,17 @@ public final class Ld {
     }
 
     @Override
-    protected MemOperation execute0(byte data) {
-      return new MemWrite(registers.hl().getAndIncrement(), registers.a().get());
+    protected Mem execute0(byte data) {
+      return Mem.write(registers.hl().getAndIncrement(), registers.a().get());
     }
 
     @Override
-    protected MemOperation execute1(byte data) {
-      return new MemRead(registers.pc().getAndIncrement());
+    protected Mem execute1(byte data) {
+      return Mem.read(registers.pc().getAndIncrement());
     }
 
     @Override
-    protected MemOperation execute2(byte data) {
+    protected Mem execute2(byte data) {
       registers.ir().set(data);
       return null;
     }
@@ -298,17 +296,17 @@ public final class Ld {
     }
 
     @Override
-    protected MemOperation execute0(byte data) {
-      return new MemWrite(registers.hl().getAndDecrement(), registers.a().get());
+    protected Mem execute0(byte data) {
+      return Mem.write(registers.hl().getAndDecrement(), registers.a().get());
     }
 
     @Override
-    protected MemOperation execute1(byte data) {
-      return new MemRead(registers.pc().getAndIncrement());
+    protected Mem execute1(byte data) {
+      return Mem.read(registers.pc().getAndIncrement());
     }
 
     @Override
-    protected MemOperation execute2(byte data) {
+    protected Mem execute2(byte data) {
       registers.ir().set(data);
       return null;
     }
@@ -325,18 +323,18 @@ public final class Ld {
     }
 
     @Override
-    protected MemOperation execute0(byte data) {
-      return new MemRead(registers.pc().getAndIncrement());
+    protected Mem execute0(byte data) {
+      return Mem.read(registers.pc().getAndIncrement());
     }
 
     @Override
-    protected MemOperation execute1(byte data) {
+    protected Mem execute1(byte data) {
       register.set(data);
-      return new MemRead(registers.pc().getAndIncrement());
+      return Mem.read(registers.pc().getAndIncrement());
     }
 
     @Override
-    protected MemOperation execute2(byte data) {
+    protected Mem execute2(byte data) {
       registers.ir().set(data);
       return null;
     }
@@ -356,25 +354,25 @@ public final class Ld {
     }
 
     @Override
-    protected MemOperation execute0(byte data) {
-      return new MemRead(registers.pc().getAndIncrement());
+    protected Mem execute0(byte data) {
+      return Mem.read(registers.pc().getAndIncrement());
     }
 
     @Override
-    protected MemOperation execute1(byte data) {
+    protected Mem execute1(byte data) {
       z = data;
-      return new MemRead(registers.pc().getAndIncrement());
+      return Mem.read(registers.pc().getAndIncrement());
     }
 
     @Override
-    protected MemOperation execute2(byte data) {
+    protected Mem execute2(byte data) {
       w = data;
       register.set(w, z);
-      return new MemRead(registers.pc().getAndIncrement());
+      return Mem.read(registers.pc().getAndIncrement());
     }
 
     @Override
-    protected MemOperation execute3(byte data) {
+    protected Mem execute3(byte data) {
       registers.ir().set(data);
       return null;
     }
@@ -392,30 +390,30 @@ public final class Ld {
     }
 
     @Override
-    protected MemOperation execute0(byte data) {
-      return new MemRead(registers.pc().getAndIncrement());
+    protected Mem execute0(byte data) {
+      return Mem.read(registers.pc().getAndIncrement());
     }
 
     @Override
-    protected MemOperation execute1(byte data) {
+    protected Mem execute1(byte data) {
       z = data;
-      return new MemRead(registers.pc().getAndIncrement());
+      return Mem.read(registers.pc().getAndIncrement());
     }
 
     @Override
-    protected MemOperation execute2(byte data) {
+    protected Mem execute2(byte data) {
       w = data;
       short address = (short) ((Byte.toUnsignedInt(w) << 8) | Byte.toUnsignedInt(z));
-      return new MemWrite(address, registers.a().get());
+      return Mem.write(address, registers.a().get());
     }
 
     @Override
-    protected MemOperation execute3(byte data) {
-      return new MemRead(registers.pc().getAndIncrement());
+    protected Mem execute3(byte data) {
+      return Mem.read(registers.pc().getAndIncrement());
     }
 
     @Override
-    protected MemOperation execute4(byte data) {
+    protected Mem execute4(byte data) {
       registers.ir().set(data);
       return null;
     }
@@ -433,36 +431,36 @@ public final class Ld {
     }
 
     @Override
-    protected MemOperation execute0(byte data) {
-      return new MemRead(registers.pc().getAndIncrement());
+    protected Mem execute0(byte data) {
+      return Mem.read(registers.pc().getAndIncrement());
     }
 
     @Override
-    protected MemOperation execute1(byte data) {
+    protected Mem execute1(byte data) {
       z = data;
-      return new MemRead(registers.pc().getAndIncrement());
+      return Mem.read(registers.pc().getAndIncrement());
     }
 
     @Override
-    protected MemOperation execute2(byte data) {
+    protected Mem execute2(byte data) {
       w = data;
       short address = (short) ((Byte.toUnsignedInt(w) << 8) | Byte.toUnsignedInt(z));
-      return new MemWrite(address, registers.sp().lo().get());
+      return Mem.write(address, registers.sp().lo().get());
     }
 
     @Override
-    protected MemOperation execute3(byte data) {
+    protected Mem execute3(byte data) {
       short address = (short) (((Byte.toUnsignedInt(w) << 8) | Byte.toUnsignedInt(z)) + 1);
-      return new MemWrite(address, registers.sp().hi().get());
+      return Mem.write(address, registers.sp().hi().get());
     }
 
     @Override
-    protected MemOperation execute4(byte data) {
-      return new MemRead(registers.pc().getAndIncrement());
+    protected Mem execute4(byte data) {
+      return Mem.read(registers.pc().getAndIncrement());
     }
 
     @Override
-    protected MemOperation execute5(byte data) {
+    protected Mem execute5(byte data) {
       registers.ir().set(data);
       return null;
     }
@@ -477,23 +475,23 @@ public final class Ld {
     }
 
     @Override
-    protected MemOperation execute0(byte data) {
-      return new MemRead(registers.pc().getAndIncrement());
+    protected Mem execute0(byte data) {
+      return Mem.read(registers.pc().getAndIncrement());
     }
 
     @Override
-    protected MemOperation execute1(byte data) {
+    protected Mem execute1(byte data) {
       short address = (short) (0xff00 | Byte.toUnsignedInt(data));
-      return new MemWrite(address, registers.a().get());
+      return Mem.write(address, registers.a().get());
     }
 
     @Override
-    protected MemOperation execute2(byte data) {
-      return new MemRead(registers.pc().getAndIncrement());
+    protected Mem execute2(byte data) {
+      return Mem.read(registers.pc().getAndIncrement());
     }
 
     @Override
-    protected MemOperation execute3(byte data) {
+    protected Mem execute3(byte data) {
       registers.ir().set(data);
       return null;
     }
@@ -510,18 +508,18 @@ public final class Ld {
     }
 
     @Override
-    protected MemOperation execute0(byte data) {
+    protected Mem execute0(byte data) {
       short address = (short) (0xff00 | Byte.toUnsignedInt(register.get()));
-      return new MemWrite(address, registers.a().get());
+      return Mem.write(address, registers.a().get());
     }
 
     @Override
-    protected MemOperation execute1(byte data) {
-      return new MemRead(registers.pc().getAndIncrement());
+    protected Mem execute1(byte data) {
+      return Mem.read(registers.pc().getAndIncrement());
     }
 
     @Override
-    protected MemOperation execute2(byte data) {
+    protected Mem execute2(byte data) {
       registers.ir().set(data);
       return null;
     }
@@ -546,31 +544,31 @@ public final class Ld {
        */
 
     @Override
-    protected MemOperation execute0(byte data) {
-      return new MemRead(registers.pc().getAndIncrement());
+    protected Mem execute0(byte data) {
+      return Mem.read(registers.pc().getAndIncrement());
     }
 
     @Override
-    protected MemOperation execute1(byte data) {
+    protected Mem execute1(byte data) {
       z = data;
-      return new MemRead(registers.pc().getAndIncrement());
+      return Mem.read(registers.pc().getAndIncrement());
     }
 
     @Override
-    protected MemOperation execute2(byte data) {
+    protected Mem execute2(byte data) {
       w = data;
       short address = (short) ((Byte.toUnsignedInt(w) << 8) | Byte.toUnsignedInt(z));
-      return new MemRead(address);
+      return Mem.read(address);
     }
 
     @Override
-    protected MemOperation execute3(byte data) {
+    protected Mem execute3(byte data) {
       registers.a().set(data);
-      return new MemRead(registers.pc().getAndIncrement());
+      return Mem.read(registers.pc().getAndIncrement());
     }
 
     @Override
-    protected MemOperation execute4(byte data) {
+    protected Mem execute4(byte data) {
       registers.ir().set(data);
       return null;
     }
@@ -585,24 +583,24 @@ public final class Ld {
     }
 
     @Override
-    protected MemOperation execute0(byte data) {
-      return new MemRead(registers.pc().getAndIncrement());
+    protected Mem execute0(byte data) {
+      return Mem.read(registers.pc().getAndIncrement());
     }
 
     @Override
-    protected MemOperation execute1(byte data) {
+    protected Mem execute1(byte data) {
       short address = (short) (0xff00 | Byte.toUnsignedInt(data));
-      return new MemRead(address);
+      return Mem.read(address);
     }
 
     @Override
-    protected MemOperation execute2(byte data) {
+    protected Mem execute2(byte data) {
       registers.a().set(data);
-      return new MemRead(registers.pc().getAndIncrement());
+      return Mem.read(registers.pc().getAndIncrement());
     }
 
     @Override
-    protected MemOperation execute3(byte data) {
+    protected Mem execute3(byte data) {
       registers.ir().set(data);
       return null;
     }
@@ -619,12 +617,12 @@ public final class Ld {
     }
 
     @Override
-    protected MemOperation execute0(byte data) {
-      return new MemRead(registers.pc().getAndIncrement());
+    protected Mem execute0(byte data) {
+      return Mem.read(registers.pc().getAndIncrement());
     }
 
     @Override
-    protected MemOperation execute1(byte data) {
+    protected Mem execute1(byte data) {
       z = data;
       byte lhs = registers.sp().lo().get();
       byte rhs = z;
@@ -633,20 +631,20 @@ public final class Ld {
       registers.f().setN(false);
       registers.f().setH((lhs & 0x0f) + (rhs & 0x0f) > 0x0f);
       registers.f().setC(Byte.toUnsignedInt(lhs) + Byte.toUnsignedInt(rhs) > 0xff);
-      return new MemRead((short) 0);
+      return Mem.read((short) 0);
     }
 
     @Override
-    protected MemOperation execute2(byte data) {
+    protected Mem execute2(byte data) {
       byte lhs = registers.sp().hi().get();
       byte rhs = (byte) ((z & 0x80) != 0 ? 0xff : 0);
       byte carry = (byte) (registers.f().getC() ? 1 : 0);
       registers.h().set((byte) (lhs + rhs + carry));
-      return new MemRead(registers.pc().getAndIncrement());
+      return Mem.read(registers.pc().getAndIncrement());
     }
 
     @Override
-    protected MemOperation execute3(byte data) {
+    protected Mem execute3(byte data) {
       registers.ir().set(data);
       return null;
     }

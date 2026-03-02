@@ -1,9 +1,7 @@
 package com.zacharyhirsch.moldygameboy.emulator.cpu.instructions;
 
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
-import com.zacharyhirsch.moldygameboy.emulator.memory.MemOperation;
-import com.zacharyhirsch.moldygameboy.emulator.memory.MemRead;
-import com.zacharyhirsch.moldygameboy.emulator.memory.MemWrite;
+
 
 public final class Inc {
 
@@ -16,23 +14,23 @@ public final class Inc {
     }
 
     @Override
-    protected MemOperation execute0(byte data) {
-      return new MemRead(registers.hl().get());
+    protected Mem execute0(byte data) {
+      return Mem.read(registers.hl().get());
     }
 
     @Override
-    protected MemOperation execute1(byte data) {
+    protected Mem execute1(byte data) {
       byte newValue = add(data, (byte) 1, 0);
-      return new MemWrite(registers.hl().get(), newValue);
+      return Mem.write(registers.hl().get(), newValue);
     }
 
     @Override
-    protected MemOperation execute2(byte data) {
-      return new MemRead(registers.pc().getAndIncrement());
+    protected Mem execute2(byte data) {
+      return Mem.read(registers.pc().getAndIncrement());
     }
 
     @Override
-    protected MemOperation execute3(byte data) {
+    protected Mem execute3(byte data) {
       registers.ir().set(data);
       return null;
     }
@@ -57,14 +55,14 @@ public final class Inc {
     }
 
     @Override
-    protected MemOperation execute0(byte data) {
+    protected Mem execute0(byte data) {
       byte newValue = add(register.get(), (byte) 1, 0);
       register.set(newValue);
-      return new MemRead(registers.pc().getAndIncrement());
+      return Mem.read(registers.pc().getAndIncrement());
     }
 
     @Override
-    protected MemOperation execute1(byte data) {
+    protected Mem execute1(byte data) {
       registers.ir().set(data);
       return null;
     }
@@ -96,17 +94,17 @@ public final class Inc {
     }
 
     @Override
-    protected MemOperation execute0(byte data) {
-      return new MemRead(register.getAndIncrement());
+    protected Mem execute0(byte data) {
+      return Mem.read(register.getAndIncrement());
     }
 
     @Override
-    protected MemOperation execute1(byte data) {
-      return new MemRead(registers.pc().getAndIncrement());
+    protected Mem execute1(byte data) {
+      return Mem.read(registers.pc().getAndIncrement());
     }
 
     @Override
-    protected MemOperation execute2(byte data) {
+    protected Mem execute2(byte data) {
       registers.ir().set(data);
       return null;
     }

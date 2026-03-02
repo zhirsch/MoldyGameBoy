@@ -27,7 +27,6 @@ java_test_suite(
     ],
     deps = [
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator",
-        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/bus",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu/registers",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/memory",

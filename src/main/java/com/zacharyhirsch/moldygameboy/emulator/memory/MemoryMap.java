@@ -1,8 +1,9 @@
 package com.zacharyhirsch.moldygameboy.emulator.memory;
 
+import com.zacharyhirsch.moldygameboy.emulator.arch.MemoryRange;
 import java.nio.ByteBuffer;
 
-public final class Memory {
+public final class MemoryMap implements MemoryRange {
 
   private final ByteBuffer boot;
   private final ByteBuffer rom;
@@ -13,7 +14,7 @@ public final class Memory {
   private final ByteBuffer waveRam;
   private final IORegisters ioRegisters;
 
-  public Memory(ByteBuffer boot, ByteBuffer rom, IORegisters ioRegisters) {
+  public MemoryMap(ByteBuffer boot, ByteBuffer rom, IORegisters ioRegisters) {
     this.boot = boot;
     this.rom = rom;
     this.vram = ByteBuffer.allocate(0x4000);
@@ -24,6 +25,7 @@ public final class Memory {
     this.ioRegisters = ioRegisters;
   }
 
+  @Override
   public byte read(short address) {
     int addr = Short.toUnsignedInt(address);
     assert 0x0000 <= addr && addr <= 0xffff;
@@ -120,6 +122,7 @@ public final class Memory {
     throw new IllegalStateException("%04x".formatted(address));
   }
 
+  @Override
   public void write(short address, byte data) {
     int addr = Short.toUnsignedInt(address);
     assert 0x0000 <= addr && addr <= 0xffff;

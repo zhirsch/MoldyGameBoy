@@ -1,13 +1,11 @@
 package com.zacharyhirsch.moldygameboy.emulator.cpu.instructions;
 
-import com.zacharyhirsch.moldygameboy.emulator.memory.MemOperation;
-
 public abstract class AbstractInstruction implements Instruction {
 
   private int i = 0;
 
   @Override
-  public final MemOperation tick(byte data) {
+  public final Mem tick(byte data) {
     return switch (i++) {
       case 0 -> execute0(data);
       case 1 -> execute1(data);
@@ -20,31 +18,31 @@ public abstract class AbstractInstruction implements Instruction {
     };
   }
 
-  protected MemOperation execute0(byte data) {
+  protected Mem execute0(byte data) {
     throw new IllegalStateException();
   }
 
-  protected MemOperation execute1(byte data) {
+  protected Mem execute1(byte data) {
     throw new IllegalStateException();
   }
 
-  protected MemOperation execute2(byte data) {
+  protected Mem execute2(byte data) {
     throw new IllegalStateException();
   }
 
-  protected MemOperation execute3(byte data) {
+  protected Mem execute3(byte data) {
     throw new IllegalStateException();
   }
 
-  protected MemOperation execute4(byte data) {
+  protected Mem execute4(byte data) {
     throw new IllegalStateException();
   }
 
-  protected MemOperation execute5(byte data) {
+  protected Mem execute5(byte data) {
     throw new IllegalStateException();
   }
 
-  protected MemOperation execute6(byte data) {
+  protected Mem execute6(byte data) {
     throw new IllegalStateException();
   }
 }
