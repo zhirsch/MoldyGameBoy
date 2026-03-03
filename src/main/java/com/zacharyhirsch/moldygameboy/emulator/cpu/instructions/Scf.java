@@ -1,5 +1,6 @@
 package com.zacharyhirsch.moldygameboy.emulator.cpu.instructions;
 
+import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.FlagsRegister;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 
 
@@ -13,9 +14,9 @@ public final class Scf extends AbstractInstruction {
 
   @Override
   protected Mem execute0(byte data) {
-    registers.f().setN(false);
-    registers.f().setH(false);
-    registers.f().setC(true);
+    registers.f().n().set(false);
+    registers.f().h().set(false);
+    registers.f().c().set(true);
     return Mem.read(registers.pc().getAndIncrement());
   }
 

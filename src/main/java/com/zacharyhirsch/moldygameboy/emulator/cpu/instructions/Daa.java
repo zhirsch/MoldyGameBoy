@@ -1,7 +1,7 @@
 package com.zacharyhirsch.moldygameboy.emulator.cpu.instructions;
 
+import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.FlagsRegister;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
-
 
 public final class Daa extends AbstractInstruction {
 
@@ -14,27 +14,27 @@ public final class Daa extends AbstractInstruction {
   @Override
   protected Mem execute0(byte data) {
     int a = Byte.toUnsignedInt(registers.a().get());
-    if (registers.f().getN()) {
+    if (registers.f().n().get()) {
       // after subtraction
-      if (registers.f().getC()) {
+      if (registers.f().c().get()) {
         a -= 0x60;
       }
-      if (registers.f().getH()) {
+      if (registers.f().h().get()) {
         a -= 0x06;
       }
     } else {
       // after addition
-      if (registers.f().getC() || a > 0x99) {
+      if (registers.f().c().get() || a > 0x99) {
         a += 0x60;
-        registers.f().setC(true);
+        registers.f().c().set(true);
       }
-      if (registers.f().getH() || (a & 0x0f) > 0x09) {
+      if (registers.f().h().get() || (a & 0x0f) > 0x09) {
         a += 0x06;
       }
     }
     registers.a().set((byte) a);
-    registers.f().setZ(((byte) a) == 0);
-    registers.f().setH(false);
+    registers.f().z().set(((byte) a) == 0);
+    registers.f().h().set(false);
     return Mem.read(registers.pc().getAndIncrement());
   }
 

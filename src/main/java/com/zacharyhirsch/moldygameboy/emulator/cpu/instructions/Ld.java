@@ -4,7 +4,6 @@ import com.zacharyhirsch.moldygameboy.emulator.arch.Register16;
 import com.zacharyhirsch.moldygameboy.emulator.arch.Register8;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 
-
 public final class Ld {
 
   private Ld() {}
@@ -37,13 +36,10 @@ public final class Ld {
   public static final class RegisterRegister16 extends AbstractInstruction {
 
     private final Registers registers;
-    private final Register16<Register8, Register8> src;
-    private final Register16<Register8, Register8> dst;
+    private final Register16 src;
+    private final Register16 dst;
 
-    public RegisterRegister16(
-        Registers registers,
-        Register16<Register8, Register8> src,
-        Register16<Register8, Register8> dst) {
+    public RegisterRegister16(Registers registers, Register16 src, Register16 dst) {
       this.registers = registers;
       this.src = src;
       this.dst = dst;
@@ -121,9 +117,9 @@ public final class Ld {
   public static final class AccumulatorIndirect extends AbstractInstruction {
 
     private final Registers registers;
-    private final Register16<Register8, Register8> register;
+    private final Register16 register;
 
-    public AccumulatorIndirect(Registers registers, Register16<Register8, Register8> register) {
+    public AccumulatorIndirect(Registers registers, Register16 register) {
       this.registers = registers;
       this.register = register;
     }
@@ -148,9 +144,9 @@ public final class Ld {
   public static final class AccumulatorIndirectDecrement extends AbstractInstruction {
 
     private final Registers registers;
-    private final Register16<Register8, Register8> register;
+    private final Register16 register;
 
-    public AccumulatorIndirectDecrement(Registers registers, Register16<Register8, Register8> register) {
+    public AccumulatorIndirectDecrement(Registers registers, Register16 register) {
       this.registers = registers;
       this.register = register;
     }
@@ -236,10 +232,9 @@ public final class Ld {
 
     private final Registers registers;
     private final Register8 src;
-    private final Register16<Register8, Register8> dst;
+    private final Register16 dst;
 
-    public IndirectRegister(
-        Registers registers, Register8 src, Register16<Register8, Register8> dst) {
+    public IndirectRegister(Registers registers, Register8 src, Register16 dst) {
       this.registers = registers;
       this.src = src;
       this.dst = dst;
@@ -343,12 +338,12 @@ public final class Ld {
   public static final class RegisterImmediate16 extends AbstractInstruction {
 
     private final Registers registers;
-    private final Register16<Register8, Register8> register;
+    private final Register16 register;
 
     private byte z;
     private byte w;
 
-    public RegisterImmediate16(Registers registers, Register16<Register8, Register8> register) {
+    public RegisterImmediate16(Registers registers, Register16 register) {
       this.registers = registers;
       this.register = register;
     }
@@ -627,10 +622,10 @@ public final class Ld {
       byte lhs = registers.sp().lo().get();
       byte rhs = z;
       registers.l().set((byte) (lhs + rhs));
-      registers.f().setZ(false);
-      registers.f().setN(false);
-      registers.f().setH((lhs & 0x0f) + (rhs & 0x0f) > 0x0f);
-      registers.f().setC(Byte.toUnsignedInt(lhs) + Byte.toUnsignedInt(rhs) > 0xff);
+      registers.f().z().set(false);
+      registers.f().n().set(false);
+      registers.f().h().set((lhs & 0x0f) + (rhs & 0x0f) > 0x0f);
+      registers.f().c().set(Byte.toUnsignedInt(lhs) + Byte.toUnsignedInt(rhs) > 0xff);
       return Mem.read((short) 0);
     }
 
@@ -638,7 +633,7 @@ public final class Ld {
     protected Mem execute2(byte data) {
       byte lhs = registers.sp().hi().get();
       byte rhs = (byte) ((z & 0x80) != 0 ? 0xff : 0);
-      byte carry = (byte) (registers.f().getC() ? 1 : 0);
+      byte carry = (byte) (registers.f().c().get() ? 1 : 0);
       registers.h().set((byte) (lhs + rhs + carry));
       return Mem.read(registers.pc().getAndIncrement());
     }

@@ -1,8 +1,8 @@
 package com.zacharyhirsch.moldygameboy.emulator.cpu.instructions;
 
 import com.zacharyhirsch.moldygameboy.emulator.arch.Register8;
+import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.FlagsRegister;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
-
 
 public final class Sub {
 
@@ -20,7 +20,7 @@ public final class Sub {
     protected Mem execute0(byte data) {
       byte result = sub(registers.a().get(), register.get(), 0);
       registers.a().set(result);
-      registers.f().setZ(result == 0);
+      registers.f().z().set(result == 0);
       return Mem.read(registers.pc().getAndIncrement());
     }
 
@@ -31,9 +31,9 @@ public final class Sub {
     }
 
     private byte sub(byte lhs, byte rhs, int carry) {
-      registers.f().setN(true);
-      registers.f().setH((lhs & 0x0f) - (rhs & 0x0f) - carry < 0);
-      registers.f().setC(Byte.toUnsignedInt(lhs) - Byte.toUnsignedInt(rhs) - carry < 0);
+      registers.f().n().set(true);
+      registers.f().h().set((lhs & 0x0f) - (rhs & 0x0f) - carry < 0);
+      registers.f().c().set(Byte.toUnsignedInt(lhs) - Byte.toUnsignedInt(rhs) - carry < 0);
       return (byte) (lhs - rhs - carry);
     }
   }
@@ -55,7 +55,7 @@ public final class Sub {
     protected Mem execute1(byte data) {
       byte result = sub(registers.a().get(), data, 0);
       registers.a().set(result);
-      registers.f().setZ(result == 0);
+      registers.f().z().set(result == 0);
       return Mem.read(registers.pc().getAndIncrement());
     }
 
@@ -66,9 +66,9 @@ public final class Sub {
     }
 
     private byte sub(byte lhs, byte rhs, int carry) {
-      registers.f().setN(true);
-      registers.f().setH((lhs & 0x0f) - (rhs & 0x0f) - carry < 0);
-      registers.f().setC(Byte.toUnsignedInt(lhs) - Byte.toUnsignedInt(rhs) - carry < 0);
+      registers.f().n().set(true);
+      registers.f().h().set((lhs & 0x0f) - (rhs & 0x0f) - carry < 0);
+      registers.f().c().set(Byte.toUnsignedInt(lhs) - Byte.toUnsignedInt(rhs) - carry < 0);
       return (byte) (lhs - rhs - carry);
     }
   }
@@ -90,7 +90,7 @@ public final class Sub {
     protected Mem execute1(byte data) {
       byte result = sub(registers.a().get(), data, 0);
       registers.a().set(result);
-      registers.f().setZ(result == 0);
+      registers.f().z().set(result == 0);
       return Mem.read(registers.pc().getAndIncrement());
     }
 
@@ -101,9 +101,9 @@ public final class Sub {
     }
 
     private byte sub(byte lhs, byte rhs, int carry) {
-      registers.f().setN(true);
-      registers.f().setH((lhs & 0x0f) - (rhs & 0x0f) - carry < 0);
-      registers.f().setC(Byte.toUnsignedInt(lhs) - Byte.toUnsignedInt(rhs) - carry < 0);
+      registers.f().n().set(true);
+      registers.f().h().set((lhs & 0x0f) - (rhs & 0x0f) - carry < 0);
+      registers.f().c().set(Byte.toUnsignedInt(lhs) - Byte.toUnsignedInt(rhs) - carry < 0);
       return (byte) (lhs - rhs - carry);
     }
   }

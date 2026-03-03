@@ -1,6 +1,7 @@
 package com.zacharyhirsch.moldygameboy.emulator.cpu.instructions;
 
 import com.zacharyhirsch.moldygameboy.emulator.arch.Register8;
+import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.FlagsRegister;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 
 
@@ -22,10 +23,10 @@ public final class Swap {
       byte h = (byte) (register.get() & 0xf0);
       byte result = (byte) ((Byte.toUnsignedInt(l) << 4) | (Byte.toUnsignedInt(h) >> 4));
       register.set(result);
-      registers.f().setZ(result == 0);
-      registers.f().setN(false);
-      registers.f().setH(false);
-      registers.f().setC(false);
+      registers.f().z().set(result == 0);
+      registers.f().n().set(false);
+      registers.f().h().set(false);
+      registers.f().c().set(false);
       return Mem.read(registers.pc().getAndIncrement());
     }
 
@@ -54,10 +55,10 @@ public final class Swap {
       byte l = (byte) (data & 0x0f);
       byte h = (byte) (data & 0xf0);
       byte result = (byte) ((Byte.toUnsignedInt(l) << 4) | (Byte.toUnsignedInt(h) >> 4));
-      registers.f().setZ(result == 0);
-      registers.f().setN(false);
-      registers.f().setH(false);
-      registers.f().setC(false);
+      registers.f().z().set(result == 0);
+      registers.f().n().set(false);
+      registers.f().h().set(false);
+      registers.f().c().set(false);
       return Mem.write(registers.hl().get(), result);
     }
 

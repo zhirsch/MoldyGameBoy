@@ -1,6 +1,10 @@
 package com.zacharyhirsch.moldygameboy.emulator.arch;
 
-public record Register16<Hi extends UInt8, Lo extends UInt8>(Hi hi, Lo lo) implements UInt16 {
+public record Register16(Register8 hi, Register8 lo) {
+
+  public Register16() {
+    this(new Register8(), new Register8());
+  }
 
   public short getAndIncrement() {
     short value = get();
@@ -14,7 +18,6 @@ public record Register16<Hi extends UInt8, Lo extends UInt8>(Hi hi, Lo lo) imple
     return value;
   }
 
-  @Override
   public short get() {
     return (short) ((Byte.toUnsignedInt(hi.get()) << 8) | Byte.toUnsignedInt(lo.get()));
   }

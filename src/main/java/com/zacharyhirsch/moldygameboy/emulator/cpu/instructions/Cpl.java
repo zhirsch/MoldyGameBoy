@@ -1,5 +1,6 @@
 package com.zacharyhirsch.moldygameboy.emulator.cpu.instructions;
 
+import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.FlagsRegister;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 
 
@@ -14,8 +15,8 @@ public final class Cpl extends AbstractInstruction {
   @Override
   protected Mem execute0(byte data) {
     registers.a().set((byte) ~registers.a().get());
-    registers.f().setN(true);
-    registers.f().setH(true);
+    registers.f().n().set(true);
+    registers.f().h().set(true);
     return Mem.read(registers.pc().getAndIncrement());
   }
 

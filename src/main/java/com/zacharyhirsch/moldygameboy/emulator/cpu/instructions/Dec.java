@@ -2,7 +2,6 @@ package com.zacharyhirsch.moldygameboy.emulator.cpu.instructions;
 
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 
-
 public final class Dec {
 
   public static final class Indirect extends AbstractInstruction {
@@ -36,9 +35,9 @@ public final class Dec {
     }
 
     private byte sub(byte lhs, byte rhs, int carry) {
-      registers.f().setZ(lhs - rhs - carry == 0);
-      registers.f().setN(true);
-      registers.f().setH((lhs & 0x0f) - (rhs & 0x0f) - carry < 0);
+      registers.f().z().set(lhs - rhs - carry == 0);
+      registers.f().n().set(true);
+      registers.f().h().set((lhs & 0x0f) - (rhs & 0x0f) - carry < 0);
       return (byte) (lhs - rhs - carry);
     }
   }
@@ -68,9 +67,9 @@ public final class Dec {
     }
 
     private byte sub(byte lhs, byte rhs, int carry) {
-      registers.f().setZ(lhs - rhs - carry == 0);
-      registers.f().setN(true);
-      registers.f().setH((lhs & 0x0f) - (rhs & 0x0f) - carry < 0);
+      registers.f().z().set(lhs - rhs - carry == 0);
+      registers.f().n().set(true);
+      registers.f().h().set((lhs & 0x0f) - (rhs & 0x0f) - carry < 0);
       return (byte) (lhs - rhs - carry);
     }
   }
@@ -78,17 +77,10 @@ public final class Dec {
   public static final class Register16 extends AbstractInstruction {
 
     private final Registers registers;
-    private final com.zacharyhirsch.moldygameboy.emulator.arch.Register16<
-            com.zacharyhirsch.moldygameboy.emulator.arch.Register8,
-            com.zacharyhirsch.moldygameboy.emulator.arch.Register8>
-        register;
+    private final com.zacharyhirsch.moldygameboy.emulator.arch.Register16 register;
 
     public Register16(
-        Registers registers,
-        com.zacharyhirsch.moldygameboy.emulator.arch.Register16<
-                com.zacharyhirsch.moldygameboy.emulator.arch.Register8,
-                com.zacharyhirsch.moldygameboy.emulator.arch.Register8>
-            register) {
+        Registers registers, com.zacharyhirsch.moldygameboy.emulator.arch.Register16 register) {
       this.registers = registers;
       this.register = register;
     }

@@ -1,6 +1,7 @@
 package com.zacharyhirsch.moldygameboy.emulator.cpu.instructions;
 
 import com.zacharyhirsch.moldygameboy.emulator.arch.Register8;
+import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.FlagsRegister;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 
 
@@ -20,10 +21,10 @@ public final class Xor {
     protected Mem execute0(byte data) {
       byte result = (byte) (registers.a().get() ^ register.get());
       registers.a().set(result);
-      registers.f().setZ(result == 0);
-      registers.f().setN(false);
-      registers.f().setH(false);
-      registers.f().setC(false);
+      registers.f().z().set(result == 0);
+      registers.f().n().set(false);
+      registers.f().h().set(false);
+      registers.f().c().set(false);
       return Mem.read(registers.pc().getAndIncrement());
     }
 
@@ -51,10 +52,10 @@ public final class Xor {
     protected Mem execute1(byte data) {
       byte result = (byte) (registers.a().get() ^ data);
       registers.a().set(result);
-      registers.f().setZ(result == 0);
-      registers.f().setN(false);
-      registers.f().setH(false);
-      registers.f().setC(false);
+      registers.f().z().set(result == 0);
+      registers.f().n().set(false);
+      registers.f().h().set(false);
+      registers.f().c().set(false);
       return Mem.read(registers.pc().getAndIncrement());
     }
 
@@ -82,10 +83,10 @@ public final class Xor {
     protected Mem execute1(byte data) {
       byte result = (byte) (registers.a().get() ^ data);
       registers.a().set(result);
-      registers.f().setZ(result == 0);
-      registers.f().setN(false);
-      registers.f().setH(false);
-      registers.f().setC(false);
+      registers.f().z().set(result == 0);
+      registers.f().n().set(false);
+      registers.f().h().set(false);
+      registers.f().c().set(false);
       return Mem.read(registers.pc().getAndIncrement());
     }
 

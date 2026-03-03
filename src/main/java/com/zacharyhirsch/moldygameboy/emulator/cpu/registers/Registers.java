@@ -6,24 +6,24 @@ import com.zacharyhirsch.moldygameboy.emulator.arch.Register8;
 public record Registers(
     Register8 ir,
     Register8 ie,
-    Register16<Register8, FlagsRegister> af,
-    Register16<Register8, Register8> bc,
-    Register16<Register8, Register8> de,
-    Register16<Register8, Register8> hl,
-    Register16<Register8, Register8> pc,
-    Register16<Register8, Register8> sp,
+    Register16 af,
+    Register16 bc,
+    Register16 de,
+    Register16 hl,
+    Register16 pc,
+    Register16 sp,
     Ime ime) {
 
   public Registers() {
     this(
         new Register8(),
         new Register8(),
-        new Register16<>(new Register8(), new FlagsRegister()),
-        new Register16<>(new Register8(), new Register8()),
-        new Register16<>(new Register8(), new Register8()),
-        new Register16<>(new Register8(), new Register8()),
-        new Register16<>(new Register8(), new Register8()),
-        new Register16<>(new Register8(), new Register8()),
+        new Register16(),
+        new Register16(),
+        new Register16(),
+        new Register16(),
+        new Register16(),
+        new Register16(),
         new Ime());
   }
 
@@ -32,7 +32,7 @@ public record Registers(
   }
 
   public FlagsRegister f() {
-    return af().lo();
+    return new FlagsRegister(af().lo());
   }
 
   public Register8 b() {

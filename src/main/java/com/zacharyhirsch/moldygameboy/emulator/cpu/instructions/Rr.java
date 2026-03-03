@@ -1,6 +1,7 @@
 package com.zacharyhirsch.moldygameboy.emulator.cpu.instructions;
 
 import com.zacharyhirsch.moldygameboy.emulator.arch.Register8;
+import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.FlagsRegister;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 
 
@@ -19,13 +20,13 @@ public final class Rr {
     @Override
     protected Mem execute0(byte data) {
       boolean b0 = (register.get() & 0x01) != 0;
-      byte carry = (byte) (registers.f().getC() ? 0x80 : 0x00);
+      byte carry = (byte) (registers.f().c().get() ? 0x80 : 0x00);
       byte result = (byte) ((Byte.toUnsignedInt(register.get()) >>> 1) | carry);
       register.set(result);
-      registers.f().setZ(result == 0);
-      registers.f().setN(false);
-      registers.f().setH(false);
-      registers.f().setC(b0);
+      registers.f().z().set(result == 0);
+      registers.f().n().set(false);
+      registers.f().h().set(false);
+      registers.f().c().set(b0);
       return Mem.read(registers.pc().getAndIncrement());
     }
 
@@ -52,12 +53,12 @@ public final class Rr {
     @Override
     protected Mem execute1(byte data) {
       boolean b0 = (data & 0x01) != 0;
-      byte carry = (byte) (registers.f().getC() ? 0x80 : 0x00);
+      byte carry = (byte) (registers.f().c().get() ? 0x80 : 0x00);
       byte result = (byte) ((Byte.toUnsignedInt(data) >>> 1) | carry);
-      registers.f().setZ(result == 0);
-      registers.f().setN(false);
-      registers.f().setH(false);
-      registers.f().setC(b0);
+      registers.f().z().set(result == 0);
+      registers.f().n().set(false);
+      registers.f().h().set(false);
+      registers.f().c().set(b0);
       return Mem.write(registers.hl().get(), result);
     }
 

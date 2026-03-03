@@ -1,5 +1,6 @@
 package com.zacharyhirsch.moldygameboy.emulator.cpu.instructions;
 
+import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.FlagsRegister;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 
 
@@ -15,10 +16,10 @@ public final class Rrca extends AbstractInstruction {
   protected Mem execute0(byte data) {
     boolean b0 = (registers.a().get() & 0x01) != 0;
     registers.a().set((byte) ((Byte.toUnsignedInt(registers.a().get()) >>> 1) | (b0 ? 0x80 : 0)));
-    registers.f().setZ(false);
-    registers.f().setN(false);
-    registers.f().setH(false);
-    registers.f().setC(b0);
+    registers.f().z().set(false);
+    registers.f().n().set(false);
+    registers.f().h().set(false);
+    registers.f().c().set(b0);
     return Mem.read(registers.pc().getAndIncrement());
   }
 

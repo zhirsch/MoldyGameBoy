@@ -1,6 +1,7 @@
 package com.zacharyhirsch.moldygameboy.emulator.cpu.instructions;
 
 import com.zacharyhirsch.moldygameboy.emulator.arch.Register8;
+import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.FlagsRegister;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 
 
@@ -20,9 +21,9 @@ public final class Bit {
 
     @Override
     protected Mem execute0(byte data) {
-      registers.f().setZ((register.get() & (1 << index)) == 0);
-      registers.f().setN(false);
-      registers.f().setH(true);
+      registers.f().z().set((register.get() & (1 << index)) == 0);
+      registers.f().n().set(false);
+      registers.f().h().set(true);
       return Mem.read(registers.pc().getAndIncrement());
     }
 
@@ -50,9 +51,9 @@ public final class Bit {
 
     @Override
     protected Mem execute1(byte data) {
-      registers.f().setZ((data & (1 << index)) == 0);
-      registers.f().setN(false);
-      registers.f().setH(true);
+      registers.f().z().set((data & (1 << index)) == 0);
+      registers.f().n().set(false);
+      registers.f().h().set(true);
       return Mem.read(registers.pc().getAndIncrement());
     }
 

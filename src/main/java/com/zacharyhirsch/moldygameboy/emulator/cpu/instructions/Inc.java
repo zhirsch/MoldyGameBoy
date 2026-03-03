@@ -2,7 +2,6 @@ package com.zacharyhirsch.moldygameboy.emulator.cpu.instructions;
 
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 
-
 public final class Inc {
 
   public static final class Indirect extends AbstractInstruction {
@@ -36,9 +35,9 @@ public final class Inc {
     }
 
     private byte add(byte lhs, byte rhs, int carry) {
-      registers.f().setZ(lhs + rhs + carry == 0);
-      registers.f().setN(false);
-      registers.f().setH((lhs & 0x0f) + (rhs & 0x0f) + carry > 0x0f);
+      registers.f().z().set(lhs + rhs + carry == 0);
+      registers.f().n().set(false);
+      registers.f().h().set((lhs & 0x0f) + (rhs & 0x0f) + carry > 0x0f);
       return (byte) (lhs + rhs + carry);
     }
   }
@@ -68,9 +67,9 @@ public final class Inc {
     }
 
     private byte add(byte lhs, byte rhs, int carry) {
-      registers.f().setZ(lhs + rhs + carry == 0);
-      registers.f().setN(false);
-      registers.f().setH((lhs & 0x0f) + (rhs & 0x0f) + carry > 0x0f);
+      registers.f().z().set(lhs + rhs + carry == 0);
+      registers.f().n().set(false);
+      registers.f().h().set((lhs & 0x0f) + (rhs & 0x0f) + carry > 0x0f);
       return (byte) (lhs + rhs + carry);
     }
   }
@@ -78,17 +77,10 @@ public final class Inc {
   public static final class Register16 extends AbstractInstruction {
 
     private final Registers registers;
-    private final com.zacharyhirsch.moldygameboy.emulator.arch.Register16<
-            com.zacharyhirsch.moldygameboy.emulator.arch.Register8,
-            com.zacharyhirsch.moldygameboy.emulator.arch.Register8>
-        register;
+    private final com.zacharyhirsch.moldygameboy.emulator.arch.Register16 register;
 
     public Register16(
-        Registers registers,
-        com.zacharyhirsch.moldygameboy.emulator.arch.Register16<
-                com.zacharyhirsch.moldygameboy.emulator.arch.Register8,
-                com.zacharyhirsch.moldygameboy.emulator.arch.Register8>
-            register) {
+        Registers registers, com.zacharyhirsch.moldygameboy.emulator.arch.Register16 register) {
       this.registers = registers;
       this.register = register;
     }

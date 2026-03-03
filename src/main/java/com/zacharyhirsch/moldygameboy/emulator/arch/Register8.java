@@ -1,6 +1,6 @@
 package com.zacharyhirsch.moldygameboy.emulator.arch;
 
-public final class Register8 implements UInt8 {
+public final class Register8 {
 
   private byte value;
 
@@ -8,12 +8,10 @@ public final class Register8 implements UInt8 {
     this.value = 0;
   }
 
-  @Override
   public byte get() {
     return value;
   }
 
-  @Override
   public void set(byte value) {
     this.value = value;
   }
