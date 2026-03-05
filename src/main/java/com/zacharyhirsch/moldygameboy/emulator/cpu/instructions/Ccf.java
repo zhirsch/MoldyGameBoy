@@ -1,5 +1,6 @@
 package com.zacharyhirsch.moldygameboy.emulator.cpu.instructions;
 
+import com.zacharyhirsch.moldygameboy.emulator.cpu.alu.Alu;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 
 public final class Ccf extends AbstractInstruction {
@@ -12,9 +13,10 @@ public final class Ccf extends AbstractInstruction {
 
   @Override
   protected Mem execute0(byte data) {
-    registers.f().n().set(false);
-    registers.f().h().set(false);
-    registers.f().c().set(!registers.f().c().get());
+    Alu.Result result = Alu.ccf(registers.f().c().get());
+    registers.f().n().set(result.n());
+    registers.f().h().set(result.h());
+    registers.f().c().set(result.c());
     return Mem.read(registers.pc().getAndIncrement());
   }
 

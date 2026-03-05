@@ -2,6 +2,7 @@ package com.zacharyhirsch.moldygameboy.emulator.cpu.instructions;
 
 import com.zacharyhirsch.moldygameboy.emulator.arch.Register16;
 import com.zacharyhirsch.moldygameboy.emulator.arch.Register8;
+import com.zacharyhirsch.moldygameboy.emulator.cpu.alu.Alu;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 
 public final class Add {
@@ -18,9 +19,12 @@ public final class Add {
 
     @Override
     protected Mem execute0(byte data) {
-      byte result = add(registers.a().get(), register.get(), 0);
-      registers.a().set(result);
-      registers.f().z().set(result == 0);
+      Alu.Result result = Alu.add(registers.a().get(), register.get(), false);
+      registers.a().set(result.result());
+      registers.f().z().set(result.z());
+      registers.f().n().set(result.n());
+      registers.f().h().set(result.h());
+      registers.f().c().set(result.c());
       return Mem.read(registers.pc().getAndIncrement());
     }
 
@@ -28,13 +32,6 @@ public final class Add {
     protected Mem execute1(byte data) {
       registers.ir().set(data);
       return null;
-    }
-
-    private byte add(byte lhs, byte rhs, int carry) {
-      registers.f().n().set(false);
-      registers.f().h().set((lhs & 0x0f) + (rhs & 0x0f) + carry > 0x0f);
-      registers.f().c().set(Byte.toUnsignedInt(lhs) + Byte.toUnsignedInt(rhs) + carry > 0xff);
-      return (byte) (lhs + rhs + carry);
     }
   }
 
@@ -53,9 +50,12 @@ public final class Add {
 
     @Override
     protected Mem execute1(byte data) {
-      byte result = add(registers.a().get(), data, 0);
-      registers.a().set(result);
-      registers.f().z().set(result == 0);
+      Alu.Result result = Alu.add(registers.a().get(), data, false);
+      registers.a().set(result.result());
+      registers.f().z().set(result.z());
+      registers.f().n().set(result.n());
+      registers.f().h().set(result.h());
+      registers.f().c().set(result.c());
       return Mem.read(registers.pc().getAndIncrement());
     }
 
@@ -63,13 +63,6 @@ public final class Add {
     protected Mem execute2(byte data) {
       registers.ir().set(data);
       return null;
-    }
-
-    private byte add(byte lhs, byte rhs, int carry) {
-      registers.f().n().set(false);
-      registers.f().h().set((lhs & 0x0f) + (rhs & 0x0f) + carry > 0x0f);
-      registers.f().c().set(Byte.toUnsignedInt(lhs) + Byte.toUnsignedInt(rhs) + carry > 0xff);
-      return (byte) (lhs + rhs + carry);
     }
   }
 
@@ -88,9 +81,12 @@ public final class Add {
 
     @Override
     protected Mem execute1(byte data) {
-      byte result = add(registers.a().get(), data, 0);
-      registers.a().set(result);
-      registers.f().z().set(result == 0);
+      Alu.Result result = Alu.add(registers.a().get(), data, false);
+      registers.a().set(result.result());
+      registers.f().z().set(result.z());
+      registers.f().n().set(result.n());
+      registers.f().h().set(result.h());
+      registers.f().c().set(result.c());
       return Mem.read(registers.pc().getAndIncrement());
     }
 
@@ -98,13 +94,6 @@ public final class Add {
     protected Mem execute2(byte data) {
       registers.ir().set(data);
       return null;
-    }
-
-    private byte add(byte lhs, byte rhs, int carry) {
-      registers.f().n().set(false);
-      registers.f().h().set((lhs & 0x0f) + (rhs & 0x0f) + carry > 0x0f);
-      registers.f().c().set(Byte.toUnsignedInt(lhs) + Byte.toUnsignedInt(rhs) + carry > 0xff);
-      return (byte) (lhs + rhs + carry);
     }
   }
 
@@ -122,22 +111,23 @@ public final class Add {
 
     @Override
     protected Mem execute0(byte data) {
-      lhs.lo().set(add(lhs.lo().get(), rhs.lo().get(), 0));
+      Alu.Result result = Alu.add(lhs.lo().get(), rhs.lo().get(), false);
+      registers.f().n().set(result.n());
+      registers.f().h().set(result.h());
+      registers.f().c().set(result.c());
+      lhs.lo().set(result.result());
       return Mem.read(registers.pc().getAndIncrement());
     }
 
     @Override
     protected Mem execute1(byte data) {
-      lhs.hi().set(add(lhs.hi().get(), rhs.hi().get(), registers.f().c().get() ? 1 : 0));
+      Alu.Result result = Alu.add(lhs.hi().get(), rhs.hi().get(), registers.f().c().get());
+      lhs.hi().set(result.result());
+      registers.f().n().set(result.n());
+      registers.f().h().set(result.h());
+      registers.f().c().set(result.c());
       registers.ir().set(data);
       return null;
-    }
-
-    private byte add(byte lhs, byte rhs, int carry) {
-      registers.f().n().set(false);
-      registers.f().h().set((lhs & 0x0f) + (rhs & 0x0f) + carry > 0x0f);
-      registers.f().c().set(Byte.toUnsignedInt(lhs) + Byte.toUnsignedInt(rhs) + carry > 0xff);
-      return (byte) (lhs + rhs + carry);
     }
   }
 
@@ -159,22 +149,19 @@ public final class Add {
     @Override
     protected Mem execute1(byte data) {
       z = data;
-      byte lhs = registers.sp().lo().get();
-      byte rhs = z;
-      registers.sp().lo().set((byte) (Byte.toUnsignedInt(lhs) + rhs));
-      registers.f().z().set(false);
-      registers.f().n().set(false);
-      registers.f().h().set((lhs & 0x0f) + (rhs & 0x0f) > 0x0f);
-      registers.f().c().set(Byte.toUnsignedInt(lhs) + Byte.toUnsignedInt(rhs) > 0xff);
+      Alu.Result result = Alu.add(registers.sp().lo().get(), z, false);
+      registers.sp().lo().set(result.result());
+      registers.f().z().set(result.z());
+      registers.f().n().set(result.n());
+      registers.f().h().set(result.h());
+      registers.f().c().set(result.c());
       return Mem.read((short) 0);
     }
 
     @Override
     protected Mem execute2(byte data) {
-      byte lhs = registers.sp().hi().get();
-      byte rhs = (byte) ((z & 0x80) != 0 ? 0xff : 0);
-      byte carry = (byte) (registers.f().c().get() ? 1 : 0);
-      registers.sp().hi().set((byte) (Byte.toUnsignedInt(lhs) + rhs + carry));
+      var result = Alu.add(registers.sp().hi().get(), (byte) (z >> 7), registers.f().c().get());
+      registers.sp().hi().set(result.result());
       return Mem.read((short) 0);
     }
 

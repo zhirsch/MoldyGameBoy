@@ -1,5 +1,6 @@
 package com.zacharyhirsch.moldygameboy.emulator.cpu.instructions;
 
+import com.zacharyhirsch.moldygameboy.emulator.cpu.alu.Alu;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 
 public final class Dec {
@@ -19,8 +20,11 @@ public final class Dec {
 
     @Override
     protected Mem execute1(byte data) {
-      byte newValue = sub(data, (byte) 1, 0);
-      return Mem.write(registers.hl().get(), newValue);
+      Alu.Result result = Alu.sub(data, (byte) 1, (byte) 0);
+      registers.f().z().set(result.z());
+      registers.f().n().set(result.n());
+      registers.f().h().set(result.h());
+      return Mem.write(registers.hl().get(), result.result());
     }
 
     @Override
@@ -32,13 +36,6 @@ public final class Dec {
     protected Mem execute3(byte data) {
       registers.ir().set(data);
       return null;
-    }
-
-    private byte sub(byte lhs, byte rhs, int carry) {
-      registers.f().z().set(lhs - rhs - carry == 0);
-      registers.f().n().set(true);
-      registers.f().h().set((lhs & 0x0f) - (rhs & 0x0f) - carry < 0);
-      return (byte) (lhs - rhs - carry);
     }
   }
 
@@ -55,8 +52,11 @@ public final class Dec {
 
     @Override
     protected Mem execute0(byte data) {
-      byte newValue = sub(register.get(), (byte) 1, 0);
-      register.set(newValue);
+      Alu.Result result = Alu.sub(register.get(), (byte) 1, (byte) 0);
+      register.set(result.result());
+      registers.f().z().set(result.z());
+      registers.f().n().set(result.n());
+      registers.f().h().set(result.h());
       return Mem.read(registers.pc().getAndIncrement());
     }
 
@@ -64,13 +64,6 @@ public final class Dec {
     protected Mem execute1(byte data) {
       registers.ir().set(data);
       return null;
-    }
-
-    private byte sub(byte lhs, byte rhs, int carry) {
-      registers.f().z().set(lhs - rhs - carry == 0);
-      registers.f().n().set(true);
-      registers.f().h().set((lhs & 0x0f) - (rhs & 0x0f) - carry < 0);
-      return (byte) (lhs - rhs - carry);
     }
   }
 

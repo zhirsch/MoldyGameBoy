@@ -1,5 +1,6 @@
 package com.zacharyhirsch.moldygameboy.emulator.cpu.instructions;
 
+import com.zacharyhirsch.moldygameboy.emulator.cpu.alu.Alu;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 
 public final class Inc {
@@ -19,8 +20,11 @@ public final class Inc {
 
     @Override
     protected Mem execute1(byte data) {
-      byte newValue = add(data, (byte) 1, 0);
-      return Mem.write(registers.hl().get(), newValue);
+      Alu.Result result = Alu.add(data, (byte) 1, false);
+      registers.f().z().set(result.z());
+      registers.f().n().set(result.n());
+      registers.f().h().set(result.h());
+      return Mem.write(registers.hl().get(), result.result());
     }
 
     @Override
@@ -32,13 +36,6 @@ public final class Inc {
     protected Mem execute3(byte data) {
       registers.ir().set(data);
       return null;
-    }
-
-    private byte add(byte lhs, byte rhs, int carry) {
-      registers.f().z().set(lhs + rhs + carry == 0);
-      registers.f().n().set(false);
-      registers.f().h().set((lhs & 0x0f) + (rhs & 0x0f) + carry > 0x0f);
-      return (byte) (lhs + rhs + carry);
     }
   }
 
@@ -55,8 +52,11 @@ public final class Inc {
 
     @Override
     protected Mem execute0(byte data) {
-      byte newValue = add(register.get(), (byte) 1, 0);
-      register.set(newValue);
+      Alu.Result result = Alu.add(register.get(), (byte) 1, false);
+      register.set(result.result());
+      registers.f().z().set(result.z());
+      registers.f().n().set(result.n());
+      registers.f().h().set(result.h());
       return Mem.read(registers.pc().getAndIncrement());
     }
 
@@ -66,12 +66,6 @@ public final class Inc {
       return null;
     }
 
-    private byte add(byte lhs, byte rhs, int carry) {
-      registers.f().z().set(lhs + rhs + carry == 0);
-      registers.f().n().set(false);
-      registers.f().h().set((lhs & 0x0f) + (rhs & 0x0f) + carry > 0x0f);
-      return (byte) (lhs + rhs + carry);
-    }
   }
 
   public static final class Register16 extends AbstractInstruction {

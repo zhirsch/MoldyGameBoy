@@ -1,6 +1,5 @@
 package com.zacharyhirsch.moldygameboy.emulator.cpu.instructions;
 
-import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.FlagsRegister;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 
 public final class Daa extends AbstractInstruction {

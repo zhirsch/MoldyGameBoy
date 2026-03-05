@@ -7,6 +7,8 @@ maven = use_extension("@rules_jvm_external//:extensions.bzl", "maven")
 maven.install(
     artifacts = [
         "ch.qos.logback:logback-classic:1.5.22",
+        "com.google.auto.value:auto-value-annotations:1.11.1",
+        "com.google.auto.value:auto-value:1.11.1",
         "com.google.guava:guava:33.5.0-jre",
         "com.google.truth:truth:1.4.5",
         "net.java.dev.jna:jna:5.18.1",

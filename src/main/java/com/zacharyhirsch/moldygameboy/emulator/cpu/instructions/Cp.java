@@ -1,9 +1,8 @@
 package com.zacharyhirsch.moldygameboy.emulator.cpu.instructions;
 
 import com.zacharyhirsch.moldygameboy.emulator.arch.Register8;
-import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.FlagsRegister;
+import com.zacharyhirsch.moldygameboy.emulator.cpu.alu.Alu;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
-
 
 public final class Cp {
 
@@ -24,7 +23,11 @@ public final class Cp {
 
     @Override
     protected Mem execute1(byte data) {
-      sub(registers.a().get(), data, 0);
+      Alu.Result result = Alu.sub(registers.a().get(), data, (byte) 0);
+      registers.f().z().set(result.z());
+      registers.f().n().set(result.n());
+      registers.f().h().set(result.h());
+      registers.f().c().set(result.c());
       return Mem.read(registers.pc().getAndIncrement());
     }
 
@@ -32,14 +35,6 @@ public final class Cp {
     protected Mem execute2(byte data) {
       registers.ir().set(data);
       return null;
-    }
-
-    private byte sub(byte lhs, byte rhs, int carry) {
-      registers.f().z().set(lhs - rhs - carry == 0);
-      registers.f().n().set(true);
-      registers.f().h().set((lhs & 0x0f) - (rhs & 0x0f) - carry < 0);
-      registers.f().c().set(Byte.toUnsignedInt(lhs) - Byte.toUnsignedInt(rhs) - carry < 0);
-      return (byte) (lhs - rhs - carry);
     }
   }
 
@@ -58,7 +53,11 @@ public final class Cp {
 
     @Override
     protected Mem execute1(byte data) {
-      sub(registers.a().get(), data, 0);
+      Alu.Result result = Alu.sub(registers.a().get(), data, (byte) 0);
+      registers.f().z().set(result.z());
+      registers.f().n().set(result.n());
+      registers.f().h().set(result.h());
+      registers.f().c().set(result.c());
       return Mem.read(registers.pc().getAndIncrement());
     }
 
@@ -66,14 +65,6 @@ public final class Cp {
     protected Mem execute2(byte data) {
       registers.ir().set(data);
       return null;
-    }
-
-    private byte sub(byte lhs, byte rhs, int carry) {
-      registers.f().z().set(lhs - rhs - carry == 0);
-      registers.f().n().set(true);
-      registers.f().h().set((lhs & 0x0f) - (rhs & 0x0f) - carry < 0);
-      registers.f().c().set(Byte.toUnsignedInt(lhs) - Byte.toUnsignedInt(rhs) - carry < 0);
-      return (byte) (lhs - rhs - carry);
     }
   }
 
@@ -89,7 +80,11 @@ public final class Cp {
 
     @Override
     protected Mem execute0(byte data) {
-      sub(registers.a().get(), rhs.get(), 0);
+      Alu.Result result = Alu.sub(registers.a().get(), rhs.get(), (byte) 0);
+      registers.f().z().set(result.z());
+      registers.f().n().set(result.n());
+      registers.f().h().set(result.h());
+      registers.f().c().set(result.c());
       return Mem.read(registers.pc().getAndIncrement());
     }
 
@@ -97,14 +92,6 @@ public final class Cp {
     protected Mem execute1(byte data) {
       registers.ir().set(data);
       return null;
-    }
-
-    private byte sub(byte lhs, byte rhs, int carry) {
-      registers.f().z().set(lhs - rhs - carry == 0);
-      registers.f().n().set(true);
-      registers.f().h().set((lhs & 0x0f) - (rhs & 0x0f) - carry < 0);
-      registers.f().c().set(Byte.toUnsignedInt(lhs) - Byte.toUnsignedInt(rhs) - carry < 0);
-      return (byte) (lhs - rhs - carry);
     }
   }
 }

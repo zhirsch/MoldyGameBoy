@@ -2,6 +2,7 @@ package com.zacharyhirsch.moldygameboy.emulator.cpu.instructions;
 
 import com.zacharyhirsch.moldygameboy.emulator.arch.Register16;
 import com.zacharyhirsch.moldygameboy.emulator.arch.Register8;
+import com.zacharyhirsch.moldygameboy.emulator.cpu.alu.Alu;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 
 public final class Ld {
@@ -531,13 +532,6 @@ public final class Ld {
       this.registers = registers;
     }
 
-    /*
-    //    byte z = read(registers.pc().getAndIncrement());
-    //    byte w = read(registers.pc().getAndIncrement());
-    //    registers.a().set(read((short) ((Byte.toUnsignedInt(w) << 8) | Byte.toUnsignedInt(z))));
-    //    registers.ir().set(read(registers.pc().getAndIncrement()));
-       */
-
     @Override
     protected Mem execute0(byte data) {
       return Mem.read(registers.pc().getAndIncrement());
@@ -619,22 +613,19 @@ public final class Ld {
     @Override
     protected Mem execute1(byte data) {
       z = data;
-      byte lhs = registers.sp().lo().get();
-      byte rhs = z;
-      registers.l().set((byte) (lhs + rhs));
-      registers.f().z().set(false);
-      registers.f().n().set(false);
-      registers.f().h().set((lhs & 0x0f) + (rhs & 0x0f) > 0x0f);
-      registers.f().c().set(Byte.toUnsignedInt(lhs) + Byte.toUnsignedInt(rhs) > 0xff);
+      Alu.Result result = Alu.add(registers.sp().lo().get(), z, false);
+      registers.hl().lo().set(result.result());
+      registers.f().z().set(result.z());
+      registers.f().n().set(result.n());
+      registers.f().h().set(result.h());
+      registers.f().c().set(result.c());
       return Mem.read((short) 0);
     }
 
     @Override
     protected Mem execute2(byte data) {
-      byte lhs = registers.sp().hi().get();
-      byte rhs = (byte) ((z & 0x80) != 0 ? 0xff : 0);
-      byte carry = (byte) (registers.f().c().get() ? 1 : 0);
-      registers.h().set((byte) (lhs + rhs + carry));
+      var result = Alu.add(registers.sp().hi().get(), (byte) (z >> 7), registers.f().c().get());
+      registers.hl().hi().set(result.result());
       return Mem.read(registers.pc().getAndIncrement());
     }
 

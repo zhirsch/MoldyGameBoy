@@ -28,7 +28,7 @@ public final class FlagsRegister {
   }
 
   public void set(byte value) {
-    register.set(value);
+    register.set((byte) (value & 0b1111_0000));
   }
 
   public Flag z() {
