@@ -5,4 +5,6 @@ public interface MemoryRange {
   byte read(short address);
 
   void write(short address, byte data);
+
+  void none(short address);
 }

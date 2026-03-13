@@ -1,10 +1,9 @@
 package com.zacharyhirsch.moldygameboy.emulator.cpu.instructions;
 
-import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.FlagsRegister;
+import com.zacharyhirsch.moldygameboy.emulator.cpu.alu.Alu;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 
-
-public final class Rrca extends AbstractInstruction {
+public final class Rrca extends AbstractInstruction1 {
 
   private final Registers registers;
 
@@ -13,19 +12,13 @@ public final class Rrca extends AbstractInstruction {
   }
 
   @Override
-  protected Mem execute0(byte data) {
-    boolean b0 = (registers.a().get() & 0x01) != 0;
-    registers.a().set((byte) ((Byte.toUnsignedInt(registers.a().get()) >>> 1) | (b0 ? 0x80 : 0)));
-    registers.f().z().set(false);
-    registers.f().n().set(false);
-    registers.f().h().set(false);
-    registers.f().c().set(b0);
-    return Mem.read(registers.pc().getAndIncrement());
-  }
-
-  @Override
-  protected Mem execute1(byte data) {
-    registers.ir().set(data);
-    return null;
+  protected Mem execute0() {
+    Alu.Result result = Alu.rrc(registers.a().get());
+    registers.a().set(result.result());
+    registers.f().z().set(result.z());
+    registers.f().n().set(result.n());
+    registers.f().h().set(result.h());
+    registers.f().c().set(result.c());
+    return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
   }
 }

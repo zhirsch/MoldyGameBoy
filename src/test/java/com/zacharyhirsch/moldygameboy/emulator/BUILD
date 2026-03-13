@@ -1,11 +1,33 @@
-load("@contrib_rules_jvm//java:defs.bzl", "java_test_suite")
+load("@contrib_rules_jvm//java:defs.bzl", "JUNIT5_DEPS", "JUNIT5_RUNTIME_DEPS", "java_junit5_test")
 load("@rules_jvm_external//:defs.bzl", "artifact")
 
-java_test_suite(
-    name = "AllTests",
-    srcs = glob(["*.java"]),
+java_junit5_test(
+    name = "SingleStepCpuTest",
+    srcs = ["SingleStepCpuTest.java"],
+    data = ["//:sm83-v1-files"],
+    jvm_flags = ["-Djava.security.manager=disallow"],
+    resources = ["//src/test/resources:junit-platform.properties"],
+    deps = [
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator",
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/arch",
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu",
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu/registers",
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/memory",
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/timer",
+        artifact("com.google.code.gson:gson"),
+        artifact("com.google.guava:guava"),
+        artifact("com.google.truth:truth"),
+        artifact("org.junit.jupiter:junit-jupiter-api"),
+        artifact("org.junit.jupiter:junit-jupiter-params"),
+    ] + JUNIT5_DEPS,
+)
+
+java_junit5_test(
+    name = "BlarggCpuInstrTest",
+    srcs = ["BlarggCpuInstrTest.java"],
     jvm_flags = ["-Djava.security.manager=disallow"],
     resources = [
+        "//src/test/resources:junit-platform.properties",
         "//src/test/resources/cpu_instrs:cpu_instrs.gb",
         "//src/test/resources/cpu_instrs:individual/01-special.gb",
         "//src/test/resources/cpu_instrs:individual/02-interrupts.gb",
@@ -19,14 +41,9 @@ java_test_suite(
         "//src/test/resources/cpu_instrs:individual/10-bit ops.gb",
         "//src/test/resources/cpu_instrs:individual/11-op a,(hl).gb",
     ],
-    runner = "junit5",
-    runtime_deps = [
-        artifact("org.junit.jupiter:junit-jupiter-engine"),
-        artifact("org.junit.platform:junit-platform-launcher"),
-        artifact("org.junit.platform:junit-platform-reporting"),
-    ],
     deps = [
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator",
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/arch",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu/registers",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/memory",
@@ -35,5 +52,5 @@ java_test_suite(
         artifact("com.google.truth:truth"),
         artifact("org.junit.jupiter:junit-jupiter-api"),
         artifact("org.junit.jupiter:junit-jupiter-params"),
-    ],
+    ] + JUNIT5_DEPS,
 )

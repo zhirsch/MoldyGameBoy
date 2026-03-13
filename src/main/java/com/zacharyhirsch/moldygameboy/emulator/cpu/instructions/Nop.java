@@ -2,23 +2,22 @@ package com.zacharyhirsch.moldygameboy.emulator.cpu.instructions;
 
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 
-
-public final class Nop extends AbstractInstruction {
+public final class Nop implements Instruction {
 
   private final Registers registers;
+
+  private int i = 0;
 
   public Nop(Registers registers) {
     this.registers = registers;
   }
 
   @Override
-  protected Mem execute0(byte data) {
-    return Mem.read(registers.pc().getAndIncrement());
-  }
-
-  @Override
-  protected Mem execute1(byte data) {
-    registers.ir().set(data);
-    return null;
+  public Mem tick() {
+    return switch (i++) {
+      case 0 -> Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      case 1 -> null;
+      default -> throw new IllegalStateException();
+    };
   }
 }

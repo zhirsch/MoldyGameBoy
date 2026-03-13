@@ -221,6 +221,9 @@ public final class MemoryMap implements MemoryRange {
     throw new IllegalStateException("%04x".formatted(address));
   }
 
+  @Override
+  public void none(short address) {}
+
   private int getWramBank() {
     return switch (ioRegisters.svbk().get()) {
       case 0, 1 -> 1;

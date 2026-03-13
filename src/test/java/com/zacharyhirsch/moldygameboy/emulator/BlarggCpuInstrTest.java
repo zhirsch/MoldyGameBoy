@@ -1,16 +1,12 @@
 package com.zacharyhirsch.moldygameboy.emulator;
 
-
 import com.google.common.io.Resources;
+import com.zacharyhirsch.moldygameboy.emulator.arch.MemoryRange;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 import com.zacharyhirsch.moldygameboy.emulator.memory.IORegisters;
-import java.io.FileOutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
+import com.zacharyhirsch.moldygameboy.emulator.memory.MemoryMap;
 import java.net.URL;
 import java.nio.ByteBuffer;
-import java.nio.file.Path;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
@@ -67,11 +63,10 @@ final class BlarggCpuInstrTest {
     registers.l().set((byte) 0x4d);
 
     IORegisters ioRegisters = new IORegisters();
-
-    Path root = Path.of(System.getenv("TEST_UNDECLARED_OUTPUTS_DIR"));
-    Path path = root.resolve("%s.txt".formatted(test.name().toLowerCase()));
-    try (Writer writer = new OutputStreamWriter(new FileOutputStream(path.toFile()))) {
-      MoldyGameBoy.run(test.getCycles(), rom, rom, registers, ioRegisters, writer);
+    MemoryRange memory = new MemoryMap(rom, rom, ioRegisters);
+    MoldyGameBoy gb = new MoldyGameBoy(memory, registers, ioRegisters);
+    for (long i = 0; i < (long) test.getCycles(); i++) {
+      gb.tick();
     }
   }
 }

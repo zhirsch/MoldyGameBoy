@@ -1,4 +1,4 @@
-load("@rules_java//java:java_library.bzl", "java_library")
+load("@contrib_rules_jvm//java:defs.bzl", "java_library")
 load("@rules_jvm_external//:defs.bzl", "artifact", "java_plugin_artifact")
 
 java_library(

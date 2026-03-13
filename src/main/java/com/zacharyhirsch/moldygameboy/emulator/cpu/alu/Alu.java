@@ -29,7 +29,11 @@ public final class Alu {
     }
   }
 
-  public static Result add(byte lhs, byte rhs, boolean carry) {
+  public static Result add(byte lhs, byte rhs) {
+    return adc(lhs, rhs, false);
+  }
+
+  public static Result adc(byte lhs, byte rhs, boolean carry) {
     byte c = (byte) (carry ? 1 : 0);
     byte result = (byte) (lhs + rhs + c);
     return Result.builder()
@@ -57,7 +61,7 @@ public final class Alu {
   }
 
   public static Result cpl(byte value) {
-    return sub((byte) 0, value, (byte) 1);
+    return sbc((byte) 0, value, true);
   }
 
   public static Result or(byte lhs, byte rhs) {
@@ -65,10 +69,52 @@ public final class Alu {
     return new Result(result, result == 0, false, false, false);
   }
 
-  public static Result sub(byte lhs, byte rhs, byte carry) {
-    byte result = (byte) (lhs - rhs - carry);
-    boolean h = (lhs & 0x0f) - (rhs & 0x0f) - carry < 0;
-    boolean c = Byte.toUnsignedInt(lhs) - Byte.toUnsignedInt(rhs) - carry < 0;
-    return new Result(result, result == 0, true, h, c);
+  public static Result rla(byte value, boolean carry) {
+    boolean b7 = (value & 0x80) != 0;
+    return Result.builder()
+        .result((byte) ((Byte.toUnsignedInt(value) << 1) | (carry ? 0x01 : 0)))
+        .z(false)
+        .n(false)
+        .h(false)
+        .c(b7)
+        .build();
+  }
+
+  public static Result rlc(byte value) {
+    boolean b7 = (value & 0x80) != 0;
+    return Result.builder()
+        .result((byte) ((Byte.toUnsignedInt(value) << 1) | (b7 ? 0x01 : 0)))
+        .z(false)
+        .n(false)
+        .h(false)
+        .c(b7)
+        .build();
+  }
+
+  public static Result rrc(byte value) {
+    boolean b0 = (value & 0x01) != 0;
+    return Result.builder()
+        .result((byte) ((Byte.toUnsignedInt(value) >>> 1) | (b0 ? 0x80 : 0)))
+        .z(false)
+        .n(false)
+        .h(false)
+        .c(b0)
+        .build();
+  }
+
+  public static Result sub(byte lhs, byte rhs) {
+    return sbc(lhs, rhs, false);
+  }
+
+  public static Result sbc(byte lhs, byte rhs, boolean carry) {
+    byte c = (byte) (carry ? 1 : 0);
+    byte result = (byte) (lhs - rhs - c);
+    return Result.builder()
+        .result(result)
+        .z(result == 0)
+        .n(true)
+        .h((lhs & 0x0f) - (rhs & 0x0f) - c < 0)
+        .c(Byte.toUnsignedInt(lhs) - Byte.toUnsignedInt(rhs) - c < 0)
+        .build();
   }
 }

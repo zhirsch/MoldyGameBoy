@@ -12,7 +12,7 @@ public record Registers(
     Register16 hl,
     Register16 pc,
     Register16 sp,
-    Ime ime) {
+    Register8 ime) {
 
   public Registers() {
     this(
@@ -24,7 +24,7 @@ public record Registers(
         new Register16(),
         new Register16(),
         new Register16(),
-        new Ime());
+        new Register8());
   }
 
   public Register8 a() {
