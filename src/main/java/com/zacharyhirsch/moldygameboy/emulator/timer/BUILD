@@ -8,5 +8,8 @@ java_library(
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator:__pkg__",
         "//src/test/java/com/zacharyhirsch/moldygameboy/emulator:__pkg__",
     ],
-    deps = ["//src/main/java/com/zacharyhirsch/moldygameboy/emulator/memory"],
+    deps = [
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/arch",
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/memory",
+    ],
 )

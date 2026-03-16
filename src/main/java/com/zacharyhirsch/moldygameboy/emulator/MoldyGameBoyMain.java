@@ -1,9 +1,8 @@
 package com.zacharyhirsch.moldygameboy.emulator;
 
 import com.google.common.io.Resources;
-import com.zacharyhirsch.moldygameboy.emulator.arch.MemoryRange;
+import com.zacharyhirsch.moldygameboy.emulator.arch.Memory;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
-import com.zacharyhirsch.moldygameboy.emulator.memory.IORegisters;
 import com.zacharyhirsch.moldygameboy.emulator.memory.MemoryMap;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -14,9 +13,8 @@ final class MoldyGameBoyMain {
   private static final String BOOT_ROM_PATH = "cgb.bin";
 
   static void main(String[] args) {
-    IORegisters ioRegisters = new IORegisters();
-    MemoryRange memory = new MemoryMap(readBootRom(), readRom(args[0]), ioRegisters);
-    MoldyGameBoy gb = new MoldyGameBoy(memory, new Registers(), ioRegisters);
+    Memory memory = new MemoryMap(readBootRom(), readRom(args[0]));
+    MoldyGameBoy gb = new MoldyGameBoy(memory, new Registers());
     while (true) {
       gb.tick();
     }

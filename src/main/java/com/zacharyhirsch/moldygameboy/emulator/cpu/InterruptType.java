@@ -16,11 +16,11 @@ enum InterruptType {
     this.vector = vector;
   }
 
-  public byte getMask() {
+  public byte mask() {
     return mask;
   }
 
-  public short getVector() {
+  public short vector() {
     return vector;
   }
 }

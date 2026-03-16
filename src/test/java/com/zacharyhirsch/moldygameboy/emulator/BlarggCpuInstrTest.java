@@ -1,9 +1,8 @@
 package com.zacharyhirsch.moldygameboy.emulator;
 
 import com.google.common.io.Resources;
-import com.zacharyhirsch.moldygameboy.emulator.arch.MemoryRange;
+import com.zacharyhirsch.moldygameboy.emulator.arch.Memory;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
-import com.zacharyhirsch.moldygameboy.emulator.memory.IORegisters;
 import com.zacharyhirsch.moldygameboy.emulator.memory.MemoryMap;
 import java.net.URL;
 import java.nio.ByteBuffer;
@@ -62,9 +61,8 @@ final class BlarggCpuInstrTest {
     registers.h().set((byte) 0x01);
     registers.l().set((byte) 0x4d);
 
-    IORegisters ioRegisters = new IORegisters();
-    MemoryRange memory = new MemoryMap(rom, rom, ioRegisters);
-    MoldyGameBoy gb = new MoldyGameBoy(memory, registers, ioRegisters);
+    Memory memory = new MemoryMap(rom, rom);
+    MoldyGameBoy gb = new MoldyGameBoy(memory, registers);
     for (long i = 0; i < (long) test.getCycles(); i++) {
       gb.tick();
     }

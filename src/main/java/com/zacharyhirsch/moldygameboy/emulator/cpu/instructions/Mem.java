@@ -1,12 +1,12 @@
 package com.zacharyhirsch.moldygameboy.emulator.cpu.instructions;
 
-import com.zacharyhirsch.moldygameboy.emulator.arch.MemoryRange;
+import com.zacharyhirsch.moldygameboy.emulator.arch.Memory;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public interface Mem {
 
-  void execute(MemoryRange memory);
+  void execute(Memory memory);
 
   static Mem read(short address, Consumer<Byte> dst) {
     return memory -> dst.accept(memory.read(address));

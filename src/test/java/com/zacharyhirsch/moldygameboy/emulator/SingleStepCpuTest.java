@@ -12,9 +12,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
-import com.zacharyhirsch.moldygameboy.emulator.arch.MemoryRange;
+import com.zacharyhirsch.moldygameboy.emulator.cpu.Cpu;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
-import com.zacharyhirsch.moldygameboy.emulator.memory.IORegisters;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
@@ -145,10 +144,8 @@ final class SingleStepCpuTest {
       ram.put(Short.toUnsignedInt(mem.address()), mem.value());
     }
 
-    IORegisters ioRegisters = new IORegisters();
-
-    MemoryRange memory =
-        new MemoryRange() {
+    com.zacharyhirsch.moldygameboy.emulator.arch.Memory memory =
+        new com.zacharyhirsch.moldygameboy.emulator.arch.Memory() {
           @Override
           public byte read(short address) {
             byte data = ram.get(Short.toUnsignedInt(address));
@@ -178,9 +175,9 @@ final class SingleStepCpuTest {
           }
         };
 
-    MoldyGameBoy gb = new MoldyGameBoy(memory, registers, ioRegisters);
+    Cpu cpu = new Cpu(registers, memory);
     while (!cycles.isEmpty()) {
-      gb.tick();
+      cpu.tick();
     }
     registers.pc().getAndDecrement();
 

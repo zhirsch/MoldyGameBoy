@@ -1,12 +1,11 @@
 package com.zacharyhirsch.moldygameboy.emulator.cpu;
 
-import com.zacharyhirsch.moldygameboy.emulator.arch.MemoryRange;
+import com.zacharyhirsch.moldygameboy.emulator.arch.Memory;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.instructions.AbstractInstruction5;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.instructions.Instruction;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.instructions.Mem;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.instructions.Nop;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
-import com.zacharyhirsch.moldygameboy.emulator.memory.IORegisters;
 
 public final class Cpu {
 
@@ -19,23 +18,21 @@ public final class Cpu {
   };
 
   private final Registers registers;
-  private final IORegisters ioRegisters;
-  private final MemoryRange memory;
+  private final Memory memory;
   private final CpuDecoder decoder;
 
   private Instruction instruction;
   private boolean halted = false;
 
-  public Cpu(Registers registers, IORegisters ioRegisters, MemoryRange memory) {
+  public Cpu(Registers registers, Memory memory) {
     this.registers = registers;
-    this.ioRegisters = ioRegisters;
     this.memory = memory;
     this.decoder = new CpuDecoder(registers);
     this.instruction = new Nop(registers);
   }
 
   public void tick() {
-    halted = halted && (ioRegisters.ie().get() & ioRegisters.if_().get()) == 0;
+    halted = halted && getPendingInterrupts() == 0;
     if (halted) {
       return;
     }
@@ -48,30 +45,36 @@ public final class Cpu {
   }
 
   private Instruction next() {
-    if (registers.ime().get() != 0 && (ioRegisters.ie().get() & ioRegisters.if_().get()) != 0) {
-      return new Isr(registers, ioRegisters);
+    if (registers.ime().get() != 0 && getPendingInterrupts() != 0) {
+      return new Isr(registers);
     }
     return decoder.decode();
   }
 
-  private static final class Isr extends AbstractInstruction5 {
+  private int getPendingInterrupts() {
+    return memory.read(Memory.Register.IE) & memory.read(Memory.Register.IF);
+  }
+
+  private boolean isInterruptPending(InterruptType interrupt) {
+    return (getPendingInterrupts() & interrupt.mask()) != 0;
+  }
+
+  private final class Isr extends AbstractInstruction5 {
 
     private final Registers registers;
-    private final IORegisters ioRegisters;
 
-    Isr(Registers registers, IORegisters ioRegisters) {
+    Isr(Registers registers) {
       this.registers = registers;
-      this.ioRegisters = ioRegisters;
     }
 
     @Override
     protected Mem execute0() {
-      return Mem.read(registers.pc().getAndDecrement(), _ -> {});
+      return Mem.none(registers.pc().getAndDecrement());
     }
 
     @Override
     protected Mem execute1() {
-      return Mem.read(registers.sp().getAndDecrement(), _ -> {});
+      return Mem.none(registers.sp().getAndDecrement());
     }
 
     @Override
@@ -87,12 +90,14 @@ public final class Cpu {
     @Override
     protected Mem execute4() {
       for (InterruptType interrupt : INTERRUPTS) {
-        if ((ioRegisters.ie().get() & ioRegisters.if_().get() & interrupt.getMask()) != 0) {
-          registers.ime().set((byte) 0);
-          ioRegisters.if_().set((byte) (ioRegisters.if_().get() & ~interrupt.getMask()));
-          registers.pc().set(interrupt.getVector());
-          break;
+        if (!isInterruptPending(interrupt)) {
+          continue;
         }
+        registers.ime().set((byte) 0);
+        memory.write(
+            Memory.Register.IF, (byte) (memory.read(Memory.Register.IF) & ~interrupt.mask()));
+        registers.pc().set(interrupt.vector());
+        break;
       }
       return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
     }

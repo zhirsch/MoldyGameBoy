@@ -1,21 +1,22 @@
 package com.zacharyhirsch.moldygameboy.emulator.timer;
 
-import com.zacharyhirsch.moldygameboy.emulator.memory.IORegisters;
+import com.zacharyhirsch.moldygameboy.emulator.arch.Memory;
 
 public final class Divider {
 
-  private final IORegisters ioRegisters;
+  private final Memory memory;
 
   private int count = 0;
 
-  public Divider(IORegisters ioRegisters) {
-    this.ioRegisters = ioRegisters;
+  public Divider(Memory memory) {
+    this.memory = memory;
   }
 
   public void tick() {
     count = (count + 1) % 64;
     if (count == 0) {
-      ioRegisters.div().set((byte) (ioRegisters.div().get() + 1));
+      byte div = memory.read(Memory.Register.DIV);
+      memory.write(Memory.Register.DIV, (byte) (div + 1));
     }
   }
 }
