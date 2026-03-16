@@ -20,10 +20,7 @@ public final class Jr extends AbstractInstruction3 {
 
   @Override
   protected Mem execute1() {
-    Alu.Result result = Alu.add(registers.pc().lo().get(), z);
-    Alu.Result result2 = Alu.adc(registers.pc().hi().get(), (byte) 0, result.c());
-    registers.pc().lo().set(result.result());
-    registers.pc().hi().set(result2.result());
+    registers.pc().set((short) (registers.pc().get() + z));
     return Mem.none(registers.pc().get());
   }
 

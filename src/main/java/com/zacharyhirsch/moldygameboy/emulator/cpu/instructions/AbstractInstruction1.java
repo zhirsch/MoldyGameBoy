@@ -5,7 +5,7 @@ public abstract class AbstractInstruction1 implements Instruction {
   private int i = 0;
 
   @Override
-  public Mem tick() {
+  public final Mem tick() {
     return switch (i++) {
       case 0 -> execute0();
       case 1 -> null;

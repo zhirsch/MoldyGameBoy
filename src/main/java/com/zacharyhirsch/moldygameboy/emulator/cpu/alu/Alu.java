@@ -8,8 +8,8 @@ public final class Alu {
 
   public record Result(byte result, boolean z, boolean n, boolean h, boolean c) {
 
-    public static Builder builder() {
-      return new AutoBuilder_Alu_Result_Builder();
+    static Builder builder(byte result) {
+      return new AutoBuilder_Alu_Result_Builder().result(result).z(result == 0);
     }
 
     @AutoBuilder
@@ -29,16 +29,10 @@ public final class Alu {
     }
   }
 
-  public static Result add(byte lhs, byte rhs) {
-    return adc(lhs, rhs, false);
-  }
-
-  public static Result adc(byte lhs, byte rhs, boolean carry) {
+  public static Result add(byte lhs, byte rhs, boolean carry) {
     byte c = (byte) (carry ? 1 : 0);
     byte result = (byte) (lhs + rhs + c);
-    return Result.builder()
-        .result(result)
-        .z(result == 0)
+    return Result.builder(result)
         .n(false)
         .h((lhs & 0x0f) + (rhs & 0x0f) + c > 0x0f)
         .c(Byte.toUnsignedInt(lhs) + Byte.toUnsignedInt(rhs) + c > 0xff)
@@ -47,74 +41,70 @@ public final class Alu {
 
   public static Result and(byte lhs, byte rhs) {
     byte result = (byte) (lhs & rhs);
-    return new Result(result, result == 0, false, true, false);
+    return Result.builder(result).n(false).h(true).c(false).build();
   }
 
   public static Result bit(byte value, int index) {
     byte result = (byte) (value & (1 << index));
-    return new Result(result, result == 0, false, true, false);
+    return Result.builder(result).n(false).h(true).c(false).build();
   }
 
   public static Result ccf(boolean carry) {
-    byte result = (byte) (1 - (carry ? 1 : 0));
-    return new Result(result, result == 0, false, false, !carry);
+    byte result = (byte) 0;
+    return Result.builder(result).n(false).h(false).c(!carry).build();
   }
 
   public static Result cpl(byte value) {
-    return sbc((byte) 0, value, true);
+    byte result = (byte) ~value;
+    return Result.builder(result).n(true).h(true).c(false).build();
   }
 
   public static Result or(byte lhs, byte rhs) {
     byte result = (byte) (lhs | rhs);
-    return new Result(result, result == 0, false, false, false);
+    return Result.builder(result).n(false).h(false).c(false).build();
   }
 
-  public static Result rla(byte value, boolean carry) {
-    boolean b7 = (value & 0x80) != 0;
-    return Result.builder()
-        .result((byte) ((Byte.toUnsignedInt(value) << 1) | (carry ? 0x01 : 0)))
-        .z(false)
-        .n(false)
-        .h(false)
-        .c(b7)
-        .build();
+  public static Result res(byte value, int index) {
+    byte result = (byte) (value & ~(1 << index));
+    return Result.builder(result).n(false).h(false).c(false).build();
   }
 
-  public static Result rlc(byte value) {
-    boolean b7 = (value & 0x80) != 0;
-    return Result.builder()
-        .result((byte) ((Byte.toUnsignedInt(value) << 1) | (b7 ? 0x01 : 0)))
-        .z(false)
-        .n(false)
-        .h(false)
-        .c(b7)
-        .build();
+  public static Result rl(byte value, boolean carry) {
+    byte c = (byte) (carry ? 0x01 : 0x00);
+    byte result = (byte) ((Byte.toUnsignedInt(value) << 1) | c);
+    return Result.builder(result).n(false).h(false).c((value & 0x80) != 0).build();
   }
 
-  public static Result rrc(byte value) {
-    boolean b0 = (value & 0x01) != 0;
-    return Result.builder()
-        .result((byte) ((Byte.toUnsignedInt(value) >>> 1) | (b0 ? 0x80 : 0)))
-        .z(false)
-        .n(false)
-        .h(false)
-        .c(b0)
-        .build();
+  public static Result rr(byte value, boolean carry) {
+    byte c = (byte) (carry ? 0x80 : 0x00);
+    byte result = (byte) ((Byte.toUnsignedInt(value) >>> 1) | c);
+    return Result.builder(result).n(false).h(false).c((value & 0x01) != 0).build();
   }
 
-  public static Result sub(byte lhs, byte rhs) {
-    return sbc(lhs, rhs, false);
+  public static Result set(byte value, int index) {
+    byte result = (byte) (value | (1 << index));
+    return Result.builder(result).n(false).h(false).c(false).build();
   }
 
-  public static Result sbc(byte lhs, byte rhs, boolean carry) {
+  public static Result sub(byte lhs, byte rhs, boolean carry) {
     byte c = (byte) (carry ? 1 : 0);
     byte result = (byte) (lhs - rhs - c);
-    return Result.builder()
-        .result(result)
-        .z(result == 0)
+    return Result.builder(result)
         .n(true)
         .h((lhs & 0x0f) - (rhs & 0x0f) - c < 0)
         .c(Byte.toUnsignedInt(lhs) - Byte.toUnsignedInt(rhs) - c < 0)
         .build();
+  }
+
+  public static Result swap(byte value) {
+    byte l = (byte) (value & 0x0f);
+    byte h = (byte) (value & 0xf0);
+    byte result = (byte) ((Byte.toUnsignedInt(l) << 4) | (Byte.toUnsignedInt(h) >> 4));
+    return Result.builder(result).n(false).h(false).c(false).build();
+  }
+
+  public static Result xor(byte lhs, byte rhs) {
+    byte result = (byte) (lhs ^ rhs);
+    return Result.builder(result).n(false).h(false).c(false).build();
   }
 }

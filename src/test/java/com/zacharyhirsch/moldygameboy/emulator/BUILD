@@ -6,7 +6,6 @@ java_junit5_test(
     srcs = ["SingleStepCpuTest.java"],
     data = ["//:sm83-v1-files"],
     jvm_flags = ["-Djava.security.manager=disallow"],
-    resources = ["//src/test/resources:junit-platform.properties"],
     deps = [
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/arch",
@@ -27,7 +26,6 @@ java_junit5_test(
     srcs = ["BlarggCpuInstrTest.java"],
     jvm_flags = ["-Djava.security.manager=disallow"],
     resources = [
-        "//src/test/resources:junit-platform.properties",
         "//src/test/resources/cpu_instrs:cpu_instrs.gb",
         "//src/test/resources/cpu_instrs:individual/01-special.gb",
         "//src/test/resources/cpu_instrs:individual/02-interrupts.gb",

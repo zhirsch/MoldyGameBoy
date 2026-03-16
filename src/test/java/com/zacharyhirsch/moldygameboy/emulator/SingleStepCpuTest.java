@@ -16,10 +16,6 @@ import com.zacharyhirsch.moldygameboy.emulator.arch.MemoryRange;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 import com.zacharyhirsch.moldygameboy.emulator.memory.IORegisters;
 import java.io.IOException;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.nio.file.DirectoryStream;
@@ -30,56 +26,36 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
-import org.junit.jupiter.params.support.ParameterDeclaration;
 import org.junit.jupiter.params.support.ParameterDeclarations;
 
-@Execution(ExecutionMode.CONCURRENT)
 final class SingleStepCpuTest {
 
-  private static final Gson gson =
-      new GsonBuilder()
-          .registerTypeAdapter(Memory.class, new MemoryDeserializer())
-          .registerTypeAdapter(Cycle.class, new CycleDeserializer())
-          .create();
-
-  @Retention(RetentionPolicy.RUNTIME)
-  @Target({ElementType.PARAMETER})
-  public @interface TestDataGlob {
-    String value();
-  }
-
-  static final class TestDataProvider implements ArgumentsProvider {
+  static final class TestInputProvider implements ArgumentsProvider {
 
     @Override
     public Stream<? extends Arguments> provideArguments(
         ParameterDeclarations parameters, ExtensionContext context) {
-      return parameters.getFirst().stream()
-          .map(ParameterDeclaration::getAnnotatedElement)
-          .filter(element -> element.isAnnotationPresent(TestDataGlob.class))
-          .map(element -> element.getAnnotation(TestDataGlob.class))
-          .flatMap(annotation -> loadTestData(annotation.value()))
+      Gson gson =
+          new GsonBuilder()
+              .registerTypeAdapter(Memory.class, new MemoryDeserializer())
+              .registerTypeAdapter(Cycle.class, new CycleDeserializer())
+              .create();
+      return Streams.stream(glob())
+          .map(SingleStepCpuTest::readJson)
+          .map(json -> gson.fromJson(json, new TypeToken<List<TestInput>>() {}))
+          .sorted(Comparator.comparing(list -> list.getFirst().name()))
           .map(Arguments::of);
     }
   }
 
-  private static Stream<TestData> loadTestData(String glob) {
-    return Streams.stream(glob(glob))
-        .map(SingleStepCpuTest::readJson)
-        .flatMap(json -> gson.fromJson(json, new TypeToken<List<TestData>>() {}).stream())
-        .sorted(Comparator.comparing(TestData::name));
-  }
-
-  private static DirectoryStream<Path> glob(String value) {
+  private static DirectoryStream<Path> glob() {
     try {
-      return Files.newDirectoryStream(Path.of("sm83/v1"), value);
+      return Files.newDirectoryStream(Path.of("sm83/v1"), "*.json");
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -112,7 +88,7 @@ final class SingleStepCpuTest {
 
   public record Cycle(short address, byte value, String mode) {}
 
-  record TestData(
+  record TestInput(
       String name, State initial, @SerializedName("final") State final_, Cycle[] cycles) {
 
     @Override
@@ -141,226 +117,36 @@ final class SingleStepCpuTest {
     }
   }
 
-  @Test
-  void testOne() {
-    List<TestData> data = loadTestData("03.json").toList();
-    doTest(data.get(0));
-  }
-
   @ParameterizedTest
-  @ArgumentsSource(TestDataProvider.class)
-  void test0(@TestDataGlob("0?.json") TestData data) {
-    doTest(data);
+  @ArgumentsSource(TestInputProvider.class)
+  void testInstructions(List<TestInput> inputs) {
+    for (TestInput input : inputs) {
+      ArrayList<Cycle> cycles = new ArrayList<>(Arrays.asList(input.cycles()));
+      cycles.add(null);
+      doTest(input.initial(), input.final_(), cycles);
+    }
   }
 
-  @ParameterizedTest
-  @ArgumentsSource(TestDataProvider.class)
-  void test1(@TestDataGlob("1?.json") TestData data) {
-    doTest(data);
-  }
-
-  @ParameterizedTest
-  @ArgumentsSource(TestDataProvider.class)
-  void test2(@TestDataGlob("2?.json") TestData data) {
-    doTest(data);
-  }
-
-  @ParameterizedTest
-  @ArgumentsSource(TestDataProvider.class)
-  void test3(@TestDataGlob("3?.json") TestData data) {
-    doTest(data);
-  }
-
-  @ParameterizedTest
-  @ArgumentsSource(TestDataProvider.class)
-  void test4(@TestDataGlob("4?.json") TestData data) {
-    doTest(data);
-  }
-
-  @ParameterizedTest
-  @ArgumentsSource(TestDataProvider.class)
-  void test5(@TestDataGlob("5?.json") TestData data) {
-    doTest(data);
-  }
-
-  @ParameterizedTest
-  @ArgumentsSource(TestDataProvider.class)
-  void test6(@TestDataGlob("6?.json") TestData data) {
-    doTest(data);
-  }
-
-  @ParameterizedTest
-  @ArgumentsSource(TestDataProvider.class)
-  void test7(@TestDataGlob("7?.json") TestData data) {
-    doTest(data);
-  }
-
-  @ParameterizedTest
-  @ArgumentsSource(TestDataProvider.class)
-  void test8(@TestDataGlob("8?.json") TestData data) {
-    doTest(data);
-  }
-
-  @ParameterizedTest
-  @ArgumentsSource(TestDataProvider.class)
-  void test9(@TestDataGlob("9?.json") TestData data) {
-    doTest(data);
-  }
-
-  @ParameterizedTest
-  @ArgumentsSource(TestDataProvider.class)
-  void testA(@TestDataGlob("a?.json") TestData data) {
-    doTest(data);
-  }
-
-  @ParameterizedTest
-  @ArgumentsSource(TestDataProvider.class)
-  void testB(@TestDataGlob("b?.json") TestData data) {
-    doTest(data);
-  }
-
-  @ParameterizedTest
-  @ArgumentsSource(TestDataProvider.class)
-  void testC(@TestDataGlob("c?.json") TestData data) {
-    doTest(data);
-  }
-
-  @ParameterizedTest
-  @ArgumentsSource(TestDataProvider.class)
-  void testD(@TestDataGlob("d?.json") TestData data) {
-    doTest(data);
-  }
-
-  @ParameterizedTest
-  @ArgumentsSource(TestDataProvider.class)
-  void testE(@TestDataGlob("e?.json") TestData data) {
-    doTest(data);
-  }
-
-  @ParameterizedTest
-  @ArgumentsSource(TestDataProvider.class)
-  void testF(@TestDataGlob("f?.json") TestData data) {
-    doTest(data);
-  }
-
-  @ParameterizedTest
-  @ArgumentsSource(TestDataProvider.class)
-  void testCb0(@TestDataGlob("cb 0?.json") TestData data) {
-    doTest(data);
-  }
-
-  @ParameterizedTest
-  @ArgumentsSource(TestDataProvider.class)
-  void testCb1(@TestDataGlob("cb 1?.json") TestData data) {
-    doTest(data);
-  }
-
-  @ParameterizedTest
-  @ArgumentsSource(TestDataProvider.class)
-  void testCb2(@TestDataGlob("cb 2?.json") TestData data) {
-    doTest(data);
-  }
-
-  @ParameterizedTest
-  @ArgumentsSource(TestDataProvider.class)
-  void testCb3(@TestDataGlob("cb 3?.json") TestData data) {
-    doTest(data);
-  }
-
-  @ParameterizedTest
-  @ArgumentsSource(TestDataProvider.class)
-  void testCb4(@TestDataGlob("cb 4?.json") TestData data) {
-    doTest(data);
-  }
-
-  @ParameterizedTest
-  @ArgumentsSource(TestDataProvider.class)
-  void testCb5(@TestDataGlob("cb 5?.json") TestData data) {
-    doTest(data);
-  }
-
-  @ParameterizedTest
-  @ArgumentsSource(TestDataProvider.class)
-  void testCb6(@TestDataGlob("cb 6?.json") TestData data) {
-    doTest(data);
-  }
-
-  @ParameterizedTest
-  @ArgumentsSource(TestDataProvider.class)
-  void testCb7(@TestDataGlob("cb 7?.json") TestData data) {
-    doTest(data);
-  }
-
-  @ParameterizedTest
-  @ArgumentsSource(TestDataProvider.class)
-  void testCb8(@TestDataGlob("cb 8?.json") TestData data) {
-    doTest(data);
-  }
-
-  @ParameterizedTest
-  @ArgumentsSource(TestDataProvider.class)
-  void testCb9(@TestDataGlob("cb 9?.json") TestData data) {
-    doTest(data);
-  }
-
-  @ParameterizedTest
-  @ArgumentsSource(TestDataProvider.class)
-  void testCbA(@TestDataGlob("cb a?.json") TestData data) {
-    doTest(data);
-  }
-
-  @ParameterizedTest
-  @ArgumentsSource(TestDataProvider.class)
-  void testCbB(@TestDataGlob("cb b?.json") TestData data) {
-    doTest(data);
-  }
-
-  @ParameterizedTest
-  @ArgumentsSource(TestDataProvider.class)
-  void testCbC(@TestDataGlob("cb c?.json") TestData data) {
-    doTest(data);
-  }
-
-  @ParameterizedTest
-  @ArgumentsSource(TestDataProvider.class)
-  void testCbD(@TestDataGlob("cb d?.json") TestData data) {
-    doTest(data);
-  }
-
-  @ParameterizedTest
-  @ArgumentsSource(TestDataProvider.class)
-  void testCbE(@TestDataGlob("cb e?.json") TestData data) {
-    doTest(data);
-  }
-
-  @ParameterizedTest
-  @ArgumentsSource(TestDataProvider.class)
-  void testCbF(@TestDataGlob("cb f?.json") TestData data) {
-    doTest(data);
-  }
-
-  private static void doTest(TestData data) {
+  private static void doTest(State initial, State final_, final List<Cycle> cycles) {
     ByteBuffer ram = ByteBuffer.allocate(1 << 16);
 
     Registers registers = new Registers();
-    registers.pc().set(data.initial().pc());
-    registers.sp().set(data.initial().sp());
-    registers.a().set(data.initial().a());
-    registers.f().set(data.initial().f());
-    registers.b().set(data.initial().b());
-    registers.c().set(data.initial().c());
-    registers.d().set(data.initial().d());
-    registers.e().set(data.initial().e());
-    registers.h().set(data.initial().h());
-    registers.l().set(data.initial().l());
-    for (Memory mem : data.initial().ram()) {
+    registers.pc().set(initial.pc());
+    registers.sp().set(initial.sp());
+    registers.a().set(initial.a());
+    registers.f().set(initial.f());
+    registers.b().set(initial.b());
+    registers.c().set(initial.c());
+    registers.d().set(initial.d());
+    registers.e().set(initial.e());
+    registers.h().set(initial.h());
+    registers.l().set(initial.l());
+    for (Memory mem : initial.ram()) {
       ram.put(Short.toUnsignedInt(mem.address()), mem.value());
     }
 
     IORegisters ioRegisters = new IORegisters();
 
-    List<Cycle> cycles = new ArrayList<>(Arrays.asList(data.cycles));
-    cycles.add(null);
     MemoryRange memory =
         new MemoryRange() {
           @Override
@@ -391,23 +177,24 @@ final class SingleStepCpuTest {
             cycles.removeFirst();
           }
         };
+
     MoldyGameBoy gb = new MoldyGameBoy(memory, registers, ioRegisters);
-    for (long i = 0; i < (long) (data.cycles().length + 1); i++) {
+    while (!cycles.isEmpty()) {
       gb.tick();
     }
     registers.pc().getAndDecrement();
 
-    assertThat(registers.pc().get()).isEqualTo(data.final_().pc());
-    assertThat(registers.sp().get()).isEqualTo(data.final_().sp());
-    assertThat(registers.a().get()).isEqualTo(data.final_().a());
-    assertThat(registers.f().get()).isEqualTo(data.final_().f());
-    assertThat(registers.b().get()).isEqualTo(data.final_().b());
-    assertThat(registers.c().get()).isEqualTo(data.final_().c());
-    assertThat(registers.d().get()).isEqualTo(data.final_().d());
-    assertThat(registers.e().get()).isEqualTo(data.final_().e());
-    assertThat(registers.h().get()).isEqualTo(data.final_().h());
-    assertThat(registers.l().get()).isEqualTo(data.final_().l());
-    for (Memory mem : data.final_().ram()) {
+    assertThat(registers.pc().get()).isEqualTo(final_.pc());
+    assertThat(registers.sp().get()).isEqualTo(final_.sp());
+    assertThat(registers.a().get()).isEqualTo(final_.a());
+    assertThat(registers.f().get()).isEqualTo(final_.f());
+    assertThat(registers.b().get()).isEqualTo(final_.b());
+    assertThat(registers.c().get()).isEqualTo(final_.c());
+    assertThat(registers.d().get()).isEqualTo(final_.d());
+    assertThat(registers.e().get()).isEqualTo(final_.e());
+    assertThat(registers.h().get()).isEqualTo(final_.h());
+    assertThat(registers.l().get()).isEqualTo(final_.l());
+    for (Memory mem : final_.ram()) {
       assertThat(ram.get(Short.toUnsignedInt(mem.address()))).isEqualTo(mem.value());
     }
   }

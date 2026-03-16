@@ -1,6 +1,6 @@
 package com.zacharyhirsch.moldygameboy.emulator.cpu.instructions;
 
-public abstract class AbstractInstruction5 implements Instruction {
+public abstract class AbstractInstruction6 implements Instruction {
 
   private int i = 0;
 
@@ -12,7 +12,8 @@ public abstract class AbstractInstruction5 implements Instruction {
       case 2 -> execute2();
       case 3 -> execute3();
       case 4 -> execute4();
-      case 5 -> null;
+      case 5 -> execute5();
+      case 6 -> null;
       default -> throw new IllegalStateException();
     };
   }
@@ -26,4 +27,6 @@ public abstract class AbstractInstruction5 implements Instruction {
   protected abstract Mem execute3();
 
   protected abstract Mem execute4();
+
+  protected abstract Mem execute5();
 }

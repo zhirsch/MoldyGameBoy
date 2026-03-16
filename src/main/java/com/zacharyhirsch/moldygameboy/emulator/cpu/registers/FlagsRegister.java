@@ -24,11 +24,11 @@ public final class FlagsRegister {
   }
 
   public byte get() {
-    return register.get();
+    return (byte) (register.get() & 0xf0);
   }
 
   public void set(byte value) {
-    register.set((byte) (value & 0b1111_0000));
+    register.set(value);
   }
 
   public Flag z() {
