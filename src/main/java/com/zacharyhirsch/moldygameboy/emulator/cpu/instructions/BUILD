@@ -8,5 +8,6 @@ java_library(
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/arch",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu/alu",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu/registers",
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/memory",
     ],
 )

@@ -1,6 +1,6 @@
 package com.zacharyhirsch.moldygameboy.emulator.cpu.instructions;
 
-import com.zacharyhirsch.moldygameboy.emulator.arch.Memory;
+import com.zacharyhirsch.moldygameboy.emulator.memory.Memory;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 

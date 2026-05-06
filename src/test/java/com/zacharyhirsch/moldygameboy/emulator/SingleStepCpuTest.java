@@ -1,6 +1,9 @@
 package com.zacharyhirsch.moldygameboy.emulator;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.mockito.ArgumentMatchers.anyByte;
+import static org.mockito.ArgumentMatchers.anyShort;
+import static org.mockito.Mockito.lenient;
 
 import com.google.common.collect.Streams;
 import com.google.gson.Gson;
@@ -14,6 +17,7 @@ import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.Cpu;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
+import com.zacharyhirsch.moldygameboy.emulator.memory.Memory;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
@@ -25,13 +29,17 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.junit.jupiter.params.support.ParameterDeclarations;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+@ExtendWith(MockitoExtension.class)
 final class SingleStepCpuTest {
 
   static final class TestInputProvider implements ArgumentsProvider {
@@ -41,7 +49,7 @@ final class SingleStepCpuTest {
         ParameterDeclarations parameters, ExtensionContext context) {
       Gson gson =
           new GsonBuilder()
-              .registerTypeAdapter(Memory.class, new MemoryDeserializer())
+              .registerTypeAdapter(Mem.class, new MemoryDeserializer())
               .registerTypeAdapter(Cycle.class, new CycleDeserializer())
               .create();
       return Streams.stream(glob())
@@ -68,7 +76,7 @@ final class SingleStepCpuTest {
     }
   }
 
-  record Memory(short address, byte value) {}
+  record Mem(short address, byte value) {}
 
   record State(
       short pc,
@@ -83,7 +91,7 @@ final class SingleStepCpuTest {
       byte l,
       byte ime,
       byte ie,
-      Memory[] ram) {}
+      Mem[] ram) {}
 
   public record Cycle(short address, byte value, String mode) {}
 
@@ -96,13 +104,13 @@ final class SingleStepCpuTest {
     }
   }
 
-  static final class MemoryDeserializer implements JsonDeserializer<Memory> {
+  static final class MemoryDeserializer implements JsonDeserializer<Mem> {
 
     @Override
-    public Memory deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
+    public Mem deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
         throws JsonParseException {
       JsonArray arr = json.getAsJsonArray();
-      return new Memory(arr.get(0).getAsShort(), arr.get(1).getAsByte());
+      return new Mem(arr.get(0).getAsShort(), arr.get(1).getAsByte());
     }
   }
 
@@ -116,6 +124,8 @@ final class SingleStepCpuTest {
     }
   }
 
+  private @Mock Memory memory;
+
   @ParameterizedTest
   @ArgumentsSource(TestInputProvider.class)
   void testInstructions(List<TestInput> inputs) {
@@ -126,7 +136,7 @@ final class SingleStepCpuTest {
     }
   }
 
-  private static void doTest(State initial, State final_, final List<Cycle> cycles) {
+  private void doTest(State initial, State final_, List<Cycle> cycles) {
     ByteBuffer ram = ByteBuffer.allocate(1 << 16);
 
     Registers registers = new Registers();
@@ -140,40 +150,49 @@ final class SingleStepCpuTest {
     registers.e().set(initial.e());
     registers.h().set(initial.h());
     registers.l().set(initial.l());
-    for (Memory mem : initial.ram()) {
+    for (Mem mem : initial.ram()) {
       ram.put(Short.toUnsignedInt(mem.address()), mem.value());
     }
 
-    com.zacharyhirsch.moldygameboy.emulator.arch.Memory memory =
-        new com.zacharyhirsch.moldygameboy.emulator.arch.Memory() {
-          @Override
-          public byte read(short address) {
-            byte data = ram.get(Short.toUnsignedInt(address));
-            Cycle cycle = cycles.removeFirst();
-            if (cycle != null) {
-              assertThat("r-m").isEqualTo(cycle.mode());
-              assertThat(address).isEqualTo(cycle.address());
-              assertThat(data).isEqualTo(cycle.value());
-            }
-            return data;
-          }
-
-          @Override
-          public void write(short address, byte data) {
-            ram.put(Short.toUnsignedInt(address), data);
-            Cycle cycle = cycles.removeFirst();
-            if (cycle != null) {
-              assertThat("-wm").isEqualTo(cycle.mode());
-              assertThat(address).isEqualTo(cycle.address());
-              assertThat(data).isEqualTo(cycle.value());
-            }
-          }
-
-          @Override
-          public void none(short address) {
-            cycles.removeFirst();
-          }
-        };
+    lenient()
+        .doAnswer(
+            invocation -> {
+              short address = invocation.getArgument(0);
+              byte data = ram.get(Short.toUnsignedInt(address));
+              Cycle cycle = cycles.removeFirst();
+              if (cycle != null) {
+                assertThat("r-m").isEqualTo(cycle.mode());
+                assertThat(address).isEqualTo(cycle.address());
+                assertThat(data).isEqualTo(cycle.value());
+              }
+              return data;
+            })
+        .when(memory)
+        .read(anyShort());
+    lenient()
+        .doAnswer(
+            invocation -> {
+              short address = invocation.getArgument(0);
+              byte data = invocation.getArgument(1);
+              ram.put(Short.toUnsignedInt(address), data);
+              Cycle cycle = cycles.removeFirst();
+              if (cycle != null) {
+                assertThat("-wm").isEqualTo(cycle.mode());
+                assertThat(address).isEqualTo(cycle.address());
+                assertThat(data).isEqualTo(cycle.value());
+              }
+              return null;
+            })
+        .when(memory)
+        .write(anyShort(), anyByte());
+    lenient()
+        .doAnswer(
+            _ -> {
+              cycles.removeFirst();
+              return null;
+            })
+        .when(memory)
+        .none(anyShort());
 
     Cpu cpu = new Cpu(registers, memory);
     while (!cycles.isEmpty()) {
@@ -191,7 +210,7 @@ final class SingleStepCpuTest {
     assertThat(registers.e().get()).isEqualTo(final_.e());
     assertThat(registers.h().get()).isEqualTo(final_.h());
     assertThat(registers.l().get()).isEqualTo(final_.l());
-    for (Memory mem : final_.ram()) {
+    for (Mem mem : final_.ram()) {
       assertThat(ram.get(Short.toUnsignedInt(mem.address()))).isEqualTo(mem.value());
     }
   }

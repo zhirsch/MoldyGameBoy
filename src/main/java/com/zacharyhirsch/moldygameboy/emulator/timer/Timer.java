@@ -1,6 +1,6 @@
 package com.zacharyhirsch.moldygameboy.emulator.timer;
 
-import com.zacharyhirsch.moldygameboy.emulator.arch.Memory;
+import com.zacharyhirsch.moldygameboy.emulator.memory.Memory;
 
 public final class Timer {
 
@@ -13,12 +13,11 @@ public final class Timer {
   }
 
   public void tick() {
-    byte tac = memory.read(Memory.Register.TAC);
-    if ((tac & 0b0000_0100) == 0) {
+    if ((memory.registers().tac().get() & 0b0000_0100) == 0) {
       return;
     }
     int period =
-        switch (tac & 0b0000_0011) {
+        switch (memory.registers().tac().get() & 0b0000_0011) {
           case 0 -> 256;
           case 1 -> 4;
           case 2 -> 16;
@@ -29,12 +28,11 @@ public final class Timer {
     if (count != 0) {
       return;
     }
-    byte tima = memory.read(Memory.Register.TIMA);
-    if (tima == (byte) 0xff) {
-      memory.write(Memory.Register.IF, (byte) (memory.read(Memory.Register.IF) | 0b0000_0100));
-      memory.write(Memory.Register.TIMA, memory.read(Memory.Register.TMA));
+    if (memory.registers().tima().get() == (byte) 0xff) {
+      memory.registers().if_().set((byte) (memory.registers().if_().get() | 0b0000_0100));
+      memory.registers().tima().set(memory.registers().tma().get());
       return;
     }
-    memory.write(Memory.Register.TIMA, (byte) (tima + 1));
+    memory.registers().tima().set((byte) (memory.registers().tima().get() + 1));
   }
 }

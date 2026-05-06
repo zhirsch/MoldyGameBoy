@@ -1,6 +1,6 @@
 package com.zacharyhirsch.moldygameboy.emulator.timer;
 
-import com.zacharyhirsch.moldygameboy.emulator.arch.Memory;
+import com.zacharyhirsch.moldygameboy.emulator.memory.Memory;
 
 public final class Divider {
 
@@ -15,8 +15,7 @@ public final class Divider {
   public void tick() {
     count = (count + 1) % 64;
     if (count == 0) {
-      byte div = memory.read(Memory.Register.DIV);
-      memory.write(Memory.Register.DIV, (byte) (div + 1));
+      memory.registers().div().set((byte) (memory.registers().div().get() + 1));
     }
   }
 }

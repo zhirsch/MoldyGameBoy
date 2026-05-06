@@ -18,6 +18,8 @@ java_junit5_test(
         artifact("com.google.truth:truth"),
         artifact("org.junit.jupiter:junit-jupiter-api"),
         artifact("org.junit.jupiter:junit-jupiter-params"),
+        artifact("org.mockito:mockito-core"),
+        artifact("org.mockito:mockito-junit-jupiter"),
     ] + JUNIT5_DEPS,
 )
 
@@ -44,6 +46,7 @@ java_junit5_test(
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/arch",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu/registers",
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/io",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/memory",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/timer",
         artifact("com.google.guava:guava"),

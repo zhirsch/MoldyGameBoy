@@ -21,6 +21,8 @@ maven.install(
         "org.junit.jupiter:junit-jupiter-params:6.0.2",
         "org.junit.platform:junit-platform-launcher:6.0.2",
         "org.junit.platform:junit-platform-reporting:6.0.2",
+        "org.mockito:mockito-core:5.23.0",
+        "org.mockito:mockito-junit-jupiter:5.23.0",
         "org.slf4j:slf4j-api:2.0.17",
     ],
     fetch_sources = True,

@@ -20,7 +20,9 @@ java_library(
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/arch",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu/registers",
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/io",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/memory",
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/ppu",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/timer",
     ],
 )
@@ -38,6 +40,7 @@ java_binary(
     main_class = "com.zacharyhirsch.moldygameboy.emulator.MoldyGameBoyMain",
     resources = [
         "//src/main/resources:cgb.bin",
+        "//src/main/resources:dmg.bin",
         "//src/main/resources:logback.xml",
     ],
     runtime_deps = [artifact("ch.qos.logback:logback-classic")],
@@ -45,7 +48,9 @@ java_binary(
         ":emulator",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/arch",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu/registers",
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/io",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/memory",
         artifact("com.google.guava:guava"),
+        artifact("org.slf4j:slf4j-api"),
     ],
 )

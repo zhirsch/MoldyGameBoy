@@ -1,11 +1,11 @@
 package com.zacharyhirsch.moldygameboy.emulator.cpu;
 
-import com.zacharyhirsch.moldygameboy.emulator.arch.Memory;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.instructions.AbstractInstruction5;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.instructions.Instruction;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.instructions.Mem;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.instructions.Nop;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
+import com.zacharyhirsch.moldygameboy.emulator.memory.Memory;
 
 public final class Cpu {
 
@@ -45,6 +45,7 @@ public final class Cpu {
   }
 
   private Instruction next() {
+    //    System.out.printf("%04x  %02x\n", registers.pc().get(), registers.ir().get());
     if (registers.ime().get() != 0 && getPendingInterrupts() != 0) {
       return new Isr(registers);
     }
@@ -52,7 +53,7 @@ public final class Cpu {
   }
 
   private int getPendingInterrupts() {
-    return memory.read(Memory.Register.IE) & memory.read(Memory.Register.IF);
+    return memory.ie() & memory.registers().if_().get();
   }
 
   private boolean isInterruptPending(InterruptType interrupt) {
@@ -94,8 +95,7 @@ public final class Cpu {
           continue;
         }
         registers.ime().set((byte) 0);
-        memory.write(
-            Memory.Register.IF, (byte) (memory.read(Memory.Register.IF) & ~interrupt.mask()));
+        memory.registers().if_().set((byte) (memory.registers().if_().get() & ~interrupt.mask()));
         registers.pc().set(interrupt.vector());
         break;
       }
