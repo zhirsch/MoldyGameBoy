@@ -1,10 +1,7 @@
-bazel_dep(name = "contrib_rules_jvm", version = "0.32.0")
-bazel_dep(name = "platforms", version = "1.0.0")
-bazel_dep(name = "rules_java", version = "9.6.1")
-bazel_dep(name = "rules_jvm_external", version = "6.10")
-
-# FIXME: Workaround for "The CcInfo symbol has been removed"
-bazel_dep(name = "rules_android", version = "0.7.1")
+bazel_dep(name = "contrib_rules_jvm", version = "0.34.0")
+bazel_dep(name = "platforms", version = "1.1.0")
+bazel_dep(name = "rules_java", version = "9.8.0")
+bazel_dep(name = "rules_jvm_external", version = "7.1")
 
 maven = use_extension("@rules_jvm_external//:extensions.bzl", "maven")
 maven.install(
