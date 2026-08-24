@@ -62,6 +62,10 @@ public final class Ppu {
     boolean lyEqualsLyc = memory.registers().ly().get() == memory.registers().lyc().get();
     memory.registers().stat().setLyEqualsLyc(lyEqualsLyc);
     memory.registers().stat().setMode(mode.getValue());
+    if (dot == 456) {
+      dot = 0;
+      drawnDots = 0;
+    }
   }
 
   private void tickOamScan() {
@@ -86,22 +90,18 @@ public final class Ppu {
 
   private void tickHBlank() {
     if (dot == 456) {
-      dot = 0;
-      drawnDots = 0;
       int nextLy = Byte.toUnsignedInt(memory.registers().ly().get()) + 1;
       if (nextLy == 144) {
         mode = Mode.MODE_1_VBLANK;
       } else {
         mode = Mode.MODE_2_OAM_SCAN;
       }
-      memory.registers().ly().set((byte) (nextLy));
+      memory.registers().ly().set((byte) nextLy);
     }
   }
 
   private void tickVBlank() {
     if (dot == 456) {
-      dot = 0;
-      drawnDots = 0;
       int nextLy = Byte.toUnsignedInt(memory.registers().ly().get()) + 1;
       if (nextLy == 154) {
         video.present();
@@ -113,7 +113,6 @@ public final class Ppu {
   }
 
   private void render(int pixel) {
-    assert 0 <= pixel && pixel <= 3;
     int colorIdx =
         switch (pixel) {
           case 0 -> (memory.registers().bgp().get() & 0b0000_0011) >>> 0;
@@ -122,7 +121,7 @@ public final class Ppu {
           case 3 -> (memory.registers().bgp().get() & 0b1100_0000) >>> 6;
           default -> throw new IllegalStateException();
         };
-    video.writeVideoPixel(
-        drawnDots++, Byte.toUnsignedInt(memory.registers().ly().get()), PALETTE[colorIdx]);
+    int y = Byte.toUnsignedInt(memory.registers().ly().get());
+    video.writeVideoPixel(drawnDots++, y, PALETTE[colorIdx]);
   }
 }
