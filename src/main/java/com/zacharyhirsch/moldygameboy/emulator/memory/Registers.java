@@ -4,6 +4,8 @@ import com.zacharyhirsch.moldygameboy.emulator.arch.IORegister;
 import com.zacharyhirsch.moldygameboy.emulator.memory.registers.*;
 
 public record Registers(
+    /* 01 */ Sb sb,
+    /* 02 */ Sc sc,
     /* 04 */ Div div,
     /* 05 */ Tima tima,
     /* 06 */ Tma tma,
@@ -32,6 +34,8 @@ public record Registers(
 
   Registers() {
     this(
+        new Sb(),
+        new Sc(),
         new Div(),
         new Tima(),
         new Tma(),
@@ -61,6 +65,8 @@ public record Registers(
 
   IORegister at(int index) {
     return switch (index) {
+      case 0x01 -> sb();
+      case 0x02 -> sc();
       case 0x04 -> div();
       case 0x05 -> tima();
       case 0x06 -> tma();

@@ -45,15 +45,15 @@ final class PixelFetcher {
     }
     if (memory.registers().lcdc().isWindowEnabled() && isInWindow()) {
     } else if (memory.registers().lcdc().isBackgroundEnabled()) {
-      short base = memory.registers().lcdc().getTileIdBase();
-      byte ly = memory.registers().ly().get();
-      byte scx = memory.registers().scx().get();
-      byte scy = memory.registers().scy().get();
+      int base = memory.registers().lcdc().getTileIdBase() & 0xffff;
+      int ly = memory.registers().ly().get() & 0xff;
+      int scx = memory.registers().scx().get() & 0xff;
+      int scy = memory.registers().scy().get() & 0xff;
       int tileY = (ly + scy) & 0xff;
-      int tileX = (fetcherX + (scx / 7)) & 0x1f;
+      int tileX = (fetcherX + (scx / 8)) & 0x1f;
       int row = (tileY / 8) & 0x1f;
-      short address = (short) (base + (row * 32) + tileX);
-      tileId = memory.read(address);
+      int address = base + (row * 32) + tileX;
+      tileId = memory.read((short) address);
       state = State.GET_TILE_DATA_LO;
     }
     clock = 0;
@@ -68,8 +68,8 @@ final class PixelFetcher {
       clock++;
       return;
     }
-    short address = (short) (memory.registers().lcdc().getTileDataBase() + tileId);
-    tileDataLo = memory.read(address);
+
+    tileDataLo = memory.read((short) computeTileAddress());
     state = State.GET_TILE_DATA_HI;
     clock = 0;
   }
@@ -79,8 +79,8 @@ final class PixelFetcher {
       clock++;
       return;
     }
-    short address = (short) (memory.registers().lcdc().getTileDataBase() + tileId + 1);
-    tileDataHi = memory.read(address);
+
+    tileDataHi = memory.read((short) (computeTileAddress() + 1));
     state = State.PUSH_TO_FIFO;
     clock = 0;
   }
@@ -101,5 +101,16 @@ final class PixelFetcher {
     fetcherX++;
     state = State.GET_TILE_ID;
     clock = 0;
+  }
+
+  private int computeTileAddress() {
+    int base = memory.registers().lcdc().getTileDataBase() & 0xffff;
+
+    int ly = memory.registers().ly().get() & 0xff;
+    int scy = memory.registers().scy().get() & 0xff;
+    int tileLine = (ly + scy) % 8;
+    int offset = (tileId & 0xff) * 16 + (tileLine * 2);
+
+    return base + offset;
   }
 }
