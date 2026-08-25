@@ -13,12 +13,16 @@ public final class Stat implements IORegister {
 
   @Override
   public byte read() {
-    return (byte) ((value & READ_MASK) | ~READ_MASK);
+    return get();
   }
 
   @Override
   public void write(byte value) {
     this.value = (byte) ((this.value & ~WRITE_MASK) | (value & WRITE_MASK));
+  }
+
+  public byte get() {
+    return (byte) ((value & READ_MASK) | ~READ_MASK);
   }
 
   public void setLyEqualsLyc(boolean value) {
@@ -27,5 +31,21 @@ public final class Stat implements IORegister {
 
   public void setMode(byte value) {
     this.value = (byte) ((this.value & 0b1111_1100) | (value & 0b0000_0011));
+    switch (value) {
+      case 0:
+        this.value = (byte) ((this.value & 0b1100_0111) | 0b0000_1000);
+        break;
+      case 1:
+        this.value = (byte) ((this.value & 0b1100_0111) | 0b001_0000);
+        break;
+      case 2:
+        this.value = (byte) ((this.value & 0b1100_0111) | 0b0010_0000);
+        break;
+      case 3:
+        this.value = (byte) ((this.value & 0b1100_0111) | 0b0000_0000);
+        break;
+      default:
+        throw new IllegalArgumentException(String.valueOf(value));
+    }
   }
 }

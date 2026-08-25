@@ -1,0 +1,12 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Run all tests under BlarggCpuInstrTest.java" type="BazelRunConfigurationType">
+    <bsp-state handler-provider-id="JvmTestHandlerProvider" check-visibility="true">
+      <bsp-target>@//src/test/java/com/zacharyhirsch/moldygameboy/emulator:BlarggCpuInstrTest</bsp-target>
+      <handler-state />
+    </bsp-state>
+    <method v="2">
+      <option name="KotlinCoroutineLibraryFinderBeforeRunTaskProvider" enabled="false" />
+      <option name="BuildScriptBeforeRunTaskProvider" enabled="false" />
+    </method>
+  </configuration>
+</component>

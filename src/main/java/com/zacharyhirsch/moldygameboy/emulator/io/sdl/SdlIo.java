@@ -1,7 +1,12 @@
-package com.zacharyhirsch.moldygameboy.emulator.io;
+package com.zacharyhirsch.moldygameboy.emulator.io.sdl;
 
 import static com.zacharyhirsch.jna.sdl3.SDL.*;
 
+import com.zacharyhirsch.moldygameboy.emulator.io.Audio;
+import com.zacharyhirsch.moldygameboy.emulator.io.EventLoop;
+import com.zacharyhirsch.moldygameboy.emulator.io.Io;
+import com.zacharyhirsch.moldygameboy.emulator.io.Joypads;
+import com.zacharyhirsch.moldygameboy.emulator.io.Video;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 

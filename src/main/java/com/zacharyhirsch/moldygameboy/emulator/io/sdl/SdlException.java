@@ -1,4 +1,4 @@
-package com.zacharyhirsch.moldygameboy.emulator.io;
+package com.zacharyhirsch.moldygameboy.emulator.io.sdl;
 
 import static com.zacharyhirsch.jna.sdl3.SDL.*;
 

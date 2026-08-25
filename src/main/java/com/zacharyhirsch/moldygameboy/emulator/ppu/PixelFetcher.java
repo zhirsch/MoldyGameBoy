@@ -17,6 +17,9 @@ final class PixelFetcher {
   private State state = State.GET_TILE_ID;
   private int clock = 0;
   private int fetcherX = 0;
+  private int windowFetcherX = 0;
+  private boolean inWindow = false;
+  private int windowLineCounter = 0;
   private byte tileId;
   private byte tileDataLo;
   private byte tileDataHi;
@@ -34,8 +37,21 @@ final class PixelFetcher {
     }
   }
 
-  public void nextLine() {
+  void startWindow() {
+    inWindow = true;
+    windowFetcherX = 0;
+  }
+
+  void nextLine() {
     fetcherX = 0;
+    if (inWindow) {
+      windowLineCounter++;
+    }
+    inWindow = false;
+  }
+
+  void nextFrame() {
+    windowLineCounter = 0;
   }
 
   private void getTileId() {
@@ -43,24 +59,28 @@ final class PixelFetcher {
       clock++;
       return;
     }
-    if (memory.registers().lcdc().isWindowEnabled() && isInWindow()) {
-    } else if (memory.registers().lcdc().isBackgroundEnabled()) {
-      int base = memory.registers().lcdc().getTileIdBase() & 0xffff;
-      int ly = memory.registers().ly().get() & 0xff;
-      int scx = memory.registers().scx().get() & 0xff;
-      int scy = memory.registers().scy().get() & 0xff;
-      int tileY = (ly + scy) & 0xff;
-      int tileX = (fetcherX + (scx / 8)) & 0x1f;
-      int row = (tileY / 8) & 0x1f;
-      int address = base + (row * 32) + tileX;
-      tileId = memory.read((short) address);
-      state = State.GET_TILE_DATA_LO;
+    if (memory.registers().lcdc().isBackgroundEnabled()) {
+      if (memory.registers().lcdc().isWindowEnabled() && inWindow) {
+        int base = memory.registers().lcdc().getWindowTileIdBase() & 0xffff;
+        int row = (windowLineCounter / 8) & 0x1f;
+        int tileX = windowFetcherX & 0x1f;
+        int address = base + (row * 32) + tileX;
+        tileId = memory.read((short) address);
+        state = State.GET_TILE_DATA_LO;
+      } else {
+        int base = memory.registers().lcdc().getBackgroundTileIdBase() & 0xffff;
+        int ly = memory.registers().ly().get() & 0xff;
+        int scx = memory.registers().scx().get() & 0xff;
+        int scy = memory.registers().scy().get() & 0xff;
+        int tileY = (ly + scy) & 0xff;
+        int tileX = (fetcherX + (scx / 8)) & 0x1f;
+        int row = (tileY / 8) & 0x1f;
+        int address = base + (row * 32) + tileX;
+        tileId = memory.read((short) address);
+        state = State.GET_TILE_DATA_LO;
+      }
+      clock = 0;
     }
-    clock = 0;
-  }
-
-  private boolean isInWindow() {
-    return false;
   }
 
   private void getTileDataLo() {

@@ -3,7 +3,7 @@ package com.zacharyhirsch.moldygameboy.emulator;
 import com.google.common.io.Resources;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 import com.zacharyhirsch.moldygameboy.emulator.io.Io;
-import com.zacharyhirsch.moldygameboy.emulator.io.SdlIo;
+import com.zacharyhirsch.moldygameboy.emulator.io.IoFactory;
 import com.zacharyhirsch.moldygameboy.emulator.memory.Memory;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -17,7 +17,7 @@ final class MoldyGameBoyMain {
   private static final Logger log = LoggerFactory.getLogger(MoldyGameBoyMain.class);
 
   static void main(String[] args) throws Exception {
-    try (Io io = new SdlIo(Arena.global())) {
+    try (Io io = IoFactory.sdl()) {
       Memory memory = new Memory(readBootRom(args[0]), readRom(args[1]));
       MoldyGameBoy gb = new MoldyGameBoy(memory, new Registers(), io);
       try {

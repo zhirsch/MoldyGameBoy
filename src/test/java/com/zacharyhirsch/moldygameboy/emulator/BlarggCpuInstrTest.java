@@ -3,9 +3,8 @@ package com.zacharyhirsch.moldygameboy.emulator;
 import com.google.common.io.Resources;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 import com.zacharyhirsch.moldygameboy.emulator.io.Io;
-import com.zacharyhirsch.moldygameboy.emulator.io.SdlIo;
+import com.zacharyhirsch.moldygameboy.emulator.io.IoFactory;
 import com.zacharyhirsch.moldygameboy.emulator.memory.Memory;
-import java.lang.foreign.Arena;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -63,7 +62,7 @@ final class BlarggCpuInstrTest {
     registers.h().set((byte) 0x01);
     registers.l().set((byte) 0x4d);
 
-    try (Io io = new SdlIo(Arena.global())) {
+    try (Io io = IoFactory.none()) {
       Memory memory = new Memory(rom, rom);
       MoldyGameBoy gb = new MoldyGameBoy(memory, registers, io);
       for (long i = 0; i < (long) test.getCycles(); i++) {

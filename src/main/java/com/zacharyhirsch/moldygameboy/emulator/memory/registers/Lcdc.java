@@ -18,8 +18,12 @@ public final class Lcdc implements IORegister {
     this.value = value;
   }
 
-  public short getTileIdBase() {
+  public short getBackgroundTileIdBase() {
     return (short) ((value & 0b0000_1000) != 0 ? 0x9c00 : 0x9800);
+  }
+
+  public short getWindowTileIdBase() {
+    return (short) ((value & 0b0100_0000) != 0 ? 0x9c00 : 0x9800);
   }
 
   public short getTileDataBase() {

@@ -1,5 +1,6 @@
 package com.zacharyhirsch.moldygameboy.emulator;
 
+import com.zacharyhirsch.moldygameboy.emulator.arch.InterruptRequestLine;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.Cpu;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 import com.zacharyhirsch.moldygameboy.emulator.io.Io;
@@ -16,10 +17,15 @@ final class MoldyGameBoy {
   private final Ppu ppu;
 
   public MoldyGameBoy(Memory memory, Registers registers, Io io) {
+    InterruptRequestLine vblank = new InterruptRequestLine();
+    InterruptRequestLine lcd = new InterruptRequestLine();
+    InterruptRequestLine timer = new InterruptRequestLine();
+    InterruptRequestLine serial = new InterruptRequestLine();
+    InterruptRequestLine joypad = new InterruptRequestLine();
     this.divider = new Divider(memory);
-    this.timer = new Timer(memory);
-    this.cpu = new Cpu(registers, memory);
-    this.ppu = new Ppu(memory, io.video());
+    this.timer = new Timer(memory, timer);
+    this.cpu = new Cpu(registers, memory, vblank, lcd, timer, serial, joypad);
+    this.ppu = new Ppu(memory, io.video(), vblank, lcd);
   }
 
   public void tick() {

@@ -1,7 +1,9 @@
-package com.zacharyhirsch.moldygameboy.emulator.io;
+package com.zacharyhirsch.moldygameboy.emulator.io.sdl;
 
 import static com.zacharyhirsch.jna.sdl3.SDL.*;
 
+import com.zacharyhirsch.moldygameboy.emulator.io.Color;
+import com.zacharyhirsch.moldygameboy.emulator.io.Video;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;

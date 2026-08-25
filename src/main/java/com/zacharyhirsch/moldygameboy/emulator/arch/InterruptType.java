@@ -1,6 +1,6 @@
-package com.zacharyhirsch.moldygameboy.emulator.cpu;
+package com.zacharyhirsch.moldygameboy.emulator.arch;
 
-enum InterruptType {
+public enum InterruptType {
   VBLANK((byte) 0b0000_0001, (short) 0x0040),
   LCD((byte) 0b0000_0010, (short) 0x0048),
   TIMER((byte) 0b0000_0100, (short) 0x0050),

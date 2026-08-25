@@ -1,4 +1,4 @@
-package com.zacharyhirsch.moldygameboy.emulator.io;
+package com.zacharyhirsch.moldygameboy.emulator.io.sdl;
 
 import static com.zacharyhirsch.jna.sdl3.SDL.*;
 
@@ -7,6 +7,7 @@ import com.zacharyhirsch.jna.sdl3.SDL_GamepadAxisEvent;
 import com.zacharyhirsch.jna.sdl3.SDL_GamepadButtonEvent;
 import com.zacharyhirsch.jna.sdl3.SDL_GamepadDeviceEvent;
 import com.zacharyhirsch.jna.sdl3.SDL_KeyboardEvent;
+import com.zacharyhirsch.moldygameboy.emulator.io.Joypads;
 import java.lang.foreign.MemorySegment;
 import java.util.Map;
 import org.slf4j.Logger;

@@ -24,5 +24,5 @@ java_import(
         ":macos": "macos-arm64/sdl3-sources.jar",
         ":windows": "win32-x64/sdl3-sources.jar",
     }),
-    visibility = ["//src/main/java/com/zacharyhirsch/moldygameboy/emulator/io:__pkg__"],
+    visibility = ["//src/main/java/com/zacharyhirsch/moldygameboy/emulator/io/sdl:__pkg__"],
 )

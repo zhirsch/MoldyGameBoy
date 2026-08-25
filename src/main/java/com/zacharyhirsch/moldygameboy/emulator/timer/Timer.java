@@ -1,15 +1,18 @@
 package com.zacharyhirsch.moldygameboy.emulator.timer;
 
+import com.zacharyhirsch.moldygameboy.emulator.arch.InterruptRequestLine;
 import com.zacharyhirsch.moldygameboy.emulator.memory.Memory;
 
 public final class Timer {
 
   private final Memory memory;
+  private final InterruptRequestLine timer;
 
   private int count = 0;
 
-  public Timer(Memory memory) {
+  public Timer(Memory memory, InterruptRequestLine timer) {
     this.memory = memory;
+    this.timer = timer;
   }
 
   public void tick() {
@@ -28,11 +31,14 @@ public final class Timer {
     if (count != 0) {
       return;
     }
+    int nextTima;
     if (memory.registers().tima().get() == (byte) 0xff) {
-      memory.registers().if_().set((byte) (memory.registers().if_().get() | 0b0000_0100));
-      memory.registers().tima().set(memory.registers().tma().get());
-      return;
+      nextTima = memory.registers().tma().get();
+      timer.set(true);
+    } else {
+      nextTima = memory.registers().tima().get() + 1;
+      timer.set(false);
     }
-    memory.registers().tima().set((byte) (memory.registers().tima().get() + 1));
+    memory.registers().tima().set((byte) nextTima);
   }
 }

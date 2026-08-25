@@ -1,6 +1,7 @@
 package com.zacharyhirsch.moldygameboy.emulator.memory.registers;
 
 import com.zacharyhirsch.moldygameboy.emulator.arch.IORegister;
+import com.zacharyhirsch.moldygameboy.emulator.arch.InterruptType;
 
 public final class If implements IORegister {
 
@@ -12,7 +13,7 @@ public final class If implements IORegister {
 
   @Override
   public byte read() {
-    return (byte) ((value & MASK) | ~MASK);
+    return get();
   }
 
   @Override
@@ -21,10 +22,14 @@ public final class If implements IORegister {
   }
 
   public byte get() {
-    return value;
+    return (byte) ((value & MASK) | ~MASK);
   }
 
-  public void set(byte value) {
-    this.value = value;
+  public void request(InterruptType interruptType) {
+    this.value = (byte) (this.value | interruptType.mask());
+  }
+
+  public void clear(InterruptType interruptType) {
+    this.value = (byte) (this.value & ~interruptType.mask());
   }
 }

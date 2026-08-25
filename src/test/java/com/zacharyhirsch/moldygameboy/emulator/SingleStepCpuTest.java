@@ -15,6 +15,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
+import com.zacharyhirsch.moldygameboy.emulator.arch.InterruptRequestLine;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.Cpu;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 import com.zacharyhirsch.moldygameboy.emulator.memory.Memory;
@@ -194,7 +195,15 @@ final class SingleStepCpuTest {
         .when(memory)
         .none(anyShort());
 
-    Cpu cpu = new Cpu(registers, memory);
+    Cpu cpu =
+        new Cpu(
+            registers,
+            memory,
+            new InterruptRequestLine(),
+            new InterruptRequestLine(),
+            new InterruptRequestLine(),
+            new InterruptRequestLine(),
+            new InterruptRequestLine());
     while (!cycles.isEmpty()) {
       cpu.tick();
     }

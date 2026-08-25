@@ -1,5 +1,6 @@
 package com.zacharyhirsch.moldygameboy.emulator.ppu;
 
+import com.zacharyhirsch.moldygameboy.emulator.arch.InterruptRequestLine;
 import com.zacharyhirsch.moldygameboy.emulator.io.Color;
 import com.zacharyhirsch.moldygameboy.emulator.io.Video;
 import com.zacharyhirsch.moldygameboy.emulator.memory.Memory;
@@ -35,6 +36,8 @@ public final class Ppu {
 
   private final Memory memory;
   private final Video video;
+  private final InterruptRequestLine vblank;
+  private final InterruptRequestLine lcd;
   private final Queue<Integer> fifo;
   private final PixelFetcher fetcher;
 
@@ -42,11 +45,14 @@ public final class Ppu {
   private int drawnDots = 0;
   private int pushedPixels = 0;
   private Mode mode = Mode.MODE_2_OAM_SCAN;
+  private boolean yCondition = false;
   private boolean isStalledForSprite = false;
 
-  public Ppu(Memory memory, Video video) {
+  public Ppu(Memory memory, Video video, InterruptRequestLine vblank, InterruptRequestLine lcd) {
     this.memory = memory;
     this.video = video;
+    this.vblank = vblank;
+    this.lcd = lcd;
     this.fifo = new ArrayDeque<>();
     this.fetcher = new PixelFetcher(memory);
   }
@@ -66,6 +72,8 @@ public final class Ppu {
       dot = 0;
       drawnDots = 0;
     }
+    vblank.set(mode == Mode.MODE_1_VBLANK);
+    lcd.set((memory.registers().stat().get() & 0b0111_1100) != 0);
   }
 
   private void tickOamScan() {
@@ -77,6 +85,10 @@ public final class Ppu {
   private void tickDrawing() {
     if (!fifo.isEmpty() && !isStalledForSprite) {
       render(fifo.remove());
+    }
+    if (yCondition && memory.registers().wx().get() == drawnDots) {
+      fetcher.startWindow();
+      fifo.clear();
     }
     int old = fifo.size();
     fetcher.tick(fifo);
@@ -97,6 +109,7 @@ public final class Ppu {
         mode = Mode.MODE_2_OAM_SCAN;
       }
       memory.registers().ly().set((byte) nextLy);
+      yCondition = memory.registers().wy().get() == nextLy;
     }
   }
 
@@ -107,6 +120,8 @@ public final class Ppu {
         video.present();
         mode = Mode.MODE_2_OAM_SCAN;
         nextLy = 0;
+        yCondition = false;
+        fetcher.nextFrame();
       }
       memory.registers().ly().set((byte) nextLy);
     }

@@ -1,5 +1,7 @@
 package com.zacharyhirsch.moldygameboy.emulator.cpu;
 
+import com.zacharyhirsch.moldygameboy.emulator.arch.InterruptRequestLine;
+import com.zacharyhirsch.moldygameboy.emulator.arch.InterruptType;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.instructions.AbstractInstruction5;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.instructions.Instruction;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.instructions.Mem;
@@ -19,19 +21,51 @@ public final class Cpu {
 
   private final Registers registers;
   private final Memory memory;
+  private final InterruptRequestLine vblank;
+  private final InterruptRequestLine lcd;
+  private final InterruptRequestLine timer;
+  private final InterruptRequestLine serial;
+  private final InterruptRequestLine joypad;
   private final CpuDecoder decoder;
 
   private Instruction instruction;
   private boolean halted = false;
 
-  public Cpu(Registers registers, Memory memory) {
+  public Cpu(
+      Registers registers,
+      Memory memory,
+      InterruptRequestLine vblank,
+      InterruptRequestLine lcd,
+      InterruptRequestLine timer,
+      InterruptRequestLine serial,
+      InterruptRequestLine joypad) {
     this.registers = registers;
     this.memory = memory;
+    this.vblank = vblank;
+    this.lcd = lcd;
+    this.timer = timer;
+    this.serial = serial;
+    this.joypad = joypad;
     this.decoder = new CpuDecoder(registers);
     this.instruction = new Nop(registers);
   }
 
   public void tick() {
+    if (vblank.get()) {
+      memory.registers().if_().request(InterruptType.VBLANK);
+    }
+    if (lcd.get()) {
+      memory.registers().if_().request(InterruptType.LCD);
+    }
+    if (timer.get()) {
+      memory.registers().if_().request(InterruptType.TIMER);
+    }
+    if (serial.get()) {
+      memory.registers().if_().request(InterruptType.SERIAL);
+    }
+    if (joypad.get()) {
+      memory.registers().if_().request(InterruptType.JOYPAD);
+    }
     halted = halted && getPendingInterrupts() == 0;
     if (halted) {
       return;
@@ -94,8 +128,11 @@ public final class Cpu {
         if (!isInterruptPending(interrupt)) {
           continue;
         }
+        if (interrupt != InterruptType.LCD) {
+          IO.println("Interrupt: " + interrupt);
+        }
         registers.ime().set((byte) 0);
-        memory.registers().if_().set((byte) (memory.registers().if_().get() & ~interrupt.mask()));
+        memory.registers().if_().clear(interrupt);
         registers.pc().set(interrupt.vector());
         break;
       }

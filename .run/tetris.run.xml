@@ -1,0 +1,12 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="tetris" type="BazelRunConfigurationType">
+    <bsp-state handler-provider-id="JvmRunHandlerProvider" check-visibility="true">
+      <bsp-target>@//src/main/java/com/zacharyhirsch/moldygameboy/emulator:MoldyGameBoy</bsp-target>
+      <handler-state programArguments="dmg.bin $PROJECT_DIR$/roms/games/tetris.gb" />
+    </bsp-state>
+    <method v="2">
+      <option name="KotlinCoroutineLibraryFinderBeforeRunTaskProvider" enabled="false" />
+      <option name="BuildScriptBeforeRunTaskProvider" enabled="false" />
+    </method>
+  </configuration>
+</component>
