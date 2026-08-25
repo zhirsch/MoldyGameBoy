@@ -37,16 +37,21 @@ final class PixelFetcher {
     }
   }
 
+  boolean isInWindow() {
+    return inWindow;
+  }
+
   void startWindow() {
     inWindow = true;
     windowFetcherX = 0;
+    state = State.GET_TILE_ID;
+    clock = 0;
   }
 
-  void nextLine() {
+  void nextLine(boolean windowWasDrawnThisLine) {
     fetcherX = 0;
-    int ly = memory.registers().ly().get() & 0xff;
-    int wy = memory.registers().wy().get() & 0xff;
-    if (memory.registers().lcdc().isWindowEnabled() && inWindow && ly >= wy) {
+    windowFetcherX = 0;
+    if (windowWasDrawnThisLine) {
       windowLy++;
     }
     inWindow = false;
@@ -54,6 +59,7 @@ final class PixelFetcher {
 
   void nextFrame() {
     windowLy = 0;
+    inWindow = false;
   }
 
   private void getTileId() {
@@ -118,19 +124,58 @@ final class PixelFetcher {
       int hiBit = (tileDataHi >> bit) & 0x01;
       fifo.add((hiBit << 1) | loBit);
     }
-    fetcherX++;
+    if (inWindow) {
+      windowFetcherX++;
+    } else {
+      fetcherX++;
+    }
     state = State.GET_TILE_ID;
     clock = 0;
   }
 
+  //  private int computeTileAddress() {
+  //    int base = memory.registers().lcdc().getTileDataBase() & 0xffff;
+  //    int tileLine =
+  //        inWindow
+  //            ? (windowLy % 8)
+  //            : (((memory.registers().ly().get() & 0xff) + (memory.registers().scy().get() &
+  // 0xff))
+  //                % 8);
+  //
+  //    boolean isUnsigned = memory.registers().lcdc().isTileDataBase8000();
+  //    int tileOffset;
+  //    if (isUnsigned) {
+  //      tileOffset = (tileId & 0xff) * 16;
+  //    } else {
+  //      tileOffset = ((byte) tileId) * 16;
+  //    }
+  //
+  //    return base + tileOffset + (tileLine * 2);
+  //  }
+
   private int computeTileAddress() {
-    int base = memory.registers().lcdc().getTileDataBase() & 0xffff;
+    boolean isUnsigned = memory.registers().lcdc().isTileDataBase8000();
 
-    int ly = memory.registers().ly().get() & 0xff;
-    int scy = memory.registers().scy().get() & 0xff;
-    int tileLine = (ly + scy) % 8;
-    int offset = (tileId & 0xff) * 16 + (tileLine * 2);
+    // Force 0x9000 as the math origin for signed tiles
+    int base;
+    int tileOffset;
+    if (isUnsigned) {
+      base = 0x8000;
+      tileOffset = (tileId & 0xff) * 16;
+    } else {
+      base = 0x9000;
+      tileOffset = ((byte) tileId) * 16; // Safely index -128 to 127 from 0x9000
+    }
 
-    return base + offset;
+    int tileLine;
+    if (inWindow) {
+      tileLine = windowLy % 8;
+    } else {
+      byte ly = memory.registers().ly().get();
+      byte scy = memory.registers().scy().get();
+      tileLine = ((ly & 0xff) + (scy & 0xff)) % 8;
+    }
+
+    return base + tileOffset + (tileLine * 2);
   }
 }

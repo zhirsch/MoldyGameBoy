@@ -47,6 +47,7 @@ public final class Ppu {
   private Mode mode = Mode.MODE_2_OAM_SCAN;
   private boolean yCondition = false;
   private boolean isStalledForSprite = false;
+  private boolean windowWasDrawnThisLine = false;
 
   public Ppu(Memory memory, Video video, InterruptRequestLine vblank, InterruptRequestLine lcd) {
     this.memory = memory;
@@ -70,7 +71,6 @@ public final class Ppu {
     memory.registers().stat().setMode(mode.getValue());
     if (dot == 456) {
       dot = 0;
-      drawnDots = 0;
     }
     vblank.set(mode == Mode.MODE_1_VBLANK);
     lcd.set((memory.registers().stat().get() & 0b0111_1100) != 0);
@@ -85,18 +85,19 @@ public final class Ppu {
   private void tickDrawing() {
     if (!fifo.isEmpty() && !isStalledForSprite) {
       render(fifo.remove());
+      pushedPixels++;
     }
-    if (yCondition && memory.registers().wx().get() == drawnDots) {
+    boolean isWindowEnabled = memory.registers().lcdc().isWindowEnabled();
+    if (isWindowEnabled && yCondition && !fetcher.isInWindow() && (memory.registers().wx().get() & 0xff) - 7 == drawnDots) {
       fetcher.startWindow();
       fifo.clear();
+      windowWasDrawnThisLine = true;
     }
-    int old = fifo.size();
     fetcher.tick(fifo);
-    pushedPixels += fifo.size() - old;
     if (pushedPixels == 160) {
       pushedPixels = 0;
       mode = Mode.MODE_0_HBLANK;
-      fetcher.nextLine();
+      fetcher.nextLine(windowWasDrawnThisLine);
     }
   }
 
@@ -109,7 +110,9 @@ public final class Ppu {
         mode = Mode.MODE_2_OAM_SCAN;
       }
       memory.registers().ly().set((byte) nextLy);
-      yCondition = memory.registers().wy().get() == nextLy;
+      drawnDots = 0;
+      windowWasDrawnThisLine = false;
+      yCondition = nextLy >= Byte.toUnsignedInt(memory.registers().wy().get());
     }
   }
 

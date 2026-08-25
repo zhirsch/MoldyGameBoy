@@ -27,11 +27,15 @@ public final class Lcdc implements IORegister {
   }
 
   public short getTileDataBase() {
-    return (short) ((value & 0b0001_0000) != 0 ? 0x8000 : 0x8800);
+    return (short) (isTileDataBase8000() ? 0x8000 : 0x8800);
   }
 
   public boolean isBackgroundEnabled() {
     return (value & 0b0000_0001) != 0;
+  }
+
+  public boolean isTileDataBase8000() {
+    return (value & 0b0001_0000) != 0;
   }
 
   public boolean isWindowEnabled() {
