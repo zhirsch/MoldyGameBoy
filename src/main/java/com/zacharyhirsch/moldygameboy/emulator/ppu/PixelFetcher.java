@@ -19,7 +19,7 @@ final class PixelFetcher {
   private int fetcherX = 0;
   private int windowFetcherX = 0;
   private boolean inWindow = false;
-  private int windowLineCounter = 0;
+  private int windowLy = 0;
   private byte tileId;
   private byte tileDataLo;
   private byte tileDataHi;
@@ -44,14 +44,16 @@ final class PixelFetcher {
 
   void nextLine() {
     fetcherX = 0;
-    if (inWindow) {
-      windowLineCounter++;
+    int ly = memory.registers().ly().get() & 0xff;
+    int wy = memory.registers().wy().get() & 0xff;
+    if (memory.registers().lcdc().isWindowEnabled() && inWindow && ly >= wy) {
+      windowLy++;
     }
     inWindow = false;
   }
 
   void nextFrame() {
-    windowLineCounter = 0;
+    windowLy = 0;
   }
 
   private void getTileId() {
@@ -59,28 +61,26 @@ final class PixelFetcher {
       clock++;
       return;
     }
-    if (memory.registers().lcdc().isBackgroundEnabled()) {
-      if (memory.registers().lcdc().isWindowEnabled() && inWindow) {
-        int base = memory.registers().lcdc().getWindowTileIdBase() & 0xffff;
-        int row = (windowLineCounter / 8) & 0x1f;
-        int tileX = windowFetcherX & 0x1f;
-        int address = base + (row * 32) + tileX;
-        tileId = memory.read((short) address);
-        state = State.GET_TILE_DATA_LO;
-      } else {
-        int base = memory.registers().lcdc().getBackgroundTileIdBase() & 0xffff;
-        int ly = memory.registers().ly().get() & 0xff;
-        int scx = memory.registers().scx().get() & 0xff;
-        int scy = memory.registers().scy().get() & 0xff;
-        int tileY = (ly + scy) & 0xff;
-        int tileX = (fetcherX + (scx / 8)) & 0x1f;
-        int row = (tileY / 8) & 0x1f;
-        int address = base + (row * 32) + tileX;
-        tileId = memory.read((short) address);
-        state = State.GET_TILE_DATA_LO;
-      }
-      clock = 0;
+    if (memory.registers().lcdc().isWindowEnabled() && inWindow) {
+      int base = memory.registers().lcdc().getWindowTileIdBase() & 0xffff;
+      int row = (windowLy / 8) & 0x1f;
+      int tileX = windowFetcherX & 0x1f;
+      int address = base + (row * 32) + tileX;
+      tileId = memory.read((short) address);
+      state = State.GET_TILE_DATA_LO;
+    } else if (memory.registers().lcdc().isBackgroundEnabled()) {
+      int base = memory.registers().lcdc().getBackgroundTileIdBase() & 0xffff;
+      int ly = memory.registers().ly().get() & 0xff;
+      int scx = memory.registers().scx().get() & 0xff;
+      int scy = memory.registers().scy().get() & 0xff;
+      int tileY = (ly + scy) & 0xff;
+      int tileX = (fetcherX + (scx / 8)) & 0x1f;
+      int row = (tileY / 8) & 0x1f;
+      int address = base + (row * 32) + tileX;
+      tileId = memory.read((short) address);
+      state = State.GET_TILE_DATA_LO;
     }
+    clock = 0;
   }
 
   private void getTileDataLo() {
