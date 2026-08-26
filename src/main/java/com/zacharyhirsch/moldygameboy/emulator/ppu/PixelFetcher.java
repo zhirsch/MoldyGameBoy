@@ -133,38 +133,17 @@ final class PixelFetcher {
     clock = 0;
   }
 
-  //  private int computeTileAddress() {
-  //    int base = memory.registers().lcdc().getTileDataBase() & 0xffff;
-  //    int tileLine =
-  //        inWindow
-  //            ? (windowLy % 8)
-  //            : (((memory.registers().ly().get() & 0xff) + (memory.registers().scy().get() &
-  // 0xff))
-  //                % 8);
-  //
-  //    boolean isUnsigned = memory.registers().lcdc().isTileDataBase8000();
-  //    int tileOffset;
-  //    if (isUnsigned) {
-  //      tileOffset = (tileId & 0xff) * 16;
-  //    } else {
-  //      tileOffset = ((byte) tileId) * 16;
-  //    }
-  //
-  //    return base + tileOffset + (tileLine * 2);
-  //  }
-
   private int computeTileAddress() {
     boolean isUnsigned = memory.registers().lcdc().isTileDataBase8000();
 
-    // Force 0x9000 as the math origin for signed tiles
     int base;
     int tileOffset;
     if (isUnsigned) {
       base = 0x8000;
-      tileOffset = (tileId & 0xff) * 16;
+      tileOffset = Byte.toUnsignedInt(tileId) * 16;
     } else {
       base = 0x9000;
-      tileOffset = ((byte) tileId) * 16; // Safely index -128 to 127 from 0x9000
+      tileOffset = tileId * 16;
     }
 
     int tileLine;

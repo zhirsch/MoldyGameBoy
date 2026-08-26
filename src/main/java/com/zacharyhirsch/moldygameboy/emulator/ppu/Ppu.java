@@ -60,6 +60,10 @@ public final class Ppu {
 
   public void tick() {
     dot++;
+    yCondition =
+        yCondition
+            || Byte.toUnsignedInt(memory.registers().ly().get())
+                == Byte.toUnsignedInt(memory.registers().wy().get());
     switch (mode) {
       case MODE_2_OAM_SCAN -> tickOamScan();
       case MODE_3_DRAWING -> tickDrawing();
