@@ -10,7 +10,8 @@ public final class Ly implements IORegister {
 
   @Override
   public byte read() {
-    return value;
+//    return value;
+    return (byte) 0xff;
   }
 
   @Override

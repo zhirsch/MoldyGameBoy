@@ -56,3 +56,25 @@ java_junit5_test(
         artifact("org.junit.jupiter:junit-jupiter-params"),
     ] + JUNIT5_DEPS,
 )
+
+java_junit5_test(
+    name = "MooneyeTest",
+    srcs = ["MooneyeTest.java"],
+    jvm_flags = ["-Djava.security.manager=disallow"],
+    resources = [
+        "//:mooneye-test-suite/build/acceptance/bits/reg_f.gb",
+        "//:mooneye-test-suite/build/acceptance/instr/daa.gb",
+    ],
+    deps = [
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator",
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/arch",
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu/registers",
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/io",
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/io:factory",
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/memory",
+        artifact("com.google.guava:guava"),
+        artifact("com.google.truth:truth"),
+        artifact("org.junit.jupiter:junit-jupiter-api"),
+        artifact("org.junit.jupiter:junit-jupiter-params"),
+    ] + JUNIT5_DEPS,
+)

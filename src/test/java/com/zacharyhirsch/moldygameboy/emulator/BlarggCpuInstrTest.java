@@ -1,6 +1,7 @@
 package com.zacharyhirsch.moldygameboy.emulator;
 
 import com.google.common.io.Resources;
+import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Register8;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 import com.zacharyhirsch.moldygameboy.emulator.io.Io;
 import com.zacharyhirsch.moldygameboy.emulator.io.IoFactory;
@@ -50,17 +51,25 @@ final class BlarggCpuInstrTest {
     ByteBuffer rom = ByteBuffer.wrap(Resources.toByteArray(romResource));
 
     Registers registers = new Registers();
-    registers.ir().set(rom.get(0x0100));
+    byte value = rom.get(0x0100);
+    registers.ir().write(value);
     registers.pc().set((short) 0x0101);
     registers.sp().set((short) 0xfffe);
-    registers.a().set((byte) 0x01);
+    Register8 register14 = registers.a();
+    register14.write((byte) 0x01);
     registers.f().set((byte) 0xb0);
-    registers.b().set((byte) 0x00);
-    registers.c().set((byte) 0x13);
-    registers.d().set((byte) 0x00);
-    registers.e().set((byte) 0xd8);
-    registers.h().set((byte) 0x01);
-    registers.l().set((byte) 0x4d);
+    Register8 register13 = registers.b();
+    register13.write((byte) 0x00);
+    Register8 register12 = registers.c();
+    register12.write((byte) 0x13);
+    Register8 register11 = registers.d();
+    register11.write((byte) 0x00);
+    Register8 register10 = registers.e();
+    register10.write((byte) 0xd8);
+    Register8 register9 = registers.h();
+    register9.write((byte) 0x01);
+    Register8 register8 = registers.l();
+    register8.write((byte) 0x4d);
 
     try (Io io = IoFactory.none()) {
       Memory memory = new Memory(rom, rom);

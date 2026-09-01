@@ -8,7 +8,7 @@ public final class Sc implements IORegister {
 
   @Override
   public byte read() {
-    throw new UnsupportedOperationException();
+    return (byte) 0xff;
   }
 
   @Override

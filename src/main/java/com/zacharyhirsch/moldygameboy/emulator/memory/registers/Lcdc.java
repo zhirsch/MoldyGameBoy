@@ -18,27 +18,27 @@ public final class Lcdc implements IORegister {
     this.value = value;
   }
 
-  public short getBackgroundTileIdBase() {
-    return (short) ((value & 0b0000_1000) != 0 ? 0x9c00 : 0x9800);
-  }
-
-  public short getWindowTileIdBase() {
-    return (short) ((value & 0b0100_0000) != 0 ? 0x9c00 : 0x9800);
-  }
-
-  public short getTileDataBase() {
-    return (short) (isTileDataBase8000() ? 0x8000 : 0x8800);
-  }
-
   public boolean isBackgroundEnabled() {
-    return (value & 0b0000_0001) != 0;
+    return bit(0);
+  }
+
+  public boolean isBackgroundTileMapBase9c00() {
+    return bit(3);
   }
 
   public boolean isTileDataBase8000() {
-    return (value & 0b0001_0000) != 0;
+    return bit(4);
   }
 
   public boolean isWindowEnabled() {
-    return (value & 0b0010_0000) != 0;
+    return bit(5);
+  }
+
+  public boolean isWindowTileMapBase9c00() {
+    return bit(6);
+  }
+
+  private boolean bit(int i) {
+    return (value & (1 << i)) != 0;
   }
 }

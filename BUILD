@@ -5,3 +5,7 @@ filegroup(
     srcs = glob(["sm83/v1/*.json"]),
     visibility = ["//src/test:__subpackages__"],
 )
+
+exports_files(
+    glob(["mooneye-test-suite/**/*.gb"]),
+)

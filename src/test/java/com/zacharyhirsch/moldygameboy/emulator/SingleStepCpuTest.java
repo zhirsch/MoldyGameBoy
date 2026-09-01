@@ -17,6 +17,7 @@ import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
 import com.zacharyhirsch.moldygameboy.emulator.arch.InterruptRequestLine;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.Cpu;
+import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Register8;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 import com.zacharyhirsch.moldygameboy.emulator.memory.Memory;
 import java.io.IOException;
@@ -143,14 +144,21 @@ final class SingleStepCpuTest {
     Registers registers = new Registers();
     registers.pc().set(initial.pc());
     registers.sp().set(initial.sp());
-    registers.a().set(initial.a());
+    Register8 register14 = registers.a();
+    register14.write(initial.a());
     registers.f().set(initial.f());
-    registers.b().set(initial.b());
-    registers.c().set(initial.c());
-    registers.d().set(initial.d());
-    registers.e().set(initial.e());
-    registers.h().set(initial.h());
-    registers.l().set(initial.l());
+    Register8 register13 = registers.b();
+    register13.write(initial.b());
+    Register8 register12 = registers.c();
+    register12.write(initial.c());
+    Register8 register11 = registers.d();
+    register11.write(initial.d());
+    Register8 register10 = registers.e();
+    register10.write(initial.e());
+    Register8 register9 = registers.h();
+    register9.write(initial.h());
+    Register8 register8 = registers.l();
+    register8.write(initial.l());
     for (Mem mem : initial.ram()) {
       ram.put(Short.toUnsignedInt(mem.address()), mem.value());
     }

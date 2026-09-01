@@ -7,3 +7,6 @@
 [submodule "sm83"]
 	path = sm83
 	url = https://github.com/SingleStepTests/sm83
+[submodule "mooneye-test-suite"]
+	path = mooneye-test-suite
+	url = https://github.com/Gekkio/mooneye-test-suite
