@@ -18,13 +18,13 @@ public final class Sbc {
 
     @Override
     protected Mem execute0() {
-      Alu.Result result = Alu.sub(registers.a().get(), register.get(), registers.f().c().get());
-      registers.a().set(result.result());
+      Alu.Result result = Alu.sub(registers.a().read(), register.read(), registers.f().c().get());
+      registers.a().write(result.result());
       registers.f().z().set(result.z());
       registers.f().n().set(result.n());
       registers.f().h().set(result.h());
       registers.f().c().set(result.c());
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 
@@ -40,18 +40,18 @@ public final class Sbc {
 
     @Override
     protected Mem execute0() {
-      return Mem.read(registers.hl().get(), data -> z = data);
+      return Mem.read(registers.hl().read(), data -> z = data);
     }
 
     @Override
     protected Mem execute1() {
-      Alu.Result result = Alu.sub(registers.a().get(), z, registers.f().c().get());
-      registers.a().set(result.result());
+      Alu.Result result = Alu.sub(registers.a().read(), z, registers.f().c().get());
+      registers.a().write(result.result());
       registers.f().z().set(result.z());
       registers.f().n().set(result.n());
       registers.f().h().set(result.h());
       registers.f().c().set(result.c());
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 
@@ -72,13 +72,13 @@ public final class Sbc {
 
     @Override
     protected Mem execute1() {
-      Alu.Result result = Alu.sub(registers.a().get(), z, registers.f().c().get());
-      registers.a().set(result.result());
+      Alu.Result result = Alu.sub(registers.a().read(), z, registers.f().c().get());
+      registers.a().write(result.result());
       registers.f().z().set(result.z());
       registers.f().n().set(result.n());
       registers.f().h().set(result.h());
       registers.f().c().set(result.c());
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 }

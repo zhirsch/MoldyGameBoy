@@ -18,13 +18,13 @@ public final class Sra {
 
     @Override
     protected Mem execute0() {
-      Alu.Result result = Alu.rr(register.get(), (register.get() & 0x80) != 0);
-      register.set(result.result());
+      Alu.Result result = Alu.rr(register.read(), (register.read() & 0x80) != 0);
+      register.write(result.result());
       registers.f().z().set(result.z());
       registers.f().n().set(result.n());
       registers.f().h().set(result.h());
       registers.f().c().set(result.c());
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 
@@ -40,7 +40,7 @@ public final class Sra {
 
     @Override
     protected Mem execute0() {
-      return Mem.read(registers.hl().get(), data -> z = data);
+      return Mem.read(registers.hl().read(), data -> z = data);
     }
 
     @Override
@@ -50,12 +50,12 @@ public final class Sra {
       registers.f().n().set(result.n());
       registers.f().h().set(result.h());
       registers.f().c().set(result.c());
-      return Mem.write(registers.hl().get(), result::result);
+      return Mem.write(registers.hl().read(), result::result);
     }
 
     @Override
     protected Mem execute2() {
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 }

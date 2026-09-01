@@ -19,17 +19,17 @@ public final class Rst extends AbstractInstruction4 {
 
   @Override
   protected Mem execute1() {
-    return Mem.write(registers.sp().getAndDecrement(), registers.pc().hi()::get);
+    return Mem.write(registers.sp().getAndDecrement(), registers.pc().hi()::read);
   }
 
   @Override
   protected Mem execute2() {
-    return Mem.write(registers.sp().get(), registers.pc().lo()::get);
+    return Mem.write(registers.sp().read(), registers.pc().lo()::read);
   }
 
   @Override
   protected Mem execute3() {
-    registers.pc().set(address);
-    return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+    registers.pc().write(address);
+    return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
   }
 }

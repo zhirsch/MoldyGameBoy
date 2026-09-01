@@ -35,13 +35,13 @@ public final class Jrcc implements Instruction {
   private Mem execute1() {
     if (!predicate.test(registers.f())) {
       i = 3;
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
-    registers.pc().set((short) (registers.pc().get() + z));
-    return Mem.none(registers.pc().get());
+    registers.pc().write((short) (registers.pc().read() + z));
+    return Mem.none(registers.pc().read());
   }
 
   private Mem execute2() {
-    return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+    return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
   }
 }

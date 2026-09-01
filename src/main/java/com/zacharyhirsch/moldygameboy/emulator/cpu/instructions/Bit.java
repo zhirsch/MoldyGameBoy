@@ -20,11 +20,11 @@ public final class Bit {
 
     @Override
     protected Mem execute0() {
-      Alu.Result result = Alu.bit(register.get(), index);
+      Alu.Result result = Alu.bit(register.read(), index);
       registers.f().z().set(result.z());
       registers.f().n().set(result.n());
       registers.f().h().set(result.h());
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 
@@ -42,7 +42,7 @@ public final class Bit {
 
     @Override
     protected Mem execute0() {
-      return Mem.read(registers.hl().get(), data -> z = data);
+      return Mem.read(registers.hl().read(), data -> z = data);
     }
 
     @Override
@@ -51,7 +51,7 @@ public final class Bit {
       registers.f().z().set(result.z());
       registers.f().n().set(result.n());
       registers.f().h().set(result.h());
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 }

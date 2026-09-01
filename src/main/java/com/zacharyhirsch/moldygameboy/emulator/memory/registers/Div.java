@@ -1,8 +1,8 @@
 package com.zacharyhirsch.moldygameboy.emulator.memory.registers;
 
-import com.zacharyhirsch.moldygameboy.emulator.arch.IORegister;
+import com.zacharyhirsch.moldygameboy.emulator.arch.Register8;
 
-public final class Div implements IORegister {
+public final class Div implements Register8 {
 
   private static final int MASK = 0b1111_1111;
 

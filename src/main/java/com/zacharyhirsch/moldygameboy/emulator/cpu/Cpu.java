@@ -80,7 +80,7 @@ public final class Cpu {
 
   private Instruction next() {
     //    System.out.printf("%04x  %02x\n", registers.pc().get(), registers.ir().get());
-    if (registers.ime().get() != 0 && getPendingInterrupts() != 0) {
+    if (registers.ime().read() != 0 && getPendingInterrupts() != 0) {
       return new Isr(registers);
     }
     return decoder.decode();
@@ -114,12 +114,12 @@ public final class Cpu {
 
     @Override
     protected Mem execute2() {
-      return Mem.write(registers.sp().getAndDecrement(), registers.pc().hi()::get);
+      return Mem.write(registers.sp().getAndDecrement(), registers.pc().hi()::read);
     }
 
     @Override
     protected Mem execute3() {
-      return Mem.write(registers.sp().get(), registers.pc().lo()::get);
+      return Mem.write(registers.sp().read(), registers.pc().lo()::read);
     }
 
     @Override
@@ -131,12 +131,12 @@ public final class Cpu {
         if (interrupt != InterruptType.LCD) {
           IO.println("Interrupt: " + interrupt);
         }
-        registers.ime().set((byte) 0);
+        registers.ime().write((byte) 0);
         memory.registers().if_().clear(interrupt);
-        registers.pc().set(interrupt.vector());
+        registers.pc().write(interrupt.vector());
         break;
       }
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 }

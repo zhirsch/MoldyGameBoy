@@ -27,13 +27,13 @@ public class Jp {
 
     @Override
     protected Mem execute2() {
-      registers.pc().set(w, z);
+      registers.pc().write(w, z);
       return Mem.none((short) 0x0000);
     }
 
     @Override
     protected Mem execute3() {
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 
@@ -47,8 +47,8 @@ public class Jp {
 
     @Override
     protected Mem execute0() {
-      registers.pc().set(registers.hl().get());
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      registers.pc().write(registers.hl().read());
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 }

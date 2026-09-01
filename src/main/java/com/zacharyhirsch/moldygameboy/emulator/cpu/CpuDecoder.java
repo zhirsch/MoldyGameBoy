@@ -67,7 +67,7 @@ final class CpuDecoder {
     return new AbstractInstruction1() {
       @Override
       protected Mem execute0() {
-        return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+        return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
       }
     };
   }
@@ -77,7 +77,7 @@ final class CpuDecoder {
       prefixed = false;
       return decodePrefixed();
     }
-    return switch (Byte.toUnsignedInt(registers.ir().get())) {
+    return switch (Byte.toUnsignedInt(registers.ir().read())) {
       case 0x00 -> new Nop(registers);
       case 0x01 -> new Ld.RegisterImmediate16(registers, registers.bc());
       case 0x02 -> new Ld.IndirectRegister(registers, registers.a(), registers.bc());
@@ -334,12 +334,12 @@ final class CpuDecoder {
       // case 0xfd -> null; // illegal
       case 0xfe -> new Cp.Immediate(registers);
       case 0xff -> new Rst(registers, (short) 0x38);
-      default -> throw new InvalidOpcodeError(registers.ir().get());
+      default -> throw new InvalidOpcodeError(registers.ir().read());
     };
   }
 
   private Instruction decodePrefixed() {
-    return switch (Byte.toUnsignedInt(registers.ir().get())) {
+    return switch (Byte.toUnsignedInt(registers.ir().read())) {
       case 0x00 -> new Rlc.Register(registers, registers.b());
       case 0x01 -> new Rlc.Register(registers, registers.c());
       case 0x02 -> new Rlc.Register(registers, registers.d());
@@ -596,7 +596,7 @@ final class CpuDecoder {
       case 0xfd -> new Set.Register(registers, registers.l(), 7);
       case 0xfe -> new Set.Indirect(registers, 7);
       case 0xff -> new Set.Register(registers, registers.a(), 7);
-      default -> throw new InvalidOpcodeError((byte) 0xcb, registers.ir().get());
+      default -> throw new InvalidOpcodeError((byte) 0xcb, registers.ir().read());
     };
   }
 }

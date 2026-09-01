@@ -1,7 +1,7 @@
 package com.zacharyhirsch.moldygameboy.emulator;
 
 import com.google.common.io.Resources;
-import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Register8;
+import com.zacharyhirsch.moldygameboy.emulator.arch.Register8;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 import com.zacharyhirsch.moldygameboy.emulator.io.Io;
 import com.zacharyhirsch.moldygameboy.emulator.io.IoFactory;
@@ -53,11 +53,11 @@ final class BlarggCpuInstrTest {
     Registers registers = new Registers();
     byte value = rom.get(0x0100);
     registers.ir().write(value);
-    registers.pc().set((short) 0x0101);
-    registers.sp().set((short) 0xfffe);
+    registers.pc().write((short) 0x0101);
+    registers.sp().write((short) 0xfffe);
     Register8 register14 = registers.a();
     register14.write((byte) 0x01);
-    registers.f().set((byte) 0xb0);
+    registers.f().write((byte) 0xb0);
     Register8 register13 = registers.b();
     register13.write((byte) 0x00);
     Register8 register12 = registers.c();

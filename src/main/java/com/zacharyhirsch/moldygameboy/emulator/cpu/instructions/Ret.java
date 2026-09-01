@@ -30,7 +30,7 @@ public final class Ret extends AbstractInstruction4 {
 
   @Override
   protected Mem execute3() {
-    registers.pc().set(w, z);
-    return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+    registers.pc().write(w, z);
+    return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
   }
 }

@@ -15,6 +15,6 @@ public final class Scf extends AbstractInstruction1 {
     registers.f().n().set(false);
     registers.f().h().set(false);
     registers.f().c().set(true);
-    return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+    return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
   }
 }

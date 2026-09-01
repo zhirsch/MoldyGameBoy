@@ -17,7 +17,7 @@ import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
 import com.zacharyhirsch.moldygameboy.emulator.arch.InterruptRequestLine;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.Cpu;
-import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Register8;
+import com.zacharyhirsch.moldygameboy.emulator.arch.Register8;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 import com.zacharyhirsch.moldygameboy.emulator.memory.Memory;
 import java.io.IOException;
@@ -142,11 +142,11 @@ final class SingleStepCpuTest {
     ByteBuffer ram = ByteBuffer.allocate(1 << 16);
 
     Registers registers = new Registers();
-    registers.pc().set(initial.pc());
-    registers.sp().set(initial.sp());
+    registers.pc().write(initial.pc());
+    registers.sp().write(initial.sp());
     Register8 register14 = registers.a();
     register14.write(initial.a());
-    registers.f().set(initial.f());
+    registers.f().write(initial.f());
     Register8 register13 = registers.b();
     register13.write(initial.b());
     Register8 register12 = registers.c();
@@ -217,16 +217,16 @@ final class SingleStepCpuTest {
     }
     registers.pc().getAndDecrement();
 
-    assertThat(registers.pc().get()).isEqualTo(final_.pc());
-    assertThat(registers.sp().get()).isEqualTo(final_.sp());
-    assertThat(registers.a().get()).isEqualTo(final_.a());
-    assertThat(registers.f().get()).isEqualTo(final_.f());
-    assertThat(registers.b().get()).isEqualTo(final_.b());
-    assertThat(registers.c().get()).isEqualTo(final_.c());
-    assertThat(registers.d().get()).isEqualTo(final_.d());
-    assertThat(registers.e().get()).isEqualTo(final_.e());
-    assertThat(registers.h().get()).isEqualTo(final_.h());
-    assertThat(registers.l().get()).isEqualTo(final_.l());
+    assertThat(registers.pc().read()).isEqualTo(final_.pc());
+    assertThat(registers.sp().read()).isEqualTo(final_.sp());
+    assertThat(registers.a().read()).isEqualTo(final_.a());
+    assertThat(registers.f().read()).isEqualTo(final_.f());
+    assertThat(registers.b().read()).isEqualTo(final_.b());
+    assertThat(registers.c().read()).isEqualTo(final_.c());
+    assertThat(registers.d().read()).isEqualTo(final_.d());
+    assertThat(registers.e().read()).isEqualTo(final_.e());
+    assertThat(registers.h().read()).isEqualTo(final_.h());
+    assertThat(registers.l().read()).isEqualTo(final_.l());
     for (Mem mem : final_.ram()) {
       assertThat(ram.get(Short.toUnsignedInt(mem.address()))).isEqualTo(mem.value());
     }

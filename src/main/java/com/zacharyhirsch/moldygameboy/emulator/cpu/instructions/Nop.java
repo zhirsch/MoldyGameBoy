@@ -15,7 +15,7 @@ public final class Nop implements Instruction {
   @Override
   public Mem tick() {
     return switch (i++) {
-      case 0 -> Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      case 0 -> Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
       case 1 -> null;
       default -> throw new IllegalStateException();
     };

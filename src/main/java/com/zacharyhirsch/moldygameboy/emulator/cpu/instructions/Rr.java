@@ -18,13 +18,13 @@ public final class Rr {
 
     @Override
     protected Mem execute0() {
-      Alu.Result result = Alu.rr(register.get(), registers.f().c().get());
-      register.set(result.result());
+      Alu.Result result = Alu.rr(register.read(), registers.f().c().get());
+      register.write(result.result());
       registers.f().z().set(result.z());
       registers.f().n().set(false);
       registers.f().h().set(false);
       registers.f().c().set(result.c());
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 
@@ -40,7 +40,7 @@ public final class Rr {
 
     @Override
     protected Mem execute0() {
-      return Mem.read(registers.hl().get(), data -> z = data);
+      return Mem.read(registers.hl().read(), data -> z = data);
     }
 
     @Override
@@ -50,12 +50,12 @@ public final class Rr {
       registers.f().n().set(false);
       registers.f().h().set(false);
       registers.f().c().set(result.c());
-      return Mem.write(registers.hl().get(), result::result);
+      return Mem.write(registers.hl().read(), result::result);
     }
 
     @Override
     protected Mem execute2() {
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 }

@@ -18,13 +18,13 @@ public final class Swap {
 
     @Override
     protected Mem execute0() {
-      Alu.Result result = Alu.swap(register.get());
-      register.set(result.result());
+      Alu.Result result = Alu.swap(register.read());
+      register.write(result.result());
       registers.f().z().set(result.z());
       registers.f().n().set(result.n());
       registers.f().h().set(result.h());
       registers.f().c().set(result.c());
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 
@@ -40,7 +40,7 @@ public final class Swap {
 
     @Override
     protected Mem execute0() {
-      return Mem.read(registers.hl().get(), data -> z = data);
+      return Mem.read(registers.hl().read(), data -> z = data);
     }
 
     @Override
@@ -50,12 +50,12 @@ public final class Swap {
       registers.f().n().set(result.n());
       registers.f().h().set(result.h());
       registers.f().c().set(result.c());
-      return Mem.write(registers.hl().get(), result::result);
+      return Mem.write(registers.hl().read(), result::result);
     }
 
     @Override
     protected Mem execute2() {
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 }

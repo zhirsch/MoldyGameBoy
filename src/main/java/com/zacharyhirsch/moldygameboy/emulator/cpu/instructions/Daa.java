@@ -12,7 +12,7 @@ public final class Daa extends AbstractInstruction1 {
 
   @Override
   protected Mem execute0() {
-    int a = Byte.toUnsignedInt(registers.a().get());
+    int a = Byte.toUnsignedInt(registers.a().read());
     if (registers.f().n().get()) {
       // after subtraction
       if (registers.f().c().get()) {
@@ -31,9 +31,9 @@ public final class Daa extends AbstractInstruction1 {
         a += 0x06;
       }
     }
-    registers.a().set((byte) a);
+    registers.a().write((byte) a);
     registers.f().z().set(((byte) a) == 0);
     registers.f().h().set(false);
-    return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+    return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
   }
 }

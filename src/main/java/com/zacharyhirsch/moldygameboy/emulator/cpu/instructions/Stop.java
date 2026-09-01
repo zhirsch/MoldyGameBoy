@@ -12,7 +12,7 @@ public final class Stop extends AbstractInstruction2 {
 
   @Override
   protected Mem execute0() {
-    return Mem.none(registers.pc().get());
+    return Mem.none(registers.pc().read());
   }
 
   @Override

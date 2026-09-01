@@ -18,12 +18,12 @@ public final class Cp {
 
     @Override
     protected Mem execute0() {
-      Alu.Result result = Alu.sub(registers.a().get(), register.get(), false);
+      Alu.Result result = Alu.sub(registers.a().read(), register.read(), false);
       registers.f().z().set(result.z());
       registers.f().n().set(result.n());
       registers.f().h().set(result.h());
       registers.f().c().set(result.c());
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 
@@ -39,17 +39,17 @@ public final class Cp {
 
     @Override
     protected Mem execute0() {
-      return Mem.read(registers.hl().get(), data -> z = data);
+      return Mem.read(registers.hl().read(), data -> z = data);
     }
 
     @Override
     protected Mem execute1() {
-      Alu.Result result = Alu.sub(registers.a().get(), z, false);
+      Alu.Result result = Alu.sub(registers.a().read(), z, false);
       registers.f().z().set(result.z());
       registers.f().n().set(result.n());
       registers.f().h().set(result.h());
       registers.f().c().set(result.c());
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 
@@ -70,12 +70,12 @@ public final class Cp {
 
     @Override
     protected Mem execute1() {
-      Alu.Result result = Alu.sub(registers.a().get(), z, false);
+      Alu.Result result = Alu.sub(registers.a().read(), z, false);
       registers.f().z().set(result.z());
       registers.f().n().set(result.n());
       registers.f().h().set(result.h());
       registers.f().c().set(result.c());
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 }

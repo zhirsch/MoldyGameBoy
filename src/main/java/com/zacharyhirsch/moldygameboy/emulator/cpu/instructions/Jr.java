@@ -1,6 +1,5 @@
 package com.zacharyhirsch.moldygameboy.emulator.cpu.instructions;
 
-import com.zacharyhirsch.moldygameboy.emulator.cpu.alu.Alu;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 
 public final class Jr extends AbstractInstruction3 {
@@ -20,12 +19,12 @@ public final class Jr extends AbstractInstruction3 {
 
   @Override
   protected Mem execute1() {
-    registers.pc().set((short) (registers.pc().get() + z));
-    return Mem.none(registers.pc().get());
+    registers.pc().write((short) (registers.pc().read() + z));
+    return Mem.none(registers.pc().read());
   }
 
   @Override
   protected Mem execute2() {
-    return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+    return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
   }
 }

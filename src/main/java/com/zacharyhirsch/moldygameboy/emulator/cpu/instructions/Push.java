@@ -20,16 +20,16 @@ public final class Push extends AbstractInstruction4 {
 
   @Override
   protected Mem execute1() {
-    return Mem.write(registers.sp().getAndDecrement(), register.hi()::get);
+    return Mem.write(registers.sp().getAndDecrement(), register.hi()::read);
   }
 
   @Override
   protected Mem execute2() {
-    return Mem.write(registers.sp().get(), register.lo()::get);
+    return Mem.write(registers.sp().read(), register.lo()::read);
   }
 
   @Override
   protected Mem execute3() {
-    return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+    return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
   }
 }

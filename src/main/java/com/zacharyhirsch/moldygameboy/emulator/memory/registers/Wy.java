@@ -1,8 +1,8 @@
 package com.zacharyhirsch.moldygameboy.emulator.memory.registers;
 
-import com.zacharyhirsch.moldygameboy.emulator.arch.IORegister;
+import com.zacharyhirsch.moldygameboy.emulator.arch.Register8;
 
-public final class Wy implements IORegister {
+public final class Wy implements Register8 {
 
   private byte value = 0;
 

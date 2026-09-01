@@ -18,13 +18,13 @@ public final class Srl {
 
     @Override
     protected Mem execute0() {
-      Alu.Result r = Alu.rr(register.get(), false);
-      register.set(r.result());
+      Alu.Result r = Alu.rr(register.read(), false);
+      register.write(r.result());
       registers.f().z().set(r.z());
       registers.f().n().set(r.n());
       registers.f().h().set(r.h());
       registers.f().c().set(r.c());
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 
@@ -40,7 +40,7 @@ public final class Srl {
 
     @Override
     protected Mem execute0() {
-      return Mem.read(registers.hl().get(), data -> z = data);
+      return Mem.read(registers.hl().read(), data -> z = data);
     }
 
     @Override
@@ -50,12 +50,12 @@ public final class Srl {
       registers.f().n().set(result.n());
       registers.f().h().set(result.h());
       registers.f().c().set(result.c());
-      return Mem.write(registers.hl().get(), result::result);
+      return Mem.write(registers.hl().read(), result::result);
     }
 
     @Override
     protected Mem execute2() {
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 }

@@ -1,6 +1,6 @@
 package com.zacharyhirsch.moldygameboy.emulator.memory;
 
-import com.zacharyhirsch.moldygameboy.emulator.arch.IORegister;
+import com.zacharyhirsch.moldygameboy.emulator.arch.Register8;
 import com.zacharyhirsch.moldygameboy.emulator.memory.registers.*;
 
 public record Registers(
@@ -63,7 +63,7 @@ public record Registers(
         new Svbk());
   }
 
-  IORegister at(int index) {
+  Register8 at(int index) {
     return switch (index) {
       case 0x01 -> sb();
       case 0x02 -> sc();

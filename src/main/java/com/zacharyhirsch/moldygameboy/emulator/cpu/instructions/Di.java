@@ -12,7 +12,7 @@ public final class Di extends AbstractInstruction1 {
 
   @Override
   protected Mem execute0() {
-    registers.ime().set((byte) 0);
-    return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+    registers.ime().write((byte) 0);
+    return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
   }
 }

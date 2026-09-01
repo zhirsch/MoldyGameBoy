@@ -13,12 +13,12 @@ public final class Rlca extends AbstractInstruction1 {
 
   @Override
   protected Mem execute0() {
-    Alu.Result result = Alu.rl(registers.a().get(), (registers.a().get() & 0x80) != 0);
-    registers.a().set(result.result());
+    Alu.Result result = Alu.rl(registers.a().read(), (registers.a().read() & 0x80) != 0);
+    registers.a().write(result.result());
     registers.f().z().set(false);
     registers.f().n().set(false);
     registers.f().h().set(false);
     registers.f().c().set(result.c());
-    return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+    return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
   }
 }

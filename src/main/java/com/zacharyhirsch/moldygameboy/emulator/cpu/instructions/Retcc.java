@@ -38,7 +38,7 @@ public final class Retcc implements Instruction {
   private Mem execute1() {
     if (!predicate.test(registers.f())) {
       i = 5;
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
     return Mem.read(registers.sp().getAndIncrement(), data -> z = data);
   }
@@ -48,12 +48,12 @@ public final class Retcc implements Instruction {
   }
 
   private Mem execute3() {
-    registers.pc().set(w, z);
+    registers.pc().write(w, z);
     return Mem.none((short) 0x0000);
   }
 
   private Mem execute4() {
-    registers.pc().set(w, z);
-    return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+    registers.pc().write(w, z);
+    return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
   }
 }

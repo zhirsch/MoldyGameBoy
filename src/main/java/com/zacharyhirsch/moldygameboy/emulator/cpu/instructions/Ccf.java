@@ -17,6 +17,6 @@ public final class Ccf extends AbstractInstruction1 {
     registers.f().n().set(result.n());
     registers.f().h().set(result.h());
     registers.f().c().set(result.c());
-    return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+    return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
   }
 }

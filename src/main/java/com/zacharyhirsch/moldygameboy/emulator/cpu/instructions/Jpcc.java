@@ -43,14 +43,14 @@ public class Jpcc {
     private Mem execute2() {
       if (!predicate.test(registers.f())) {
         i = 4;
-        return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+        return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
       }
-      registers.pc().set(w, z);
+      registers.pc().write(w, z);
       return Mem.none((short) 0x0000);
     }
 
     private Mem execute3() {
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 

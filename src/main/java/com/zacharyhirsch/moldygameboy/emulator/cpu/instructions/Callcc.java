@@ -43,21 +43,21 @@ public final class Callcc implements Instruction {
   private Mem execute2() {
     if (!predicate.test(registers.f())) {
       i = 6;
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
     return Mem.none(registers.sp().getAndDecrement());
   }
 
   private Mem execute3() {
-    return Mem.write(registers.sp().getAndDecrement(), registers.pc().hi()::get);
+    return Mem.write(registers.sp().getAndDecrement(), registers.pc().hi()::read);
   }
 
   private Mem execute4() {
-    return Mem.write(registers.sp().get(), registers.pc().lo()::get);
+    return Mem.write(registers.sp().read(), registers.pc().lo()::read);
   }
 
   private Mem execute5() {
-    registers.pc().set(w, z);
-    return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+    registers.pc().write(w, z);
+    return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
   }
 }

@@ -63,6 +63,7 @@ java_junit5_test(
     jvm_flags = ["-Djava.security.manager=disallow"],
     resources = [
         "//:mooneye-test-suite/build/acceptance/bits/reg_f.gb",
+        "//:mooneye-test-suite/build/acceptance/bits/unused_hwio-GS.gb",
         "//:mooneye-test-suite/build/acceptance/instr/daa.gb",
     ],
     deps = [

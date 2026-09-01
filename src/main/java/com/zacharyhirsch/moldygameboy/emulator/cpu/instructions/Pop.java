@@ -28,7 +28,7 @@ public final class Pop extends AbstractInstruction3 {
 
   @Override
   protected Mem execute2() {
-    register.set(w, z);
-    return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+    register.write(w, z);
+    return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
   }
 }

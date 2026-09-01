@@ -1,8 +1,8 @@
 package com.zacharyhirsch.moldygameboy.emulator.memory.registers;
 
-import com.zacharyhirsch.moldygameboy.emulator.arch.IORegister;
+import com.zacharyhirsch.moldygameboy.emulator.arch.Register8;
 
-public final class Nr52 implements IORegister {
+public final class Nr52 implements Register8 {
 
   private static final int READ_MASK = 0b1000_1111;
   private static final int WRITE_MASK = 0b1000_0000;

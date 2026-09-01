@@ -12,7 +12,7 @@ public final class Ei extends AbstractInstruction1 {
 
   @Override
   protected Mem execute0() {
-    registers.ime().set((byte) 1);
-    return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+    registers.ime().write((byte) 1);
+    return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
   }
 }

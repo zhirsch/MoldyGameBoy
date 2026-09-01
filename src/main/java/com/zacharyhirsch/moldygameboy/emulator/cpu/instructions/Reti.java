@@ -30,8 +30,8 @@ public final class Reti extends AbstractInstruction4 {
 
   @Override
   protected Mem execute3() {
-    registers.pc().set(w, z);
-    registers.ime().set((byte) 1);
-    return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+    registers.pc().write(w, z);
+    registers.ime().write((byte) 1);
+    return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
   }
 }

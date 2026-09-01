@@ -30,17 +30,17 @@ public final class Call extends AbstractInstruction6 {
 
   @Override
   protected Mem execute3() {
-    return Mem.write(registers.sp().getAndDecrement(), registers.pc().hi()::get);
+    return Mem.write(registers.sp().getAndDecrement(), registers.pc().hi()::read);
   }
 
   @Override
   protected Mem execute4() {
-    return Mem.write(registers.sp().get(), registers.pc().lo()::get);
+    return Mem.write(registers.sp().read(), registers.pc().lo()::read);
   }
 
   @Override
   protected Mem execute5() {
-    registers.pc().set(w, z);
-    return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+    registers.pc().write(w, z);
+    return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
   }
 }

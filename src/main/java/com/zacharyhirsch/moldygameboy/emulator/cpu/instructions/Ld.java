@@ -1,8 +1,9 @@
 package com.zacharyhirsch.moldygameboy.emulator.cpu.instructions;
 
+import com.zacharyhirsch.moldygameboy.emulator.cpu.alu.Alu;
 import com.zacharyhirsch.moldygameboy.emulator.arch.Register16;
 import com.zacharyhirsch.moldygameboy.emulator.arch.Register8;
-import com.zacharyhirsch.moldygameboy.emulator.cpu.alu.Alu;
+import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.CpuRegister8;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 
 public final class Ld {
@@ -23,8 +24,8 @@ public final class Ld {
 
     @Override
     protected Mem execute0() {
-      dst.set(src.get());
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      dst.write(src.read());
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 
@@ -42,13 +43,13 @@ public final class Ld {
 
     @Override
     protected Mem execute0() {
-      dst.set(src.get());
-      return Mem.none(src.get());
+      dst.write(src.read());
+      return Mem.none(src.read());
     }
 
     @Override
     protected Mem execute1() {
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 
@@ -64,12 +65,12 @@ public final class Ld {
 
     @Override
     protected Mem execute0() {
-      return Mem.read(registers.hl().getAndIncrement(), dst::set);
+      return Mem.read(registers.hl().getAndIncrement(), dst::write);
     }
 
     @Override
     protected Mem execute1() {
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 
@@ -85,12 +86,12 @@ public final class Ld {
 
     @Override
     protected Mem execute0() {
-      return Mem.read(registers.hl().get(), dst::set);
+      return Mem.read(registers.hl().read(), dst::write);
     }
 
     @Override
     protected Mem execute1() {
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 
@@ -106,12 +107,12 @@ public final class Ld {
 
     @Override
     protected Mem execute0() {
-      return Mem.read(register.get(), registers.a()::set);
+      return Mem.read(register.read(), registers.a()::write);
     }
 
     @Override
     protected Mem execute1() {
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 
@@ -127,12 +128,12 @@ public final class Ld {
 
     @Override
     protected Mem execute0() {
-      return Mem.read(register.getAndDecrement(), registers.a()::set);
+      return Mem.read(register.getAndDecrement(), registers.a()::write);
     }
 
     @Override
     protected Mem execute1() {
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 
@@ -148,13 +149,13 @@ public final class Ld {
 
     @Override
     protected Mem execute0() {
-      short address = (short) (0xff00 | register.get());
-      return Mem.read(address, registers.a()::set);
+      short address = (short) (0xff00 | register.read());
+      return Mem.read(address, registers.a()::write);
     }
 
     @Override
     protected Mem execute1() {
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 
@@ -175,12 +176,12 @@ public final class Ld {
 
     @Override
     protected Mem execute1() {
-      return Mem.write(registers.hl().get(), () -> z);
+      return Mem.write(registers.hl().read(), () -> z);
     }
 
     @Override
     protected Mem execute2() {
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 
@@ -198,12 +199,12 @@ public final class Ld {
 
     @Override
     protected Mem execute0() {
-      return Mem.write(dst.get(), src::get);
+      return Mem.write(dst.read(), src::read);
     }
 
     @Override
     protected Mem execute1() {
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 
@@ -217,12 +218,12 @@ public final class Ld {
 
     @Override
     protected Mem execute0() {
-      return Mem.write(registers.hl().getAndIncrement(), registers.a()::get);
+      return Mem.write(registers.hl().getAndIncrement(), registers.a()::read);
     }
 
     @Override
     protected Mem execute1() {
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 
@@ -236,12 +237,12 @@ public final class Ld {
 
     @Override
     protected Mem execute0() {
-      return Mem.write(registers.hl().getAndDecrement(), registers.a()::get);
+      return Mem.write(registers.hl().getAndDecrement(), registers.a()::read);
     }
 
     @Override
     protected Mem execute1() {
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 
@@ -257,12 +258,12 @@ public final class Ld {
 
     @Override
     protected Mem execute0() {
-      return Mem.read(registers.pc().getAndIncrement(), register::set);
+      return Mem.read(registers.pc().getAndIncrement(), register::write);
     }
 
     @Override
     protected Mem execute1() {
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 
@@ -285,12 +286,12 @@ public final class Ld {
 
     @Override
     protected Mem execute1() {
-      return Mem.read(registers.pc().getAndIncrement(), data -> register.set(data, z));
+      return Mem.read(registers.pc().getAndIncrement(), data -> register.write(data, z));
     }
 
     @Override
     protected Mem execute2() {
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 
@@ -318,48 +319,48 @@ public final class Ld {
     @Override
     protected Mem execute2() {
       short address = (short) ((Byte.toUnsignedInt(w) << 8) | Byte.toUnsignedInt(z));
-      return Mem.write(address, registers.a()::get);
+      return Mem.write(address, registers.a()::read);
     }
 
     @Override
     protected Mem execute3() {
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 
   public static final class DirectStackPointer extends AbstractInstruction5 {
 
     private final Registers registers;
-    private final Register16 wz;
+    private final Register16<Register8, Register8> wz;
 
     public DirectStackPointer(Registers registers) {
       this.registers = registers;
-      this.wz = new Register16();
+      this.wz = new Register16<>(new CpuRegister8(), new CpuRegister8());
     }
 
     @Override
     protected Mem execute0() {
-      return Mem.read(registers.pc().getAndIncrement(), wz.lo()::set);
+      return Mem.read(registers.pc().getAndIncrement(), wz.lo()::write);
     }
 
     @Override
     protected Mem execute1() {
-      return Mem.read(registers.pc().getAndIncrement(), wz.hi()::set);
+      return Mem.read(registers.pc().getAndIncrement(), wz.hi()::write);
     }
 
     @Override
     protected Mem execute2() {
-      return Mem.write(wz.getAndIncrement(), registers.sp().lo()::get);
+      return Mem.write(wz.getAndIncrement(), registers.sp().lo()::read);
     }
 
     @Override
     protected Mem execute3() {
-      return Mem.write(wz.getAndIncrement(), registers.sp().hi()::get);
+      return Mem.write(wz.getAndIncrement(), registers.sp().hi()::read);
     }
 
     @Override
     protected Mem execute4() {
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 
@@ -381,12 +382,12 @@ public final class Ld {
     @Override
     protected Mem execute1() {
       short address = (short) (0xff00 | Byte.toUnsignedInt(z));
-      return Mem.write(address, registers.a()::get);
+      return Mem.write(address, registers.a()::read);
     }
 
     @Override
     protected Mem execute2() {
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 
@@ -402,44 +403,44 @@ public final class Ld {
 
     @Override
     protected Mem execute0() {
-      short address = (short) (0xff00 | Byte.toUnsignedInt(register.get()));
-      return Mem.write(address, registers.a()::get);
+      short address = (short) (0xff00 | Byte.toUnsignedInt(register.read()));
+      return Mem.write(address, registers.a()::read);
     }
 
     @Override
     protected Mem execute1() {
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 
   public static final class AccumulatorDirect extends AbstractInstruction4 {
 
     private final Registers registers;
-    private final Register16 wz;
+    private final Register16<Register8, Register8> wz;
 
     public AccumulatorDirect(Registers registers) {
       this.registers = registers;
-      this.wz = new Register16();
+      this.wz = new Register16<>(new CpuRegister8(), new CpuRegister8());
     }
 
     @Override
     protected Mem execute0() {
-      return Mem.read(registers.pc().getAndIncrement(), wz.lo()::set);
+      return Mem.read(registers.pc().getAndIncrement(), wz.lo()::write);
     }
 
     @Override
     protected Mem execute1() {
-      return Mem.read(registers.pc().getAndIncrement(), wz.hi()::set);
+      return Mem.read(registers.pc().getAndIncrement(), wz.hi()::write);
     }
 
     @Override
     protected Mem execute2() {
-      return Mem.read(wz.getAndIncrement(), registers.a()::set);
+      return Mem.read(wz.getAndIncrement(), registers.a()::write);
     }
 
     @Override
     protected Mem execute3() {
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 
@@ -461,12 +462,12 @@ public final class Ld {
     @Override
     protected Mem execute1() {
       short address = (short) (0xff00 | Byte.toUnsignedInt(z));
-      return Mem.read(address, registers.a()::set);
+      return Mem.read(address, registers.a()::write);
     }
 
     @Override
     protected Mem execute2() {
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 
@@ -487,8 +488,8 @@ public final class Ld {
 
     @Override
     protected Mem execute1() {
-      Alu.Result result = Alu.add(registers.sp().lo().get(), z, false);
-      registers.hl().lo().set(result.result());
+      Alu.Result result = Alu.add(registers.sp().lo().read(), z, false);
+      registers.hl().lo().write(result.result());
       registers.f().z().set(false);
       registers.f().n().set(false);
       registers.f().h().set(result.h());
@@ -498,9 +499,9 @@ public final class Ld {
 
     @Override
     protected Mem execute2() {
-      var result = Alu.add(registers.sp().hi().get(), (byte) (z >>> 7), registers.f().c().get());
-      registers.hl().hi().set(result.result());
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      var result = Alu.add(registers.sp().hi().read(), (byte) (z >>> 7), registers.f().c().get());
+      registers.hl().hi().write(result.result());
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 }

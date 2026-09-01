@@ -13,10 +13,10 @@ public final class Flag {
   }
 
   public boolean get() {
-    return (register.get() & mask) != 0;
+    return (register.read() & mask) != 0;
   }
 
   public void set(boolean value) {
-    register.set(value ? (byte) (register.get() | mask) : (byte) (register.get() & ~mask));
+    register.write(value ? (byte) (register.read() | mask) : (byte) (register.read() & ~mask));
   }
 }

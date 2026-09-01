@@ -20,9 +20,9 @@ public final class Set {
 
     @Override
     protected Mem execute0() {
-      Alu.Result result = Alu.set(register.get(), index);
-      register.set(result.result());
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      Alu.Result result = Alu.set(register.read(), index);
+      register.write(result.result());
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 
@@ -40,18 +40,18 @@ public final class Set {
 
     @Override
     protected Mem execute0() {
-      return Mem.read(registers.hl().get(), data -> z = data);
+      return Mem.read(registers.hl().read(), data -> z = data);
     }
 
     @Override
     protected Mem execute1() {
       Alu.Result result = Alu.set(z, index);
-      return Mem.write(registers.hl().get(), result::result);
+      return Mem.write(registers.hl().read(), result::result);
     }
 
     @Override
     protected Mem execute2() {
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::set);
+      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
 }

@@ -1,12 +1,10 @@
-package com.zacharyhirsch.moldygameboy.emulator.memory.registers;
+package com.zacharyhirsch.moldygameboy.emulator.cpu.registers;
 
 import com.zacharyhirsch.moldygameboy.emulator.arch.Register8;
 
-public final class Wx implements Register8 {
+public final class CpuRegister8 implements Register8 {
 
   private byte value = 0;
-
-  public Wx() {}
 
   @Override
   public byte read() {
@@ -18,7 +16,8 @@ public final class Wx implements Register8 {
     this.value = value;
   }
 
-  public byte get() {
-    return value;
+  @Override
+  public String toString() {
+    return "Register8{%02x}".formatted(value);
   }
 }
