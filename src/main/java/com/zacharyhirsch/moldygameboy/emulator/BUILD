@@ -2,13 +2,6 @@ load("@rules_java//java:java_binary.bzl", "java_binary")
 load("@rules_java//java:java_library.bzl", "java_library")
 load("@rules_jvm_external//:defs.bzl", "artifact")
 
-config_setting(
-    name = "macos",
-    constraint_values = [
-        "@platforms//os:osx",
-    ],
-)
-
 java_library(
     name = "emulator",
     srcs = glob(
@@ -32,7 +25,7 @@ java_binary(
     srcs = ["MoldyGameBoyMain.java"],
     jvm_flags =
         select({
-            ":macos": ["-XstartOnFirstThread"],
+            "//:macos": ["-XstartOnFirstThread"],
             "//conditions:default": [],
         }) + [
             "--enable-native-access=ALL-UNNAMED",

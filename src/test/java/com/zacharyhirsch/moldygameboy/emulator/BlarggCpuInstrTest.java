@@ -1,13 +1,17 @@
 package com.zacharyhirsch.moldygameboy.emulator;
 
 import com.google.common.io.Resources;
-import com.zacharyhirsch.moldygameboy.emulator.arch.Register8;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 import com.zacharyhirsch.moldygameboy.emulator.io.Io;
 import com.zacharyhirsch.moldygameboy.emulator.io.IoFactory;
-import com.zacharyhirsch.moldygameboy.emulator.memory.Memory;
+import com.zacharyhirsch.moldygameboy.emulator.memory.BootRom;
+import com.zacharyhirsch.moldygameboy.emulator.memory.Rom;
+import java.io.IOException;
 import java.net.URL;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
@@ -47,36 +51,44 @@ final class BlarggCpuInstrTest {
   @ParameterizedTest
   @EnumSource(BlarggTest.class)
   void testBlarggTest(BlarggTest test) throws Exception {
-    URL romResource = Resources.getResource(test.getPath());
-    ByteBuffer rom = ByteBuffer.wrap(Resources.toByteArray(romResource));
+    ByteBuffer[] banks = read(test.getPath(), 0x4000);
+    BootRom boot = new BootRom(banks[0].slice(0, 0x0100));
+    Rom rom = new Rom(banks);
 
     Registers registers = new Registers();
-    byte value = rom.get(0x0100);
-    registers.ir().write(value);
+    registers.ir().write(rom.read((short) 0x0100));
     registers.pc().write((short) 0x0101);
     registers.sp().write((short) 0xfffe);
-    Register8 register14 = registers.a();
-    register14.write((byte) 0x01);
+    registers.a().write((byte) 0x01);
     registers.f().write((byte) 0xb0);
-    Register8 register13 = registers.b();
-    register13.write((byte) 0x00);
-    Register8 register12 = registers.c();
-    register12.write((byte) 0x13);
-    Register8 register11 = registers.d();
-    register11.write((byte) 0x00);
-    Register8 register10 = registers.e();
-    register10.write((byte) 0xd8);
-    Register8 register9 = registers.h();
-    register9.write((byte) 0x01);
-    Register8 register8 = registers.l();
-    register8.write((byte) 0x4d);
+    registers.b().write((byte) 0x00);
+    registers.c().write((byte) 0x13);
+    registers.d().write((byte) 0x00);
+    registers.e().write((byte) 0xd8);
+    registers.h().write((byte) 0x01);
+    registers.l().write((byte) 0x4d);
 
     try (Io io = IoFactory.none()) {
-      Memory memory = new Memory(rom, rom);
-      MoldyGameBoy gb = new MoldyGameBoy(memory, registers, io);
+      MoldyGameBoy gb = new MoldyGameBoy(boot, rom, registers, io);
       for (long i = 0; i < (long) test.getCycles(); i++) {
         gb.tick();
       }
     }
+  }
+
+  public static ByteBuffer[] read(String path, int size) throws IOException {
+    URL romResource = Resources.getResource(path);
+    ByteBuffer bytes = ByteBuffer.wrap(Resources.toByteArray(romResource));
+
+    if (bytes.limit() % size != 0) {
+      throw new IllegalArgumentException(
+          "file size %d is not a multiple of bank size %d".formatted(bytes.limit(), size));
+    }
+
+    ArrayList<ByteBuffer> buffers = new ArrayList<>();
+    for (int position = 0; position != bytes.limit(); position += size) {
+      buffers.add(bytes.slice(position, size));
+    }
+    return buffers.toArray(ByteBuffer[]::new);
   }
 }

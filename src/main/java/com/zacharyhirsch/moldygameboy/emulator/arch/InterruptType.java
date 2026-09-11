@@ -16,8 +16,8 @@ public enum InterruptType {
     this.vector = vector;
   }
 
-  public byte mask() {
-    return mask;
+  public int mask() {
+    return Byte.toUnsignedInt(mask);
   }
 
   public short vector() {

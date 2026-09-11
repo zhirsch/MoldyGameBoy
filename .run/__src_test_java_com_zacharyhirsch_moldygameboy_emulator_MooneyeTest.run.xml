@@ -1,0 +1,12 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="//src/test/java/com/zacharyhirsch/moldygameboy/emulator:MooneyeTest" type="BazelRunConfigurationType">
+    <bsp-state handler-provider-id="JvmTestHandlerProvider" check-visibility="true">
+      <bsp-target>@//src/test/java/com/zacharyhirsch/moldygameboy/emulator:MooneyeTest</bsp-target>
+      <handler-state testFilter="com.zacharyhirsch.moldygameboy.emulator.MooneyeTest.mooneyeTest$" />
+    </bsp-state>
+    <method v="2">
+      <option name="KotlinCoroutineLibraryFinderBeforeRunTaskProvider" enabled="false" />
+      <option name="BuildScriptBeforeRunTaskProvider" enabled="false" />
+    </method>
+  </configuration>
+</component>

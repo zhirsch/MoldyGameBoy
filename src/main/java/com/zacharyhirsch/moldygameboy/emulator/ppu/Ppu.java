@@ -3,7 +3,8 @@ package com.zacharyhirsch.moldygameboy.emulator.ppu;
 import com.zacharyhirsch.moldygameboy.emulator.arch.InterruptRequestLine;
 import com.zacharyhirsch.moldygameboy.emulator.io.Color;
 import com.zacharyhirsch.moldygameboy.emulator.io.Video;
-import com.zacharyhirsch.moldygameboy.emulator.memory.Memory;
+import com.zacharyhirsch.moldygameboy.emulator.memory.IoRegisters;
+import com.zacharyhirsch.moldygameboy.emulator.memory.Vram;
 import java.util.ArrayDeque;
 import java.util.Queue;
 
@@ -42,7 +43,8 @@ public final class Ppu {
     PUSH_TO_FIFO,
   }
 
-  private final Memory memory;
+  private final IoRegisters ioregs;
+  private final Vram vram;
   private final Video video;
   private final InterruptRequestLine vblank;
   private final InterruptRequestLine lcd;
@@ -65,8 +67,14 @@ public final class Ppu {
   private byte tileDataLo;
   private byte tileDataHi;
 
-  public Ppu(Memory memory, Video video, InterruptRequestLine vblank, InterruptRequestLine lcd) {
-    this.memory = memory;
+  public Ppu(
+      IoRegisters ioregs,
+      Vram vram,
+      Video video,
+      InterruptRequestLine vblank,
+      InterruptRequestLine lcd) {
+    this.ioregs = ioregs;
+    this.vram = vram;
     this.video = video;
     this.vblank = vblank;
     this.lcd = lcd;
@@ -76,11 +84,9 @@ public final class Ppu {
   public void tick() {
     if (dot == 0) {
       drawnDots = 0;
-      yCondition = yCondition || memory.registers().ly().get() == memory.registers().wy().get();
+      yCondition = yCondition || ioregs.ly.get() == ioregs.wy.get();
     }
-    if (yCondition
-        && memory.registers().lcdc().isWindowEnabled()
-        && memory.registers().wx().get() == drawnDots) {
+    if (yCondition && ioregs.lcdc.bit(5) && ioregs.wx.get() == drawnDots) {
       // TODO: reset rendering
       state = State.GET_TILE_ID;
     }
@@ -91,14 +97,18 @@ public final class Ppu {
       case MODE_0_HBLANK -> tickHBlank();
       case MODE_1_VBLANK -> tickVBlank();
     }
-    boolean lyEqualsLyc = memory.registers().ly().get() == memory.registers().lyc().get();
-    memory.registers().stat().setLyEqualsLyc(lyEqualsLyc);
-    memory.registers().stat().setMode(mode.getValue());
+    ioregs.stat.set((byte) (ioregs.stat.get() & 0xf8));
+    ioregs.stat.set((byte) (ioregs.stat.get() | (mode.getValue() & 0x03)));
+    ioregs.stat.set((byte) (ioregs.stat.get() | (ioregs.ly.get() == ioregs.lyc.get() ? 0x04 : 0)));
     if (dot == 456) {
       dot = 0;
     }
     vblank.set(mode == Mode.MODE_1_VBLANK);
-    lcd.set((memory.registers().stat().get() & 0b0111_1100) != 0);
+    lcd.set(
+        (mode == Mode.MODE_0_HBLANK && ioregs.stat.bit(3))
+            || (mode == Mode.MODE_1_VBLANK && ioregs.stat.bit(4))
+            || (mode == Mode.MODE_2_OAM_SCAN && ioregs.stat.bit(5))
+            || (ioregs.ly.get() == ioregs.lyc.get() && ioregs.stat.bit(6)));
   }
 
   private void tickOamScan() {
@@ -113,13 +123,8 @@ public final class Ppu {
       render(fifo.remove());
       pushedPixels++;
     }
-    boolean isWindowEnabled =
-        memory.registers().lcdc().isBackgroundEnabled()
-            && memory.registers().lcdc().isWindowEnabled();
-    if (isWindowEnabled
-        && !inWindow
-        && yCondition
-        && Byte.toUnsignedInt(memory.registers().wx().get()) - 7 == drawnDots) {
+    boolean isWindowEnabled = ioregs.lcdc.bit(0) && ioregs.lcdc.bit(5);
+    if (isWindowEnabled && !inWindow && yCondition && ioregs.wx.get() - 7 == drawnDots) {
       inWindow = true;
       windowFetcherX = 0;
       state = State.GET_TILE_ID;
@@ -148,13 +153,8 @@ public final class Ppu {
 
   private void tickHBlank() {
     if (dot == 456) {
-      int nextLy = Byte.toUnsignedInt(memory.registers().ly().get()) + 1;
-      if (nextLy == 144) {
-        mode = Mode.MODE_1_VBLANK;
-      } else {
-        mode = Mode.MODE_2_OAM_SCAN;
-      }
-      memory.registers().ly().set((byte) nextLy);
+      ioregs.ly.set((byte) (ioregs.ly.get() + 1));
+      mode = ioregs.ly.get() == 144 ? Mode.MODE_1_VBLANK : Mode.MODE_2_OAM_SCAN;
       windowWasDrawnThisLine = false;
     }
   }
@@ -162,33 +162,31 @@ public final class Ppu {
   private void tickVBlank() {
     yCondition = false;
     if (dot == 456) {
-      int nextLy = Byte.toUnsignedInt(memory.registers().ly().get()) + 1;
-      if (nextLy == 154) {
+      ioregs.ly.set((byte) (ioregs.ly.get() + 1));
+      if (ioregs.ly.get() == 154) {
         video.present();
+        ioregs.ly.set(0);
         mode = Mode.MODE_2_OAM_SCAN;
-        nextLy = 0;
         windowFetcherY = 0;
         inWindow = false;
       }
-      memory.registers().ly().set((byte) nextLy);
     }
   }
 
   private void render(int pixel) {
-//    if (drawnDots < 8) {
-//      drawnDots++;
-//      return;
-//    }
+    // if (drawnDots < 8) {
+    // drawnDots++;
+    // return;
+    // }
     int colorIdx =
         switch (pixel) {
-          case 0 -> (memory.registers().bgp().get() & 0b0000_0011) >>> 0;
-          case 1 -> (memory.registers().bgp().get() & 0b0000_1100) >>> 2;
-          case 2 -> (memory.registers().bgp().get() & 0b0011_0000) >>> 4;
-          case 3 -> (memory.registers().bgp().get() & 0b1100_0000) >>> 6;
+          case 0 -> (ioregs.bgp.get() & 0b0000_0011) >>> 0;
+          case 1 -> (ioregs.bgp.get() & 0b0000_1100) >>> 2;
+          case 2 -> (ioregs.bgp.get() & 0b0011_0000) >>> 4;
+          case 3 -> (ioregs.bgp.get() & 0b1100_0000) >>> 6;
           default -> throw new IllegalStateException();
         };
-    int y = Byte.toUnsignedInt(memory.registers().ly().get());
-    video.writeVideoPixel(drawnDots++, y, PALETTE[colorIdx]);
+    video.writeVideoPixel(drawnDots++, ioregs.ly.get(), PALETTE[colorIdx]);
   }
 
   private void getTileId() {
@@ -198,24 +196,24 @@ public final class Ppu {
     }
     int base;
     if (inWindow) {
-      base = memory.registers().lcdc().isWindowTileMapBase9c00() ? 0x9c00 : 0x9800;
+      base = ioregs.lcdc.bit(6) ? 0x9c00 : 0x9800;
     } else {
-      base = memory.registers().lcdc().isBackgroundTileMapBase9c00() ? 0x9c00 : 0x9800;
+      base = ioregs.lcdc.bit(3) ? 0x9c00 : 0x9800;
     }
     int tileX;
     if (inWindow) {
       tileX = windowFetcherX;
     } else {
-      tileX = (fetcherX + (memory.registers().scx().get() / 8)) & 0x1f;
+      tileX = (fetcherX + (ioregs.scx.get() / 8)) & 0x1f;
     }
     int tileY;
     if (inWindow) {
       tileY = windowFetcherY;
     } else {
-      tileY = (memory.registers().ly().get() + memory.registers().scy().get()) & 0xff;
+      tileY = (ioregs.ly.get() + ioregs.scy.get()) & 0xff;
     }
     int address = base + (tileY / 8 * 32) + tileX;
-    tileId = memory.read((short) address);
+    tileId = vram.read((short) address);
     state = State.GET_TILE_DATA_LO;
     clock = 0;
   }
@@ -225,7 +223,7 @@ public final class Ppu {
       clock++;
       return;
     }
-    tileDataLo = memory.read((short) computeTileAddress());
+    tileDataLo = vram.read((short) computeTileAddress());
     state = State.GET_TILE_DATA_HI;
     clock = 0;
   }
@@ -235,21 +233,21 @@ public final class Ppu {
       clock++;
       return;
     }
-    tileDataHi = memory.read((short) (computeTileAddress() + 1));
+    tileDataHi = vram.read((short) (computeTileAddress() + 1));
 
-//    if (fifo.size() > 8) {
-//      return;
-//    }
-//    for (int bit = 7; bit >= 0; bit--) {
-//      int loBit = (tileDataLo >> bit) & 0x01;
-//      int hiBit = (tileDataHi >> bit) & 0x01;
-//      fifo.add((hiBit << 1) | loBit);
-//    }
-//    if (inWindow) {
-//      windowFetcherX++;
-//    } else {
-//      fetcherX++;
-//    }
+    // if (fifo.size() > 8) {
+    // return;
+    // }
+    // for (int bit = 7; bit >= 0; bit--) {
+    // int loBit = (tileDataLo >> bit) & 0x01;
+    // int hiBit = (tileDataHi >> bit) & 0x01;
+    // fifo.add((hiBit << 1) | loBit);
+    // }
+    // if (inWindow) {
+    // windowFetcherX++;
+    // } else {
+    // fetcherX++;
+    // }
 
     state = State.SLEEP;
     clock = 0;
@@ -288,7 +286,7 @@ public final class Ppu {
 
   private int computeTileAddress() {
     int base;
-    if (memory.registers().lcdc().isTileDataBase8000()) {
+    if (ioregs.lcdc.bit(4)) {
       base = Byte.toUnsignedInt(tileId) <= 127 ? 0x8000 : 0x8800;
     } else {
       base = Byte.toUnsignedInt(tileId) <= 127 ? 0x9000 : 0x8800;
@@ -298,7 +296,7 @@ public final class Ppu {
     if (inWindow) {
       tileLine = windowFetcherY % 8;
     } else {
-      tileLine = (memory.registers().ly().get() + memory.registers().scy().get()) % 8;
+      tileLine = (ioregs.ly.get() + ioregs.scy.get()) % 8;
     }
 
     return base + tileOffset + (tileLine * 2);

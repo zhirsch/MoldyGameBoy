@@ -1,5 +1,16 @@
 load("@contrib_rules_jvm//java:defs.bzl", "JUNIT5_DEPS", "JUNIT5_RUNTIME_DEPS", "java_junit5_test")
+load("@rules_java//java:java_library.bzl", "java_library")
 load("@rules_jvm_external//:defs.bzl", "artifact")
+
+java_library(
+    name = "emulator",
+    testonly = True,
+    srcs = ["RegistersSubject.java"],
+    deps = [
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu/registers",
+        artifact("com.google.truth:truth"),
+    ],
+)
 
 java_junit5_test(
     name = "SingleStepCpuTest",
@@ -60,13 +71,21 @@ java_junit5_test(
 java_junit5_test(
     name = "MooneyeTest",
     srcs = ["MooneyeTest.java"],
-    jvm_flags = ["-Djava.security.manager=disallow"],
+    jvm_flags =
+        select({
+            "//:macos": ["-XstartOnFirstThread"],
+            "//conditions:default": [],
+        }) + [
+            "--enable-native-access=ALL-UNNAMED",
+        ],
     resources = [
-        "//:mooneye-test-suite/build/acceptance/bits/reg_f.gb",
-        "//:mooneye-test-suite/build/acceptance/bits/unused_hwio-GS.gb",
-        "//:mooneye-test-suite/build/acceptance/instr/daa.gb",
+        "//:mooneye-test-suite",
+        "//src/main/resources:dmg.bin",
+        "//src/main/resources:logback.xml",
     ],
+    runtime_deps = [artifact("ch.qos.logback:logback-classic")],
     deps = [
+        ":emulator",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/arch",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu/registers",

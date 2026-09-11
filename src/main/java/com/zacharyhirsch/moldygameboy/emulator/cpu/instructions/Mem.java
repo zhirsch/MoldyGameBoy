@@ -1,22 +1,22 @@
 package com.zacharyhirsch.moldygameboy.emulator.cpu.instructions;
 
-import com.zacharyhirsch.moldygameboy.emulator.memory.Memory;
+import com.zacharyhirsch.moldygameboy.emulator.cpu.memory.CpuBus;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public interface Mem {
 
-  void execute(Memory memory);
+  void execute(CpuBus bus);
 
   static Mem read(short address, Consumer<Byte> dst) {
-    return memory -> dst.accept(memory.read(address));
+    return bus -> dst.accept(bus.read(address));
   }
 
   static Mem write(short address, Supplier<Byte> src) {
-    return memory -> memory.write(address, src.get());
+    return bus -> bus.write(address, src.get());
   }
 
   static Mem none(short address) {
-    return memory -> memory.none(address);
+    return _ -> {};
   }
 }
