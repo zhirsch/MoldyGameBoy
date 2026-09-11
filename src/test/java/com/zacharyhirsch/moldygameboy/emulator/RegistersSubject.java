@@ -2,10 +2,12 @@ package com.zacharyhirsch.moldygameboy.emulator;
 
 import static com.google.common.truth.Truth.assertAbout;
 
+import com.google.common.truth.Fact;
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
-import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.CpuRegister8;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
+import java.util.ArrayList;
+import java.util.List;
 
 final class RegistersSubject extends Subject {
 
@@ -20,43 +22,37 @@ final class RegistersSubject extends Subject {
     return assertAbout(RegistersSubject::new).that(registers);
   }
 
-  public RegistersSubject hasA(byte expected) {
-    check("a").that(actual.a()).isEqualTo(new CpuRegister8(expected));
-    return this;
-  }
+  public void isMooneyeSuccess() {
+    if (actual == null) {
+      failWithoutActual(Fact.simpleFact("expected to be non-null"));
+      return;
+    }
 
-  public RegistersSubject hasF(byte expected) {
-    check("f").that(actual.f()).isEqualTo(new CpuRegister8(expected));
-    return this;
-  }
+    List<Fact> failures = new ArrayList<>();
 
-  public RegistersSubject hasB(byte expected) {
-    check("b").that(actual.b()).isEqualTo(new CpuRegister8(expected));
-    return this;
-  }
+    if (actual.b().read() != (byte) 0x03) {
+      failures.add(Fact.fact("b", "expected: 03, actual: %02x".formatted(actual.b().read())));
+    }
+    if (actual.c().read() != (byte) 0x05) {
+      failures.add(Fact.fact("c", "expected: 05, actual: %02x".formatted(actual.c().read())));
+    }
+    if (actual.d().read() != (byte) 0x08) {
+      failures.add(Fact.fact("d", "expected: 08, actual: %02x".formatted(actual.d().read())));
+    }
+    if (actual.e().read() != (byte) 0x0d) {
+      failures.add(Fact.fact("e", "expected: 0d, actual: %02x".formatted(actual.e().read())));
+    }
+    if (actual.h().read() != (byte) 0x15) {
+      failures.add(Fact.fact("h", "expected: 15, actual: %02x".formatted(actual.h().read())));
+    }
+    if (actual.l().read() != (byte) 0x22) {
+      failures.add(Fact.fact("l", "expected: 22, actual: %02x".formatted(actual.l().read())));
+    }
 
-  public RegistersSubject hasC(byte expected) {
-    check("c").that(actual.c()).isEqualTo(new CpuRegister8(expected));
-    return this;
-  }
-
-  public RegistersSubject hasD(byte expected) {
-    check("d").that(actual.d()).isEqualTo(new CpuRegister8(expected));
-    return this;
-  }
-
-  public RegistersSubject hasE(byte expected) {
-    check("e").that(actual.e()).isEqualTo(new CpuRegister8(expected));
-    return this;
-  }
-
-  public RegistersSubject hasH(byte expected) {
-    check("h").that(actual.h()).isEqualTo(new CpuRegister8(expected));
-    return this;
-  }
-
-  public RegistersSubject hasL(byte expected) {
-    check("l").that(actual.l()).isEqualTo(new CpuRegister8(expected));
-    return this;
+    if (!failures.isEmpty()) {
+      failWithActual(
+          Fact.simpleFact("cpu registers are not set to values indicating success"),
+          failures.toArray(new Fact[0]));
+    }
   }
 }

@@ -35,13 +35,7 @@ final class MooneyeTest {
       }
     }
 
-    assertThat(registers)
-        .hasB((byte) 3)
-        .hasC((byte) 5)
-        .hasD((byte) 8)
-        .hasE((byte) 13)
-        .hasH((byte) 21)
-        .hasL((byte) 34);
+    assertThat(registers).isMooneyeSuccess();
   }
 
   @Test
@@ -54,568 +48,568 @@ final class MooneyeTest {
     test("mooneye-test-suite/build/acceptance/bits/mem_oam.gb");
   }
 
-  //  @Test
-  //  void test__acceptance__bits__reg_f() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/bits/reg_f.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__bits__unused_hwio_GS() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/bits/unused_hwio-GS.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__boot_div_dmg0() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/boot_div-dmg0.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__boot_div_dmgABCmgb() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/boot_div-dmgABCmgb.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__boot_div_S() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/boot_div-S.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__boot_div2_S() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/boot_div2-S.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__boot_hwio_dmg0() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/boot_hwio-dmg0.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__boot_hwio_dmgABCmgb() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/boot_hwio-dmgABCmgb.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__boot_hwio_S() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/boot_hwio-S.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__boot_regs_dmg0() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/boot_regs-dmg0.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__boot_regs_dmgABC() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/boot_regs-dmgABC.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__boot_regs_mgb() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/boot_regs-mgb.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__boot_regs_sgb() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/boot_regs-sgb.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__boot_regs_sgb2() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/boot_regs-sgb2.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__call_cc_timing() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/call_cc_timing.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__call_cc_timing2() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/call_cc_timing2.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__call_timing() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/call_timing.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__call_timing2() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/call_timing2.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__di_timing_GS() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/di_timing-GS.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__div_timing() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/div_timing.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__ei_sequence() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/ei_sequence.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__ei_timing() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/ei_timing.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__halt_ime0_ei() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/halt_ime0_ei.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__halt_ime0_nointr_timing() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/halt_ime0_nointr_timing.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__halt_ime1_timing() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/halt_ime1_timing.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__halt_ime1_timing2_GS() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/halt_ime1_timing2-GS.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__if_ie_registers() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/if_ie_registers.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__instr__daa() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/instr/daa.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__interrupts__ie_push() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/interrupts/ie_push.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__intr_timing() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/intr_timing.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__jp_cc_timing() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/jp_cc_timing.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__jp_timing() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/jp_timing.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__ld_hl_sp_e_timing() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/ld_hl_sp_e_timing.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__oam_dma_restart() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/oam_dma_restart.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__oam_dma_start() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/oam_dma_start.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__oam_dma_timing() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/oam_dma_timing.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__oam_dma__basic() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/oam_dma/basic.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__oam_dma__reg_read() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/oam_dma/reg_read.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__oam_dma__sources_GS() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/oam_dma/sources-GS.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__pop_timing() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/pop_timing.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__ppu__hblank_ly_scx_timing_GS() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/ppu/hblank_ly_scx_timing-GS.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__ppu__intr_1_2_timing_GS() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/ppu/intr_1_2_timing-GS.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__ppu__intr_2_0_timing() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/ppu/intr_2_0_timing.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__ppu__intr_2_mode0_timing_sprites() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/ppu/intr_2_mode0_timing_sprites.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__ppu__intr_2_mode0_timing() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/ppu/intr_2_mode0_timing.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__ppu__intr_2_mode3_timing() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/ppu/intr_2_mode3_timing.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__ppu__intr_2_oam_ok_timing() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/ppu/intr_2_oam_ok_timing.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__ppu__lcdon_timing_GS() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/ppu/lcdon_timing-GS.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__ppu__lcdon_write_timing_GS() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/ppu/lcdon_write_timing-GS.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__ppu__stat_irq_blocking() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/ppu/stat_irq_blocking.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__ppu__stat_lyc_onoff() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/ppu/stat_lyc_onoff.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__ppu__vblank_stat_intr_GS() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/ppu/vblank_stat_intr-GS.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__push_timing() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/push_timing.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__rapid_di_ei() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/rapid_di_ei.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__ret_cc_timing() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/ret_cc_timing.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__ret_timing() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/ret_timing.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__reti_intr_timing() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/reti_intr_timing.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__reti_timing() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/reti_timing.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__rst_timing() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/rst_timing.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__serial__boot_sclk_align_dmgABCmgb() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/serial/boot_sclk_align-dmgABCmgb.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__timer__div_write() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/timer/div_write.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__timer__rapid_toggle() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/timer/rapid_toggle.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__timer__tim00_div_trigger() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/timer/tim00_div_trigger.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__timer__tim00() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/timer/tim00.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__timer__tim01_div_trigger() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/timer/tim01_div_trigger.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__timer__tim01() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/timer/tim01.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__timer__tim10_div_trigger() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/timer/tim10_div_trigger.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__timer__tim10() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/timer/tim10.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__timer__tim11_div_trigger() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/timer/tim11_div_trigger.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__timer__tim11() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/timer/tim11.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__timer__tima_reload() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/timer/tima_reload.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__timer__tima_write_reloading() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/timer/tima_write_reloading.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__acceptance__timer__tma_write_reloading() throws Exception {
-  //    test("mooneye-test-suite/build/acceptance/timer/tma_write_reloading.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__emulator_only__mbc1__bits_bank1() throws Exception {
-  //    test("mooneye-test-suite/build/emulator-only/mbc1/bits_bank1.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__emulator_only__mbc1__bits_bank2() throws Exception {
-  //    test("mooneye-test-suite/build/emulator-only/mbc1/bits_bank2.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__emulator_only__mbc1__bits_mode() throws Exception {
-  //    test("mooneye-test-suite/build/emulator-only/mbc1/bits_mode.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__emulator_only__mbc1__bits_ramg() throws Exception {
-  //    test("mooneye-test-suite/build/emulator-only/mbc1/bits_ramg.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__emulator_only__mbc1__multicart_rom_8Mb() throws Exception {
-  //    test("mooneye-test-suite/build/emulator-only/mbc1/multicart_rom_8Mb.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__emulator_only__mbc1__ram_256kb() throws Exception {
-  //    test("mooneye-test-suite/build/emulator-only/mbc1/ram_256kb.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__emulator_only__mbc1__ram_64kb() throws Exception {
-  //    test("mooneye-test-suite/build/emulator-only/mbc1/ram_64kb.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__emulator_only__mbc1__rom_16Mb() throws Exception {
-  //    test("mooneye-test-suite/build/emulator-only/mbc1/rom_16Mb.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__emulator_only__mbc1__rom_1Mb() throws Exception {
-  //    test("mooneye-test-suite/build/emulator-only/mbc1/rom_1Mb.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__emulator_only__mbc1__rom_2Mb() throws Exception {
-  //    test("mooneye-test-suite/build/emulator-only/mbc1/rom_2Mb.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__emulator_only__mbc1__rom_4Mb() throws Exception {
-  //    test("mooneye-test-suite/build/emulator-only/mbc1/rom_4Mb.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__emulator_only__mbc1__rom_512kb() throws Exception {
-  //    test("mooneye-test-suite/build/emulator-only/mbc1/rom_512kb.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__emulator_only__mbc1__rom_8Mb() throws Exception {
-  //    test("mooneye-test-suite/build/emulator-only/mbc1/rom_8Mb.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__emulator_only__mbc2__bits_ramg() throws Exception {
-  //    test("mooneye-test-suite/build/emulator-only/mbc2/bits_ramg.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__emulator_only__mbc2__bits_romb() throws Exception {
-  //    test("mooneye-test-suite/build/emulator-only/mbc2/bits_romb.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__emulator_only__mbc2__bits_unused() throws Exception {
-  //    test("mooneye-test-suite/build/emulator-only/mbc2/bits_unused.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__emulator_only__mbc2__ram() throws Exception {
-  //    test("mooneye-test-suite/build/emulator-only/mbc2/ram.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__emulator_only__mbc2__rom_1Mb() throws Exception {
-  //    test("mooneye-test-suite/build/emulator-only/mbc2/rom_1Mb.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__emulator_only__mbc2__rom_2Mb() throws Exception {
-  //    test("mooneye-test-suite/build/emulator-only/mbc2/rom_2Mb.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__emulator_only__mbc2__rom_512kb() throws Exception {
-  //    test("mooneye-test-suite/build/emulator-only/mbc2/rom_512kb.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__emulator_only__mbc5__rom_16Mb() throws Exception {
-  //    test("mooneye-test-suite/build/emulator-only/mbc5/rom_16Mb.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__emulator_only__mbc5__rom_1Mb() throws Exception {
-  //    test("mooneye-test-suite/build/emulator-only/mbc5/rom_1Mb.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__emulator_only__mbc5__rom_2Mb() throws Exception {
-  //    test("mooneye-test-suite/build/emulator-only/mbc5/rom_2Mb.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__emulator_only__mbc5__rom_32Mb() throws Exception {
-  //    test("mooneye-test-suite/build/emulator-only/mbc5/rom_32Mb.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__emulator_only__mbc5__rom_4Mb() throws Exception {
-  //    test("mooneye-test-suite/build/emulator-only/mbc5/rom_4Mb.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__emulator_only__mbc5__rom_512kb() throws Exception {
-  //    test("mooneye-test-suite/build/emulator-only/mbc5/rom_512kb.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__emulator_only__mbc5__rom_64Mb() throws Exception {
-  //    test("mooneye-test-suite/build/emulator-only/mbc5/rom_64Mb.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__emulator_only__mbc5__rom_8Mb() throws Exception {
-  //    test("mooneye-test-suite/build/emulator-only/mbc5/rom_8Mb.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__madness__mgb_oam_dma_halt_sprites() throws Exception {
-  //    test("mooneye-test-suite/build/madness/mgb_oam_dma_halt_sprites.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__manual_only__sprite_priority() throws Exception {
-  //    test("mooneye-test-suite/build/manual-only/sprite_priority.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__misc__bits__unused_hwio_C() throws Exception {
-  //    test("mooneye-test-suite/build/misc/bits/unused_hwio-C.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__misc__boot_div_A() throws Exception {
-  //    test("mooneye-test-suite/build/misc/boot_div-A.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__misc__boot_div_cgb0() throws Exception {
-  //    test("mooneye-test-suite/build/misc/boot_div-cgb0.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__misc__boot_div_cgbABCDE() throws Exception {
-  //    test("mooneye-test-suite/build/misc/boot_div-cgbABCDE.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__misc__boot_hwio_C() throws Exception {
-  //    test("mooneye-test-suite/build/misc/boot_hwio-C.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__misc__boot_regs_A() throws Exception {
-  //    test("mooneye-test-suite/build/misc/boot_regs-A.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__misc__boot_regs_cgb() throws Exception {
-  //    test("mooneye-test-suite/build/misc/boot_regs-cgb.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__misc__ppu__vblank_stat_intr_C() throws Exception {
-  //    test("mooneye-test-suite/build/misc/ppu/vblank_stat_intr-C.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__utils__bootrom_dumper() throws Exception {
-  //    test("mooneye-test-suite/build/utils/bootrom_dumper.gb");
-  //  }
-  //
-  //  @Test
-  //  void test__utils__dump_boot_hwio() throws Exception {
-  //    test("mooneye-test-suite/build/utils/dump_boot_hwio.gb");
-  //  }
+  @Test
+  void test__acceptance__bits__reg_f() throws Exception {
+    test("mooneye-test-suite/build/acceptance/bits/reg_f.gb");
+  }
+
+  @Test
+  void test__acceptance__bits__unused_hwio_GS() throws Exception {
+    test("mooneye-test-suite/build/acceptance/bits/unused_hwio-GS.gb");
+  }
+
+  @Test
+  void test__acceptance__boot_div_dmg0() throws Exception {
+    test("mooneye-test-suite/build/acceptance/boot_div-dmg0.gb");
+  }
+
+  @Test
+  void test__acceptance__boot_div_dmgABCmgb() throws Exception {
+    test("mooneye-test-suite/build/acceptance/boot_div-dmgABCmgb.gb");
+  }
+
+  @Test
+  void test__acceptance__boot_div_S() throws Exception {
+    test("mooneye-test-suite/build/acceptance/boot_div-S.gb");
+  }
+
+  @Test
+  void test__acceptance__boot_div2_S() throws Exception {
+    test("mooneye-test-suite/build/acceptance/boot_div2-S.gb");
+  }
+
+  @Test
+  void test__acceptance__boot_hwio_dmg0() throws Exception {
+    test("mooneye-test-suite/build/acceptance/boot_hwio-dmg0.gb");
+  }
+
+  @Test
+  void test__acceptance__boot_hwio_dmgABCmgb() throws Exception {
+    test("mooneye-test-suite/build/acceptance/boot_hwio-dmgABCmgb.gb");
+  }
+
+  @Test
+  void test__acceptance__boot_hwio_S() throws Exception {
+    test("mooneye-test-suite/build/acceptance/boot_hwio-S.gb");
+  }
+
+  @Test
+  void test__acceptance__boot_regs_dmg0() throws Exception {
+    test("mooneye-test-suite/build/acceptance/boot_regs-dmg0.gb");
+  }
+
+  @Test
+  void test__acceptance__boot_regs_dmgABC() throws Exception {
+    test("mooneye-test-suite/build/acceptance/boot_regs-dmgABC.gb");
+  }
+
+  @Test
+  void test__acceptance__boot_regs_mgb() throws Exception {
+    test("mooneye-test-suite/build/acceptance/boot_regs-mgb.gb");
+  }
+
+  @Test
+  void test__acceptance__boot_regs_sgb() throws Exception {
+    test("mooneye-test-suite/build/acceptance/boot_regs-sgb.gb");
+  }
+
+  @Test
+  void test__acceptance__boot_regs_sgb2() throws Exception {
+    test("mooneye-test-suite/build/acceptance/boot_regs-sgb2.gb");
+  }
+
+  @Test
+  void test__acceptance__call_cc_timing() throws Exception {
+    test("mooneye-test-suite/build/acceptance/call_cc_timing.gb");
+  }
+
+  @Test
+  void test__acceptance__call_cc_timing2() throws Exception {
+    test("mooneye-test-suite/build/acceptance/call_cc_timing2.gb");
+  }
+
+  @Test
+  void test__acceptance__call_timing() throws Exception {
+    test("mooneye-test-suite/build/acceptance/call_timing.gb");
+  }
+
+  @Test
+  void test__acceptance__call_timing2() throws Exception {
+    test("mooneye-test-suite/build/acceptance/call_timing2.gb");
+  }
+
+  @Test
+  void test__acceptance__di_timing_GS() throws Exception {
+    test("mooneye-test-suite/build/acceptance/di_timing-GS.gb");
+  }
+
+  @Test
+  void test__acceptance__div_timing() throws Exception {
+    test("mooneye-test-suite/build/acceptance/div_timing.gb");
+  }
+
+  @Test
+  void test__acceptance__ei_sequence() throws Exception {
+    test("mooneye-test-suite/build/acceptance/ei_sequence.gb");
+  }
+
+  @Test
+  void test__acceptance__ei_timing() throws Exception {
+    test("mooneye-test-suite/build/acceptance/ei_timing.gb");
+  }
+
+  @Test
+  void test__acceptance__halt_ime0_ei() throws Exception {
+    test("mooneye-test-suite/build/acceptance/halt_ime0_ei.gb");
+  }
+
+  @Test
+  void test__acceptance__halt_ime0_nointr_timing() throws Exception {
+    test("mooneye-test-suite/build/acceptance/halt_ime0_nointr_timing.gb");
+  }
+
+  @Test
+  void test__acceptance__halt_ime1_timing() throws Exception {
+    test("mooneye-test-suite/build/acceptance/halt_ime1_timing.gb");
+  }
+
+  @Test
+  void test__acceptance__halt_ime1_timing2_GS() throws Exception {
+    test("mooneye-test-suite/build/acceptance/halt_ime1_timing2-GS.gb");
+  }
+
+  @Test
+  void test__acceptance__if_ie_registers() throws Exception {
+    test("mooneye-test-suite/build/acceptance/if_ie_registers.gb");
+  }
+
+  @Test
+  void test__acceptance__instr__daa() throws Exception {
+    test("mooneye-test-suite/build/acceptance/instr/daa.gb");
+  }
+
+  @Test
+  void test__acceptance__interrupts__ie_push() throws Exception {
+    test("mooneye-test-suite/build/acceptance/interrupts/ie_push.gb");
+  }
+
+  @Test
+  void test__acceptance__intr_timing() throws Exception {
+    test("mooneye-test-suite/build/acceptance/intr_timing.gb");
+  }
+
+  @Test
+  void test__acceptance__jp_cc_timing() throws Exception {
+    test("mooneye-test-suite/build/acceptance/jp_cc_timing.gb");
+  }
+
+  @Test
+  void test__acceptance__jp_timing() throws Exception {
+    test("mooneye-test-suite/build/acceptance/jp_timing.gb");
+  }
+
+  @Test
+  void test__acceptance__ld_hl_sp_e_timing() throws Exception {
+    test("mooneye-test-suite/build/acceptance/ld_hl_sp_e_timing.gb");
+  }
+
+  @Test
+  void test__acceptance__oam_dma_restart() throws Exception {
+    test("mooneye-test-suite/build/acceptance/oam_dma_restart.gb");
+  }
+
+  @Test
+  void test__acceptance__oam_dma_start() throws Exception {
+    test("mooneye-test-suite/build/acceptance/oam_dma_start.gb");
+  }
+
+  @Test
+  void test__acceptance__oam_dma_timing() throws Exception {
+    test("mooneye-test-suite/build/acceptance/oam_dma_timing.gb");
+  }
+
+  @Test
+  void test__acceptance__oam_dma__basic() throws Exception {
+    test("mooneye-test-suite/build/acceptance/oam_dma/basic.gb");
+  }
+
+  @Test
+  void test__acceptance__oam_dma__reg_read() throws Exception {
+    test("mooneye-test-suite/build/acceptance/oam_dma/reg_read.gb");
+  }
+
+  @Test
+  void test__acceptance__oam_dma__sources_GS() throws Exception {
+    test("mooneye-test-suite/build/acceptance/oam_dma/sources-GS.gb");
+  }
+
+  @Test
+  void test__acceptance__pop_timing() throws Exception {
+    test("mooneye-test-suite/build/acceptance/pop_timing.gb");
+  }
+
+  @Test
+  void test__acceptance__ppu__hblank_ly_scx_timing_GS() throws Exception {
+    test("mooneye-test-suite/build/acceptance/ppu/hblank_ly_scx_timing-GS.gb");
+  }
+
+  @Test
+  void test__acceptance__ppu__intr_1_2_timing_GS() throws Exception {
+    test("mooneye-test-suite/build/acceptance/ppu/intr_1_2_timing-GS.gb");
+  }
+
+  @Test
+  void test__acceptance__ppu__intr_2_0_timing() throws Exception {
+    test("mooneye-test-suite/build/acceptance/ppu/intr_2_0_timing.gb");
+  }
+
+  @Test
+  void test__acceptance__ppu__intr_2_mode0_timing_sprites() throws Exception {
+    test("mooneye-test-suite/build/acceptance/ppu/intr_2_mode0_timing_sprites.gb");
+  }
+
+  @Test
+  void test__acceptance__ppu__intr_2_mode0_timing() throws Exception {
+    test("mooneye-test-suite/build/acceptance/ppu/intr_2_mode0_timing.gb");
+  }
+
+  @Test
+  void test__acceptance__ppu__intr_2_mode3_timing() throws Exception {
+    test("mooneye-test-suite/build/acceptance/ppu/intr_2_mode3_timing.gb");
+  }
+
+  @Test
+  void test__acceptance__ppu__intr_2_oam_ok_timing() throws Exception {
+    test("mooneye-test-suite/build/acceptance/ppu/intr_2_oam_ok_timing.gb");
+  }
+
+  @Test
+  void test__acceptance__ppu__lcdon_timing_GS() throws Exception {
+    test("mooneye-test-suite/build/acceptance/ppu/lcdon_timing-GS.gb");
+  }
+
+  @Test
+  void test__acceptance__ppu__lcdon_write_timing_GS() throws Exception {
+    test("mooneye-test-suite/build/acceptance/ppu/lcdon_write_timing-GS.gb");
+  }
+
+  @Test
+  void test__acceptance__ppu__stat_irq_blocking() throws Exception {
+    test("mooneye-test-suite/build/acceptance/ppu/stat_irq_blocking.gb");
+  }
+
+  @Test
+  void test__acceptance__ppu__stat_lyc_onoff() throws Exception {
+    test("mooneye-test-suite/build/acceptance/ppu/stat_lyc_onoff.gb");
+  }
+
+  @Test
+  void test__acceptance__ppu__vblank_stat_intr_GS() throws Exception {
+    test("mooneye-test-suite/build/acceptance/ppu/vblank_stat_intr-GS.gb");
+  }
+
+  @Test
+  void test__acceptance__push_timing() throws Exception {
+    test("mooneye-test-suite/build/acceptance/push_timing.gb");
+  }
+
+  @Test
+  void test__acceptance__rapid_di_ei() throws Exception {
+    test("mooneye-test-suite/build/acceptance/rapid_di_ei.gb");
+  }
+
+  @Test
+  void test__acceptance__ret_cc_timing() throws Exception {
+    test("mooneye-test-suite/build/acceptance/ret_cc_timing.gb");
+  }
+
+  @Test
+  void test__acceptance__ret_timing() throws Exception {
+    test("mooneye-test-suite/build/acceptance/ret_timing.gb");
+  }
+
+  @Test
+  void test__acceptance__reti_intr_timing() throws Exception {
+    test("mooneye-test-suite/build/acceptance/reti_intr_timing.gb");
+  }
+
+  @Test
+  void test__acceptance__reti_timing() throws Exception {
+    test("mooneye-test-suite/build/acceptance/reti_timing.gb");
+  }
+
+  @Test
+  void test__acceptance__rst_timing() throws Exception {
+    test("mooneye-test-suite/build/acceptance/rst_timing.gb");
+  }
+
+  @Test
+  void test__acceptance__serial__boot_sclk_align_dmgABCmgb() throws Exception {
+    test("mooneye-test-suite/build/acceptance/serial/boot_sclk_align-dmgABCmgb.gb");
+  }
+
+  @Test
+  void test__acceptance__timer__div_write() throws Exception {
+    test("mooneye-test-suite/build/acceptance/timer/div_write.gb");
+  }
+
+  @Test
+  void test__acceptance__timer__rapid_toggle() throws Exception {
+    test("mooneye-test-suite/build/acceptance/timer/rapid_toggle.gb");
+  }
+
+  @Test
+  void test__acceptance__timer__tim00_div_trigger() throws Exception {
+    test("mooneye-test-suite/build/acceptance/timer/tim00_div_trigger.gb");
+  }
+
+  @Test
+  void test__acceptance__timer__tim00() throws Exception {
+    test("mooneye-test-suite/build/acceptance/timer/tim00.gb");
+  }
+
+  @Test
+  void test__acceptance__timer__tim01_div_trigger() throws Exception {
+    test("mooneye-test-suite/build/acceptance/timer/tim01_div_trigger.gb");
+  }
+
+  @Test
+  void test__acceptance__timer__tim01() throws Exception {
+    test("mooneye-test-suite/build/acceptance/timer/tim01.gb");
+  }
+
+  @Test
+  void test__acceptance__timer__tim10_div_trigger() throws Exception {
+    test("mooneye-test-suite/build/acceptance/timer/tim10_div_trigger.gb");
+  }
+
+  @Test
+  void test__acceptance__timer__tim10() throws Exception {
+    test("mooneye-test-suite/build/acceptance/timer/tim10.gb");
+  }
+
+  @Test
+  void test__acceptance__timer__tim11_div_trigger() throws Exception {
+    test("mooneye-test-suite/build/acceptance/timer/tim11_div_trigger.gb");
+  }
+
+  @Test
+  void test__acceptance__timer__tim11() throws Exception {
+    test("mooneye-test-suite/build/acceptance/timer/tim11.gb");
+  }
+
+  @Test
+  void test__acceptance__timer__tima_reload() throws Exception {
+    test("mooneye-test-suite/build/acceptance/timer/tima_reload.gb");
+  }
+
+  @Test
+  void test__acceptance__timer__tima_write_reloading() throws Exception {
+    test("mooneye-test-suite/build/acceptance/timer/tima_write_reloading.gb");
+  }
+
+  @Test
+  void test__acceptance__timer__tma_write_reloading() throws Exception {
+    test("mooneye-test-suite/build/acceptance/timer/tma_write_reloading.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc1__bits_bank1() throws Exception {
+    test("mooneye-test-suite/build/emulator-only/mbc1/bits_bank1.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc1__bits_bank2() throws Exception {
+    test("mooneye-test-suite/build/emulator-only/mbc1/bits_bank2.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc1__bits_mode() throws Exception {
+    test("mooneye-test-suite/build/emulator-only/mbc1/bits_mode.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc1__bits_ramg() throws Exception {
+    test("mooneye-test-suite/build/emulator-only/mbc1/bits_ramg.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc1__multicart_rom_8Mb() throws Exception {
+    test("mooneye-test-suite/build/emulator-only/mbc1/multicart_rom_8Mb.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc1__ram_256kb() throws Exception {
+    test("mooneye-test-suite/build/emulator-only/mbc1/ram_256kb.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc1__ram_64kb() throws Exception {
+    test("mooneye-test-suite/build/emulator-only/mbc1/ram_64kb.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc1__rom_16Mb() throws Exception {
+    test("mooneye-test-suite/build/emulator-only/mbc1/rom_16Mb.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc1__rom_1Mb() throws Exception {
+    test("mooneye-test-suite/build/emulator-only/mbc1/rom_1Mb.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc1__rom_2Mb() throws Exception {
+    test("mooneye-test-suite/build/emulator-only/mbc1/rom_2Mb.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc1__rom_4Mb() throws Exception {
+    test("mooneye-test-suite/build/emulator-only/mbc1/rom_4Mb.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc1__rom_512kb() throws Exception {
+    test("mooneye-test-suite/build/emulator-only/mbc1/rom_512kb.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc1__rom_8Mb() throws Exception {
+    test("mooneye-test-suite/build/emulator-only/mbc1/rom_8Mb.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc2__bits_ramg() throws Exception {
+    test("mooneye-test-suite/build/emulator-only/mbc2/bits_ramg.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc2__bits_romb() throws Exception {
+    test("mooneye-test-suite/build/emulator-only/mbc2/bits_romb.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc2__bits_unused() throws Exception {
+    test("mooneye-test-suite/build/emulator-only/mbc2/bits_unused.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc2__ram() throws Exception {
+    test("mooneye-test-suite/build/emulator-only/mbc2/ram.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc2__rom_1Mb() throws Exception {
+    test("mooneye-test-suite/build/emulator-only/mbc2/rom_1Mb.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc2__rom_2Mb() throws Exception {
+    test("mooneye-test-suite/build/emulator-only/mbc2/rom_2Mb.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc2__rom_512kb() throws Exception {
+    test("mooneye-test-suite/build/emulator-only/mbc2/rom_512kb.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc5__rom_16Mb() throws Exception {
+    test("mooneye-test-suite/build/emulator-only/mbc5/rom_16Mb.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc5__rom_1Mb() throws Exception {
+    test("mooneye-test-suite/build/emulator-only/mbc5/rom_1Mb.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc5__rom_2Mb() throws Exception {
+    test("mooneye-test-suite/build/emulator-only/mbc5/rom_2Mb.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc5__rom_32Mb() throws Exception {
+    test("mooneye-test-suite/build/emulator-only/mbc5/rom_32Mb.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc5__rom_4Mb() throws Exception {
+    test("mooneye-test-suite/build/emulator-only/mbc5/rom_4Mb.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc5__rom_512kb() throws Exception {
+    test("mooneye-test-suite/build/emulator-only/mbc5/rom_512kb.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc5__rom_64Mb() throws Exception {
+    test("mooneye-test-suite/build/emulator-only/mbc5/rom_64Mb.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc5__rom_8Mb() throws Exception {
+    test("mooneye-test-suite/build/emulator-only/mbc5/rom_8Mb.gb");
+  }
+
+  @Test
+  void test__madness__mgb_oam_dma_halt_sprites() throws Exception {
+    test("mooneye-test-suite/build/madness/mgb_oam_dma_halt_sprites.gb");
+  }
+
+  @Test
+  void test__manual_only__sprite_priority() throws Exception {
+    test("mooneye-test-suite/build/manual-only/sprite_priority.gb");
+  }
+
+  @Test
+  void test__misc__bits__unused_hwio_C() throws Exception {
+    test("mooneye-test-suite/build/misc/bits/unused_hwio-C.gb");
+  }
+
+  @Test
+  void test__misc__boot_div_A() throws Exception {
+    test("mooneye-test-suite/build/misc/boot_div-A.gb");
+  }
+
+  @Test
+  void test__misc__boot_div_cgb0() throws Exception {
+    test("mooneye-test-suite/build/misc/boot_div-cgb0.gb");
+  }
+
+  @Test
+  void test__misc__boot_div_cgbABCDE() throws Exception {
+    test("mooneye-test-suite/build/misc/boot_div-cgbABCDE.gb");
+  }
+
+  @Test
+  void test__misc__boot_hwio_C() throws Exception {
+    test("mooneye-test-suite/build/misc/boot_hwio-C.gb");
+  }
+
+  @Test
+  void test__misc__boot_regs_A() throws Exception {
+    test("mooneye-test-suite/build/misc/boot_regs-A.gb");
+  }
+
+  @Test
+  void test__misc__boot_regs_cgb() throws Exception {
+    test("mooneye-test-suite/build/misc/boot_regs-cgb.gb");
+  }
+
+  @Test
+  void test__misc__ppu__vblank_stat_intr_C() throws Exception {
+    test("mooneye-test-suite/build/misc/ppu/vblank_stat_intr-C.gb");
+  }
+
+  @Test
+  void test__utils__bootrom_dumper() throws Exception {
+    test("mooneye-test-suite/build/utils/bootrom_dumper.gb");
+  }
+
+  @Test
+  void test__utils__dump_boot_hwio() throws Exception {
+    test("mooneye-test-suite/build/utils/dump_boot_hwio.gb");
+  }
 }

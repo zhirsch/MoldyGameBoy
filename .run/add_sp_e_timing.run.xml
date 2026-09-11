@@ -1,8 +1,10 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Run all tests under SingleStepCpuTest.java" type="BazelRunConfigurationType">
+  <configuration default="false" name="add_sp_e_timing" type="BazelRunConfigurationType" folderName="mooneye_acceptance">
     <bsp-state handler-provider-id="JvmTestHandlerProvider" check-visibility="true">
-      <bsp-target>@//src/test/java/com/zacharyhirsch/moldygameboy/emulator:SingleStepCpuTest</bsp-target>
-      <handler-state />
+      <bsp-target>@//src/test/java/com/zacharyhirsch/moldygameboy/emulator:MooneyeTest</bsp-target>
+      <handler-state>
+        <option name="additionalBazelParams" value="--test_filter=test__acceptance__add_sp_e_timing" />
+      </handler-state>
     </bsp-state>
     <method v="2">
       <option name="KotlinCoroutineLibraryFinderBeforeRunTaskProvider" enabled="false" />

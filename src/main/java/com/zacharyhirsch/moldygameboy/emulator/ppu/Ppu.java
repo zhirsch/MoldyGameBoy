@@ -55,14 +55,9 @@ public final class Ppu {
   private int pushedPixels = 0;
   private Mode mode = Mode.MODE_2_OAM_SCAN;
   private State state = State.GET_TILE_ID;
-  private boolean yCondition = false;
-  private boolean windowWasDrawnThisLine = false;
 
   private int clock = 0;
   private int fetcherX = 0;
-  private int windowFetcherX = 0;
-  private boolean inWindow = false;
-  private int windowFetcherY = 0;
   private byte tileId;
   private byte tileDataLo;
   private byte tileDataHi;
@@ -84,11 +79,6 @@ public final class Ppu {
   public void tick() {
     if (dot == 0) {
       drawnDots = 0;
-      yCondition = yCondition || ioregs.ly.get() == ioregs.wy.get();
-    }
-    if (yCondition && ioregs.lcdc.bit(5) && ioregs.wx.get() == drawnDots) {
-      // TODO: reset rendering
-      state = State.GET_TILE_ID;
     }
     dot++;
     switch (mode) {
@@ -123,15 +113,6 @@ public final class Ppu {
       render(fifo.remove());
       pushedPixels++;
     }
-    boolean isWindowEnabled = ioregs.lcdc.bit(0) && ioregs.lcdc.bit(5);
-    if (isWindowEnabled && !inWindow && yCondition && ioregs.wx.get() - 7 == drawnDots) {
-      inWindow = true;
-      windowFetcherX = 0;
-      state = State.GET_TILE_ID;
-      clock = 0;
-      fifo.clear();
-      windowWasDrawnThisLine = true;
-    }
     switch (state) {
       case GET_TILE_ID -> getTileId();
       case GET_TILE_DATA_LO -> getTileDataLo();
@@ -143,11 +124,6 @@ public final class Ppu {
       pushedPixels = 0;
       mode = Mode.MODE_0_HBLANK;
       fetcherX = 0;
-      windowFetcherX = 0;
-      if (windowWasDrawnThisLine) {
-        windowFetcherY++;
-      }
-      inWindow = false;
     }
   }
 
@@ -155,29 +131,21 @@ public final class Ppu {
     if (dot == 456) {
       ioregs.ly.set((byte) (ioregs.ly.get() + 1));
       mode = ioregs.ly.get() == 144 ? Mode.MODE_1_VBLANK : Mode.MODE_2_OAM_SCAN;
-      windowWasDrawnThisLine = false;
     }
   }
 
   private void tickVBlank() {
-    yCondition = false;
     if (dot == 456) {
       ioregs.ly.set((byte) (ioregs.ly.get() + 1));
       if (ioregs.ly.get() == 154) {
         video.present();
         ioregs.ly.set(0);
         mode = Mode.MODE_2_OAM_SCAN;
-        windowFetcherY = 0;
-        inWindow = false;
       }
     }
   }
 
   private void render(int pixel) {
-    // if (drawnDots < 8) {
-    // drawnDots++;
-    // return;
-    // }
     int colorIdx =
         switch (pixel) {
           case 0 -> (ioregs.bgp.get() & 0b0000_0011) >>> 0;
@@ -194,24 +162,9 @@ public final class Ppu {
       clock++;
       return;
     }
-    int base;
-    if (inWindow) {
-      base = ioregs.lcdc.bit(6) ? 0x9c00 : 0x9800;
-    } else {
-      base = ioregs.lcdc.bit(3) ? 0x9c00 : 0x9800;
-    }
-    int tileX;
-    if (inWindow) {
-      tileX = windowFetcherX;
-    } else {
-      tileX = (fetcherX + (ioregs.scx.get() / 8)) & 0x1f;
-    }
-    int tileY;
-    if (inWindow) {
-      tileY = windowFetcherY;
-    } else {
-      tileY = (ioregs.ly.get() + ioregs.scy.get()) & 0xff;
-    }
+    int base = ioregs.lcdc.bit(3) ? 0x9c00 : 0x9800;
+    int tileX = (fetcherX + (ioregs.scx.get() / 8)) & 0x1f;
+    int tileY = (ioregs.ly.get() + ioregs.scy.get()) & 0xff;
     int address = base + (tileY / 8 * 32) + tileX;
     tileId = vram.read((short) address);
     state = State.GET_TILE_DATA_LO;
@@ -275,11 +228,7 @@ public final class Ppu {
       int hiBit = (tileDataHi >> bit) & 0x01;
       fifo.add((hiBit << 1) | loBit);
     }
-    if (inWindow) {
-      windowFetcherX++;
-    } else {
-      fetcherX++;
-    }
+    fetcherX++;
     state = State.GET_TILE_ID;
     clock = 0;
   }
@@ -292,12 +241,7 @@ public final class Ppu {
       base = Byte.toUnsignedInt(tileId) <= 127 ? 0x9000 : 0x8800;
     }
     int tileOffset = Byte.toUnsignedInt(tileId) * 16;
-    int tileLine;
-    if (inWindow) {
-      tileLine = windowFetcherY % 8;
-    } else {
-      tileLine = (ioregs.ly.get() + ioregs.scy.get()) % 8;
-    }
+    int tileLine = (ioregs.ly.get() + ioregs.scy.get()) % 8;
 
     return base + tileOffset + (tileLine * 2);
   }
