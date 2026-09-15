@@ -64,15 +64,4 @@ final class MoldyGameBoy {
     cpu.tick();
     timer.tick();
   }
-
-  //  private static final class UnusedIoRegister implements IoRegister {
-  //
-  //    @Override
-  //    public byte read() {
-  //      return (byte) 0xff;
-  //    }
-  //
-  //    @Override
-  //    public void write(byte value) {}
-  //  }
 }

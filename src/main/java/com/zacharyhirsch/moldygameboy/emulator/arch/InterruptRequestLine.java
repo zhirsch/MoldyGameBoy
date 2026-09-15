@@ -2,7 +2,7 @@ package com.zacharyhirsch.moldygameboy.emulator.arch;
 
 public final class InterruptRequestLine {
 
-  private boolean value = false;
+  private boolean oldValue = false;
   private boolean asserted = false;
 
   public InterruptRequestLine() {}
@@ -13,10 +13,10 @@ public final class InterruptRequestLine {
     return asserted;
   }
 
-  public void set(boolean value) {
-    if (!this.value && value) {
+  public void set(boolean newValue) {
+    if (!oldValue && newValue) {
       asserted = true;
     }
-    this.value = value;
+    oldValue = newValue;
   }
 }

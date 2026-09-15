@@ -35,7 +35,6 @@ public final class Cpu {
   private final InterruptRequestLine timer;
   private final InterruptRequestLine serial;
   private final InterruptRequestLine joypad;
-  private final OamDma oamDma;
   private final CpuDecoder decoder;
 
   private Instruction instruction;
@@ -64,13 +63,12 @@ public final class Cpu {
     this.timer = timer;
     this.serial = serial;
     this.joypad = joypad;
-    this.oamDma = new OamDma(bus);
     this.decoder = new CpuDecoder(registers);
     this.instruction = new Nop(registers);
   }
 
   public void tick() {
-    oamDma.tick();
+    ioregs.dma.tick(bus::readDirect, bus::writeDirect);
     if (vblank.get()) {
       ioregs.if_.set(ioregs.if_.get() | InterruptType.VBLANK.mask());
     }
@@ -78,7 +76,6 @@ public final class Cpu {
       ioregs.if_.set(ioregs.if_.get() | InterruptType.LCD.mask());
     }
     if (timer.get()) {
-      IO.println("Timer interrupt requested");
       ioregs.if_.set(ioregs.if_.get() | InterruptType.TIMER.mask());
     }
     if (serial.get()) {

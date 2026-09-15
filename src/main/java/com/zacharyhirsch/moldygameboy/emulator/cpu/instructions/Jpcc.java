@@ -53,25 +53,4 @@ public class Jpcc {
       return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
     }
   }
-
-  //  public static final class Register extends AbstractInstruction {
-  //
-  //    private final Registers registers;
-  //
-  //    public Register(Registers registers) {
-  //      this.registers = registers;
-  //    }
-  //
-  //    @Override
-  //    protected Mem execute0(byte data) {
-  //      registers.pc().set(registers.hl().get());
-  //      return Mem.read(registers.pc().getAndIncrement());
-  //    }
-  //
-  //    @Override
-  //    protected Mem execute1(byte data) {
-  //      registers.ir().set(data);
-  //      return null;
-  //    }
-  //  }
 }

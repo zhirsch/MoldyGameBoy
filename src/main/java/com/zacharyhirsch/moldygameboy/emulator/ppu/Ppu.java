@@ -17,29 +17,10 @@ public final class Ppu {
     new Color((byte) 0x00, (byte) 0x00, (byte) 0x00), // black
   };
 
-  private enum Mode {
-    MODE_0_HBLANK((byte) 0),
-    MODE_1_VBLANK((byte) 1),
-    MODE_2_OAM_SCAN((byte) 2),
-    MODE_3_DRAWING((byte) 3),
-    ;
-
-    private final byte value;
-
-    Mode(byte value) {
-      this.value = value;
-    }
-
-    public byte getValue() {
-      return value;
-    }
-  }
-
   enum State {
     GET_TILE_ID,
     GET_TILE_DATA_LO,
     GET_TILE_DATA_HI,
-    SLEEP,
     PUSH_TO_FIFO,
   }
 
@@ -51,16 +32,15 @@ public final class Ppu {
   private final Queue<Integer> fifo;
 
   private int dot = 0;
-  private int drawnDots = 0;
-  private int pushedPixels = 0;
-  private Mode mode = Mode.MODE_2_OAM_SCAN;
   private State state = State.GET_TILE_ID;
 
-  private int clock = 0;
   private int fetcherX = 0;
   private byte tileId;
   private byte tileDataLo;
   private byte tileDataHi;
+  private int screenX = 0;
+  private int fineScx = 0;
+  private int coarseScx = 0;
 
   public Ppu(
       IoRegisters ioregs,
@@ -77,75 +57,85 @@ public final class Ppu {
   }
 
   public void tick() {
-    if (dot == 0) {
-      drawnDots = 0;
+    assert 0 <= dot && dot <= 455;
+    assert 0 <= ioregs.ly.get() && ioregs.ly.get() <= 153;
+    int mode;
+    if (0 <= ioregs.ly.get() && ioregs.ly.get() <= 143) {
+      assert 0 <= dot && dot < 456;
+      if (0 <= dot && dot < 80) {
+        mode = 0b0000_0010;
+        tickOamScan();
+      } else if (0 <= screenX && screenX < 160) {
+        assert 80 <= dot && dot < 369;
+        mode = 0b0000_0011;
+        tickDrawing();
+      } else if (252 <= dot && dot < 456) {
+        mode = 0b0000_0000;
+        tickHBlank();
+      } else {
+        throw new IllegalStateException("dot=%03d screenX=%03d".formatted(dot, screenX));
+      }
+    } else {
+      mode = 0b0000_0001;
+      tickVBlank();
     }
-    dot++;
-    switch (mode) {
-      case MODE_2_OAM_SCAN -> tickOamScan();
-      case MODE_3_DRAWING -> tickDrawing();
-      case MODE_0_HBLANK -> tickHBlank();
-      case MODE_1_VBLANK -> tickVBlank();
-    }
-    ioregs.stat.set((byte) (ioregs.stat.get() & 0xf8));
-    ioregs.stat.set((byte) (ioregs.stat.get() | (mode.getValue() & 0x03)));
-    ioregs.stat.set((byte) (ioregs.stat.get() | (ioregs.ly.get() == ioregs.lyc.get() ? 0x04 : 0)));
-    if (dot == 456) {
-      dot = 0;
-    }
-    vblank.set(mode == Mode.MODE_1_VBLANK);
+    vblank.set(mode == 0b0000_0001);
+    ioregs.stat.set(
+        (ioregs.stat.get() & 0b1111_1000)
+            | (ioregs.ly.get() == ioregs.lyc.get() ? 0b0000_0100 : 0b0000_0000)
+            | mode);
     lcd.set(
-        (mode == Mode.MODE_0_HBLANK && ioregs.stat.bit(3))
-            || (mode == Mode.MODE_1_VBLANK && ioregs.stat.bit(4))
-            || (mode == Mode.MODE_2_OAM_SCAN && ioregs.stat.bit(5))
-            || (ioregs.ly.get() == ioregs.lyc.get() && ioregs.stat.bit(6)));
+        (ioregs.stat.bit(5) && mode == 0b0000_0010)
+            || (ioregs.stat.bit(4) && mode == 0b0000_0001)
+            || (ioregs.stat.bit(3) && mode == 0b0000_0000)
+            || (ioregs.stat.bit(6) && ioregs.stat.bit(2)));
+    if (dot == 455) {
+      dot = 0;
+      screenX = 0;
+      fetcherX = 0;
+      state = State.GET_TILE_ID;
+      fifo.clear();
+      if (ioregs.ly.get() == 153) {
+        ioregs.ly.set(0);
+        video.present();
+      } else {
+        ioregs.ly.set(ioregs.ly.get() + 0b0000_0001);
+      }
+    } else {
+      dot++;
+    }
   }
 
-  private void tickOamScan() {
-    if (dot == 80) {
-      fifo.clear();
-      mode = Mode.MODE_3_DRAWING;
-    }
-  }
+  private static void tickOamScan() {}
 
   private void tickDrawing() {
-    if (!fifo.isEmpty()) {
-      render(fifo.remove());
-      pushedPixels++;
+    if (dot == 80) {
+      fineScx = (ioregs.scx.get() & 0b0000_0111) >>> 0;
+      coarseScx = (ioregs.scx.get() & 0b1111_1000) >>> 3;
     }
-    switch (state) {
-      case GET_TILE_ID -> getTileId();
-      case GET_TILE_DATA_LO -> getTileDataLo();
-      case GET_TILE_DATA_HI -> getTileDataHi();
-      case SLEEP -> sleep();
-      case PUSH_TO_FIFO -> pushToFifo();
-    }
-    if (pushedPixels == 160) {
-      pushedPixels = 0;
-      mode = Mode.MODE_0_HBLANK;
-      fetcherX = 0;
-    }
-  }
-
-  private void tickHBlank() {
-    if (dot == 456) {
-      ioregs.ly.set((byte) (ioregs.ly.get() + 1));
-      mode = ioregs.ly.get() == 144 ? Mode.MODE_1_VBLANK : Mode.MODE_2_OAM_SCAN;
-    }
-  }
-
-  private void tickVBlank() {
-    if (dot == 456) {
-      ioregs.ly.set((byte) (ioregs.ly.get() + 1));
-      if (ioregs.ly.get() == 154) {
-        video.present();
-        ioregs.ly.set(0);
-        mode = Mode.MODE_2_OAM_SCAN;
+    if (80 <= dot && dot < 84) {
+    } else {
+      if (!fifo.isEmpty()) {
+        render(fifo.remove());
+      }
+      switch (state) {
+        case GET_TILE_ID -> getTileId();
+        case GET_TILE_DATA_LO -> getTileDataLo();
+        case GET_TILE_DATA_HI -> getTileDataHi();
+        case PUSH_TO_FIFO -> pushToFifo();
       }
     }
   }
 
+  private static void tickHBlank() {}
+
+  private static void tickVBlank() {}
+
   private void render(int pixel) {
+    if (fineScx > 0) {
+      fineScx--;
+      return;
+    }
     int colorIdx =
         switch (pixel) {
           case 0 -> (ioregs.bgp.get() & 0b0000_0011) >>> 0;
@@ -154,73 +144,43 @@ public final class Ppu {
           case 3 -> (ioregs.bgp.get() & 0b1100_0000) >>> 6;
           default -> throw new IllegalStateException();
         };
-    video.writeVideoPixel(drawnDots++, ioregs.ly.get(), PALETTE[colorIdx]);
+    video.writeVideoPixel(screenX++, ioregs.ly.get(), PALETTE[colorIdx]);
   }
 
   private void getTileId() {
-    if (clock == 0) {
-      clock++;
+    if (dot % 2 == 0) {
       return;
     }
     int base = ioregs.lcdc.bit(3) ? 0x9c00 : 0x9800;
-    int tileX = (fetcherX + (ioregs.scx.get() / 8)) & 0x1f;
-    int tileY = (ioregs.ly.get() + ioregs.scy.get()) & 0xff;
-    int address = base + (tileY / 8 * 32) + tileX;
+    int mapY = (ioregs.ly.get() + ioregs.scy.get()) & 0xff;
+    int tileY = mapY / 8;
+    int tileX = (fetcherX + coarseScx) & 0x1f;
+    int address = base + (tileY * 32) + tileX;
     tileId = vram.read((short) address);
     state = State.GET_TILE_DATA_LO;
-    clock = 0;
   }
 
   private void getTileDataLo() {
-    if (clock == 0) {
-      clock++;
+    if (dot % 2 == 0) {
       return;
     }
     tileDataLo = vram.read((short) computeTileAddress());
     state = State.GET_TILE_DATA_HI;
-    clock = 0;
   }
 
   private void getTileDataHi() {
-    if (clock == 0) {
-      clock++;
+    if (dot % 2 == 0) {
       return;
     }
     tileDataHi = vram.read((short) (computeTileAddress() + 1));
-
-    // if (fifo.size() > 8) {
-    // return;
-    // }
-    // for (int bit = 7; bit >= 0; bit--) {
-    // int loBit = (tileDataLo >> bit) & 0x01;
-    // int hiBit = (tileDataHi >> bit) & 0x01;
-    // fifo.add((hiBit << 1) | loBit);
-    // }
-    // if (inWindow) {
-    // windowFetcherX++;
-    // } else {
-    // fetcherX++;
-    // }
-
-    state = State.SLEEP;
-    clock = 0;
-  }
-
-  private void sleep() {
-    if (clock == 0) {
-      clock++;
-      return;
-    }
     state = State.PUSH_TO_FIFO;
-    clock = 0;
   }
 
   private void pushToFifo() {
-    if (clock == 0) {
-      clock++;
+    if (dot % 2 == 0) {
       return;
     }
-    if (fifo.size() > 8) {
+    if (fifo.size() >= 8) {
       return;
     }
     for (int bit = 7; bit >= 0; bit--) {
@@ -230,7 +190,6 @@ public final class Ppu {
     }
     fetcherX++;
     state = State.GET_TILE_ID;
-    clock = 0;
   }
 
   private int computeTileAddress() {
@@ -242,7 +201,6 @@ public final class Ppu {
     }
     int tileOffset = Byte.toUnsignedInt(tileId) * 16;
     int tileLine = (ioregs.ly.get() + ioregs.scy.get()) % 8;
-
     return base + tileOffset + (tileLine * 2);
   }
 }

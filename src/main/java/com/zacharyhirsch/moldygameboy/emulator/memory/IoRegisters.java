@@ -61,14 +61,15 @@ public final class IoRegisters implements MemoryRegion {
   /* ff43 */ public final IoRegister scx = IoRegister.create("scx", (short) 0xff43);
   /* ff44 */ public final IoRegister ly = IoRegister.create("ly", (short) 0xff44);
   /* ff45 */ public final IoRegister lyc = IoRegister.create("lyc", (short) 0xff45);
-  /* ff46 */ public final IoRegister dma = IoRegister.create("dma", (short) 0xff46);
+//  /* ff46 */ public final IoRegister dma = IoRegister.create("dma", (short) 0xff46);
+  /* ff46 */ public final OamDmaRegister dma = new OamDmaRegister();
   /* ff47 */ public final IoRegister bgp = IoRegister.create("bgp", (short) 0xff47);
   /* ff48 */ public final IoRegister obp0 = IoRegister.create("obp0", (short) 0xff48);
   /* ff49 */ public final IoRegister obp1 = IoRegister.create("obp1", (short) 0xff49);
   /* ff4a */ public final IoRegister wy = IoRegister.create("wy", (short) 0xff4a);
   /* ff4b */ public final IoRegister wx = IoRegister.create("wx", (short) 0xff4b);
 
-  /* ff50 */ public final IoRegister bank = IoRegister.create("boot", (short) 0xff50);
+  /* ff50 */ public final IoRegister bank = IoRegister.create("bank", (short) 0xff50);
 
   @Override
   public byte read(short address) {

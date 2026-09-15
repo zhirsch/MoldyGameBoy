@@ -24,7 +24,6 @@ public final class CpuBus {
   private final IoRegisters ioregs;
 
   private byte ie = 0;
-  private boolean oamDmaActive = false;
 
   public CpuBus(
       BootRom boot,
@@ -50,35 +49,32 @@ public final class CpuBus {
     return Byte.toUnsignedInt(ie);
   }
 
-  public boolean isOamDmaActive() {
-    return oamDmaActive;
-  }
-
-  public void setOamDmaActive(boolean active) {
-    this.oamDmaActive = active;
-  }
-
   public byte read(short address) {
-    return getMemoryRegion(address).read(address);
+    int addr = Short.toUnsignedInt(address);
+    if (ioregs.dma.isActive() && 0x0000 <= addr && addr <= 0xfeff) {
+      return (byte) 0xff;
+    }
+    return readDirect(address);
   }
 
   public void write(short address, byte data) {
+    int addr = Short.toUnsignedInt(address);
+    if (ioregs.dma.isActive() && 0x0000 <= addr && addr <= 0xfeff) {
+      return;
+    }
+    writeDirect(address, data);
+  }
+
+  public byte readDirect(short address) {
+    return getMemoryRegion(address).read(address);
+  }
+
+  public void writeDirect(short address, byte data) {
     getMemoryRegion(address).write(address, data);
   }
 
   private MemoryRegion getMemoryRegion(short address) {
     int addr = Short.toUnsignedInt(address);
-    if (oamDmaActive && 0x0000 <= addr && addr <= 0xfeff) {
-      return new MemoryRegion() {
-        @Override
-        public byte read(short address) {
-          return (byte) 0xff;
-        }
-
-        @Override
-        public void write(short address, byte value) {}
-      };
-    }
     if (0x0000 <= addr && addr <= 0x00ff) {
       return ioregs.bank.get() == 0 ? boot : rom;
     }
@@ -98,6 +94,9 @@ public final class CpuBus {
       return echoRam;
     }
     if (0xfe00 <= addr && addr <= 0xfe9f) {
+      if (addr == 0xfe00) {
+        IO.println("!");
+      }
       return oam;
     }
     if (0xfea0 <= addr && addr <= 0xfeff) {
