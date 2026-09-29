@@ -1,17 +1,17 @@
 package com.zacharyhirsch.moldygameboy.emulator.timer;
 
-import com.zacharyhirsch.moldygameboy.emulator.arch.InterruptRequestLine;
+import com.zacharyhirsch.moldygameboy.emulator.arch.Irqs;
 import com.zacharyhirsch.moldygameboy.emulator.memory.IoRegisters;
 
 public final class Timer {
 
   private final IoRegisters ioregs;
-  private final InterruptRequestLine timer;
+  private final Irqs.Line timer;
 
   private boolean prevSignal = false;
   private boolean reload = false;
 
-  public Timer(IoRegisters ioregs, InterruptRequestLine timer) {
+  public Timer(IoRegisters ioregs, Irqs.Line timer) {
     this.ioregs = ioregs;
     this.timer = timer;
   }
@@ -25,9 +25,6 @@ public final class Timer {
       timer.set(false);
     }
 
-    ioregs.div.increment();
-    ioregs.div.increment();
-    ioregs.div.increment();
     ioregs.div.increment();
 
     int bit =

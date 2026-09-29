@@ -1,61 +1,90 @@
 package com.zacharyhirsch.moldygameboy.emulator.cpu.instructions;
 
-import com.zacharyhirsch.moldygameboy.emulator.arch.Register8;
+import com.zacharyhirsch.moldygameboy.emulator.arch.Bus;
+import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.R;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.alu.Alu;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 
 public final class Srl {
 
-  public static final class Register extends AbstractInstruction1 {
+  public static final class Register implements Instruction {
 
-    private final Registers registers;
-    private final Register8 register;
+    private final R register;
 
-    public Register(Registers registers, Register8 register) {
-      this.registers = registers;
+    public Register(R register) {
       this.register = register;
     }
 
     @Override
-    protected Mem execute0() {
-      Alu.Result r = Alu.rr(register.read(), false);
-      register.write(r.result());
-      registers.f().z().set(r.z());
-      registers.f().n().set(r.n());
-      registers.f().h().set(r.h());
-      registers.f().c().set(r.c());
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
-    }
-  }
-
-  public static final class Indirect extends AbstractInstruction3 {
-
-    private final Registers registers;
-
-    private byte z;
-
-    public Indirect(Registers registers) {
-      this.registers = registers;
-    }
-
-    @Override
-    protected Mem execute0() {
-      return Mem.read(registers.hl().read(), data -> z = data);
-    }
-
-    @Override
-    protected Mem execute1() {
-      Alu.Result result = Alu.rr(z, false);
+    public MCycle start(Registers registers, Bus bus) {
+      Alu.Result<Byte> result = Alu.rr(register.get(), false);
+      register.set(result.result());
       registers.f().z().set(result.z());
       registers.f().n().set(result.n());
       registers.f().h().set(result.h());
       registers.f().c().set(result.c());
-      return Mem.write(registers.hl().read(), result::result);
+      return new FetchOpcode();
     }
+  }
+
+  public static final class Indirect implements Instruction {
 
     @Override
-    protected Mem execute2() {
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
+    public MCycle start(Registers registers, Bus bus) {
+      return new M3();
+    }
+
+    private static final class M3 implements MCycle {
+
+      @Override
+      public void t1(Registers registers, Bus bus) {
+        bus.addressBus().set(registers.hl().get());
+      }
+
+      @Override
+      public void t2(Registers registers, Bus bus) {
+        bus.rd().set(true);
+      }
+
+      @Override
+      public void t3(Registers registers, Bus bus) {
+        registers.z().set(bus.dataBus().get());
+      }
+
+      @Override
+      public MCycle t4(Registers registers, Bus bus) {
+        bus.rd().set(false);
+        Alu.Result<Byte> result = Alu.rr(registers.z().get(), false);
+        registers.z().set(result.result());
+        registers.f().z().set(result.z());
+        registers.f().n().set(result.n());
+        registers.f().h().set(result.h());
+        registers.f().c().set(result.c());
+        return new M4();
+      }
+    }
+
+    private static final class M4 implements MCycle {
+
+      @Override
+      public void t1(Registers registers, Bus bus) {
+        bus.addressBus().set(registers.hl().get());
+      }
+
+      @Override
+      public void t2(Registers registers, Bus bus) {
+        bus.dataBus().set(registers.z().get());
+        bus.wr().set(true);
+      }
+
+      @Override
+      public void t3(Registers registers, Bus bus) {}
+
+      @Override
+      public MCycle t4(Registers registers, Bus bus) {
+        bus.wr().set(false);
+        return new FetchOpcode();
+      }
     }
   }
 }

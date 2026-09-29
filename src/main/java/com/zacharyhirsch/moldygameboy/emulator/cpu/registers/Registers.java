@@ -1,62 +1,68 @@
 package com.zacharyhirsch.moldygameboy.emulator.cpu.registers;
 
-import com.zacharyhirsch.moldygameboy.emulator.arch.Register16;
-import com.zacharyhirsch.moldygameboy.emulator.arch.Register8;
-
 public record Registers(
-    Register8 ir,
-    Register8 ie,
-    Register16<Register8, FlagsRegister> af,
-    Register16<Register8, Register8> bc,
-    Register16<Register8, Register8> de,
-    Register16<Register8, Register8> hl,
-    Register16<Register8, Register8> pc,
-    Register16<Register8, Register8> sp,
-    Register8 ime) {
+    R ir,
+    R ie,
+    RR af,
+    RR bc,
+    RR de,
+    RR hl,
+    RR wz,
+    RR pc,
+    RR sp,
+    R ime) {
 
   public Registers() {
     this(
-        new CpuRegister8(),
-        new CpuRegister8(),
-        new Register16<>(new CpuRegister8(), new FlagsRegister()),
-        new Register16<>(new CpuRegister8(), new CpuRegister8()),
-        new Register16<>(new CpuRegister8(), new CpuRegister8()),
-        new Register16<>(new CpuRegister8(), new CpuRegister8()),
-        new Register16<>(new CpuRegister8(), new CpuRegister8()),
-        new Register16<>(new CpuRegister8(), new CpuRegister8()),
-        new CpuRegister8());
+        new R(),
+        new R(),
+        new RR(),
+        new RR(),
+        new RR(),
+        new RR(),
+        new RR(),
+        new RR(),
+        new RR(),
+        new R());
   }
 
-  public Register8 a() {
+  public R a() {
     return af().hi();
   }
 
   public FlagsRegister f() {
-    return af().lo();
+    return new FlagsRegister(af().lo());
   }
 
-  public Register8 b() {
+  public R b() {
     return bc().hi();
   }
 
-  public Register8 c() {
+  public R c() {
     return bc().lo();
   }
 
-  public Register8 d() {
+  public R d() {
     return de().hi();
   }
 
-  public Register8 e() {
+  public R e() {
     return de().lo();
   }
 
-  public Register8 h() {
+  public R h() {
     return hl().hi();
   }
 
-  public Register8 l() {
+  public R l() {
     return hl().lo();
   }
 
+  public R w() {
+    return wz().hi();
+  }
+
+  public R z() {
+    return wz().lo();
+  }
 }

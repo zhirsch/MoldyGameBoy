@@ -30,23 +30,23 @@ final class RegistersSubject extends Subject {
 
     List<Fact> failures = new ArrayList<>();
 
-    if (actual.b().read() != (byte) 0x03) {
-      failures.add(Fact.fact("b", "expected: 03, actual: %02x".formatted(actual.b().read())));
+    if (actual.b().get() != (byte) 0x03) {
+      failures.add(Fact.fact("b", "expected: 03, actual: %02x".formatted(actual.b().get())));
     }
-    if (actual.c().read() != (byte) 0x05) {
-      failures.add(Fact.fact("c", "expected: 05, actual: %02x".formatted(actual.c().read())));
+    if (actual.c().get() != (byte) 0x05) {
+      failures.add(Fact.fact("c", "expected: 05, actual: %02x".formatted(actual.c().get())));
     }
-    if (actual.d().read() != (byte) 0x08) {
-      failures.add(Fact.fact("d", "expected: 08, actual: %02x".formatted(actual.d().read())));
+    if (actual.d().get() != (byte) 0x08) {
+      failures.add(Fact.fact("d", "expected: 08, actual: %02x".formatted(actual.d().get())));
     }
-    if (actual.e().read() != (byte) 0x0d) {
-      failures.add(Fact.fact("e", "expected: 0d, actual: %02x".formatted(actual.e().read())));
+    if (actual.e().get() != (byte) 0x0d) {
+      failures.add(Fact.fact("e", "expected: 0d, actual: %02x".formatted(actual.e().get())));
     }
-    if (actual.h().read() != (byte) 0x15) {
-      failures.add(Fact.fact("h", "expected: 15, actual: %02x".formatted(actual.h().read())));
+    if (actual.h().get() != (byte) 0x15) {
+      failures.add(Fact.fact("h", "expected: 15, actual: %02x".formatted(actual.h().get())));
     }
-    if (actual.l().read() != (byte) 0x22) {
-      failures.add(Fact.fact("l", "expected: 22, actual: %02x".formatted(actual.l().read())));
+    if (actual.l().get() != (byte) 0x22) {
+      failures.add(Fact.fact("l", "expected: 22, actual: %02x".formatted(actual.l().get())));
     }
 
     if (!failures.isEmpty()) {

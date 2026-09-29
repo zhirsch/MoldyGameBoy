@@ -37,8 +37,16 @@ java_junit5_test(
 java_junit5_test(
     name = "BlarggCpuInstrTest",
     srcs = ["BlarggCpuInstrTest.java"],
-    jvm_flags = ["-Djava.security.manager=disallow"],
+    jvm_flags =
+        select({
+            "//:macos": ["-XstartOnFirstThread"],
+            "//conditions:default": [],
+        }) + [
+            "--enable-native-access=ALL-UNNAMED",
+        ],
     resources = [
+        "//src/main/resources:dmg.bin",
+        "//src/main/resources:logback.xml",
         "//src/test/resources/cpu_instrs:cpu_instrs.gb",
         "//src/test/resources/cpu_instrs:individual/01-special.gb",
         "//src/test/resources/cpu_instrs:individual/02-interrupts.gb",

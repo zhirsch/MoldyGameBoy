@@ -8,6 +8,7 @@ java_library(
         java_plugin_artifact("com.google.auto.value:auto-value", "com.google.auto.value.processor.AutoBuilderProcessor"),
     ],
     visibility = [
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu:__pkg__",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu/instructions:__pkg__",
         "//src/test/java/com/zacharyhirsch/moldygameboy/emulator/cpu/alu:__pkg__",
     ],

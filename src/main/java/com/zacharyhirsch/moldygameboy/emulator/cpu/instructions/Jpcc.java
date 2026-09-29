@@ -1,56 +1,145 @@
 package com.zacharyhirsch.moldygameboy.emulator.cpu.instructions;
 
+import com.zacharyhirsch.moldygameboy.emulator.arch.Bus;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.FlagsRegister;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 import java.util.function.Predicate;
 
-public class Jpcc {
+public final class Jpcc implements Instruction {
 
-  public static final class Immediate implements Instruction {
+  private final Predicate<FlagsRegister> predicate;
 
-    private final Registers registers;
-    private final Predicate<FlagsRegister> predicate;
+  public Jpcc(Predicate<FlagsRegister> predicate) {
+    this.predicate = predicate;
+  }
 
-    private int i = 0;
-    private byte z;
-    private byte w;
+  @Override
+  public MCycle start(Registers registers, Bus bus) {
+    return predicate.test(registers.f()) ? new Take.M2() : new Skip.M2();
+  }
 
-    public Immediate(Registers registers, Predicate<FlagsRegister> predicate) {
-      this.registers = registers;
-      this.predicate = predicate;
-    }
+  private static final class Take {
 
-    @Override
-    public Mem tick() {
-      return switch (i++) {
-        case 0 -> execute0();
-        case 1 -> execute1();
-        case 2 -> execute2();
-        case 3 -> execute3();
-        case 4 -> null;
-        default -> throw new IllegalStateException();
-      };
-    }
+    private static final class M2 implements MCycle {
 
-    private Mem execute0() {
-      return Mem.read(registers.pc().getAndIncrement(), data -> z = data);
-    }
-
-    private Mem execute1() {
-      return Mem.read(registers.pc().getAndIncrement(), data -> w = data);
-    }
-
-    private Mem execute2() {
-      if (!predicate.test(registers.f())) {
-        i = 4;
-        return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
+      @Override
+      public void t1(Registers registers, Bus bus) {
+        bus.addressBus().set(registers.pc().get());
       }
-      registers.pc().write(w, z);
-      return Mem.none((short) 0x0000);
+
+      @Override
+      public void t2(Registers registers, Bus bus) {
+        bus.rd().set(true);
+        registers.pc().increment();
+      }
+
+      @Override
+      public void t3(Registers registers, Bus bus) {
+        registers.z().set(bus.dataBus().get());
+      }
+
+      @Override
+      public MCycle t4(Registers registers, Bus bus) {
+        bus.rd().set(false);
+        return new M3();
+      }
     }
 
-    private Mem execute3() {
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
+    private static final class M3 implements MCycle {
+
+      @Override
+      public void t1(Registers registers, Bus bus) {
+        bus.addressBus().set(registers.pc().get());
+      }
+
+      @Override
+      public void t2(Registers registers, Bus bus) {
+        bus.rd().set(true);
+        registers.pc().increment();
+      }
+
+      @Override
+      public void t3(Registers registers, Bus bus) {
+        registers.w().set(bus.dataBus().get());
+      }
+
+      @Override
+      public MCycle t4(Registers registers, Bus bus) {
+        bus.rd().set(false);
+        return new M4();
+      }
+    }
+
+    private static final class M4 implements MCycle {
+
+      @Override
+      public void t1(Registers registers, Bus bus) {}
+
+      @Override
+      public void t2(Registers registers, Bus bus) {
+        registers.pc().set(registers.wz().get());
+      }
+
+      @Override
+      public void t3(Registers registers, Bus bus) {}
+
+      @Override
+      public MCycle t4(Registers registers, Bus bus) {
+        return new FetchOpcode();
+      }
+    }
+  }
+
+  private static final class Skip {
+
+    private static final class M2 implements MCycle {
+
+      @Override
+      public void t1(Registers registers, Bus bus) {
+        bus.addressBus().set(registers.pc().get());
+      }
+
+      @Override
+      public void t2(Registers registers, Bus bus) {
+        bus.rd().set(true);
+        registers.pc().increment();
+      }
+
+      @Override
+      public void t3(Registers registers, Bus bus) {
+        registers.z().set(bus.dataBus().get());
+      }
+
+      @Override
+      public MCycle t4(Registers registers, Bus bus) {
+        bus.rd().set(false);
+        return new M3();
+      }
+    }
+
+    private static final class M3 implements MCycle {
+
+      @Override
+      public void t1(Registers registers, Bus bus) {
+        bus.addressBus().set(registers.pc().get());
+      }
+
+      @Override
+      public void t2(Registers registers, Bus bus) {
+        bus.rd().set(true);
+        registers.pc().increment();
+      }
+
+      @Override
+      public void t3(Registers registers, Bus bus) {
+        registers.w().set(bus.dataBus().get());
+      }
+
+      @Override
+      public MCycle t4(Registers registers, Bus bus) {
+        bus.rd().set(false);
+        return new FetchOpcode();
+      }
     }
   }
 }

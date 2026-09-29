@@ -1,47 +1,94 @@
 package com.zacharyhirsch.moldygameboy.emulator.cpu.instructions;
 
+import com.zacharyhirsch.moldygameboy.emulator.arch.Bus;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.FlagsRegister;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 import java.util.function.Predicate;
 
 public final class Jrcc implements Instruction {
 
-  private final Registers registers;
   private final Predicate<FlagsRegister> predicate;
 
-  private int i = 0;
-  private byte z;
-
-  public Jrcc(Registers registers, Predicate<FlagsRegister> predicate) {
-    this.registers = registers;
+  public Jrcc(Predicate<FlagsRegister> predicate) {
     this.predicate = predicate;
   }
 
   @Override
-  public Mem tick() {
-    return switch (i++) {
-      case 0 -> execute0();
-      case 1 -> execute1();
-      case 2 -> execute2();
-      case 3 -> null;
-      default -> throw new IllegalStateException();
-    };
+  public MCycle start(Registers registers, Bus bus) {
+    return predicate.test(registers.f()) ? new Take.M2() : new Skip.M2();
   }
 
-  private Mem execute0() {
-    return Mem.read(registers.pc().getAndIncrement(), data -> z = data);
-  }
+  private static final class Take {
 
-  private Mem execute1() {
-    if (!predicate.test(registers.f())) {
-      i = 3;
-      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
+    private static final class M2 implements MCycle {
+
+      @Override
+      public void t1(Registers registers, Bus bus) {
+        bus.addressBus().set(registers.pc().get());
+      }
+
+      @Override
+      public void t2(Registers registers, Bus bus) {
+        bus.rd().set(true);
+        registers.pc().increment();
+      }
+
+      @Override
+      public void t3(Registers registers, Bus bus) {
+        registers.z().set(bus.dataBus().get());
+      }
+
+      @Override
+      public MCycle t4(Registers registers, Bus bus) {
+        bus.rd().set(false);
+        registers.wz().set(registers.z().get()); // sign extend 8-bit to 16-bit.
+        return new M3();
+      }
     }
-    registers.pc().write((short) (registers.pc().read() + z));
-    return Mem.none(registers.pc().read());
+
+    private static final class M3 implements MCycle {
+
+      @Override
+      public void t1(Registers registers, Bus bus) {}
+
+      @Override
+      public void t2(Registers registers, Bus bus) {}
+
+      @Override
+      public void t3(Registers registers, Bus bus) {
+        registers.pc().set((short) (registers.pc().get() + registers.wz().get()));
+      }
+
+      @Override
+      public MCycle t4(Registers registers, Bus bus) {
+        return new FetchOpcode();
+      }
+    }
   }
 
-  private Mem execute2() {
-    return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
+  private static final class Skip {
+
+    private static final class M2 implements MCycle {
+
+      @Override
+      public void t1(Registers registers, Bus bus) {
+        bus.addressBus().set(registers.pc().get());
+      }
+
+      @Override
+      public void t2(Registers registers, Bus bus) {
+        bus.rd().set(true);
+        registers.pc().increment();
+      }
+
+      @Override
+      public void t3(Registers registers, Bus bus) {}
+
+      @Override
+      public MCycle t4(Registers registers, Bus bus) {
+        bus.rd().set(false);
+        return new FetchOpcode();
+      }
+    }
   }
 }

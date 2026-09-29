@@ -6,8 +6,8 @@ java_library(
     visibility = ["//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu:__pkg__"],
     deps = [
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/arch",
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/common",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu/alu",
-        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu/memory",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu/registers",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/memory",
     ],

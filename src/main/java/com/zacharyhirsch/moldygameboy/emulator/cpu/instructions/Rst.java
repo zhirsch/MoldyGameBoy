@@ -1,35 +1,104 @@
 package com.zacharyhirsch.moldygameboy.emulator.cpu.instructions;
 
+import com.zacharyhirsch.moldygameboy.emulator.arch.Bus;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 
-public final class Rst extends AbstractInstruction4 {
+public final class Rst implements Instruction {
 
-  private final Registers registers;
   private final short address;
 
-  public Rst(Registers registers, short address) {
-    this.registers = registers;
+  public Rst(short address) {
     this.address = address;
   }
 
   @Override
-  protected Mem execute0() {
-    return Mem.none(registers.sp().getAndDecrement());
+  public MCycle start(Registers registers, Bus bus) {
+    return new M2(address);
   }
 
-  @Override
-  protected Mem execute1() {
-    return Mem.write(registers.sp().getAndDecrement(), registers.pc().hi()::read);
+  private static final class M2 implements MCycle {
+
+    private final short address;
+
+    private M2(short address) {
+      this.address = address;
+    }
+
+    @Override
+    public void t1(Registers registers, Bus bus) {}
+
+    @Override
+    public void t2(Registers registers, Bus bus) {
+      registers.sp().decrement();
+    }
+
+    @Override
+    public void t3(Registers registers, Bus bus) {}
+
+    @Override
+    public MCycle t4(Registers registers, Bus bus) {
+      return new M3(address);
+    }
   }
 
-  @Override
-  protected Mem execute2() {
-    return Mem.write(registers.sp().read(), registers.pc().lo()::read);
+  private static final class M3 implements MCycle {
+
+    private final short address;
+
+    private M3(short address) {
+      this.address = address;
+    }
+
+    @Override
+    public void t1(Registers registers, Bus bus) {
+      bus.addressBus().set(registers.sp().get());
+    }
+
+    @Override
+    public void t2(Registers registers, Bus bus) {
+      bus.dataBus().set(registers.pc().hi().get());
+      bus.wr().set(true);
+    }
+
+    @Override
+    public void t3(Registers registers, Bus bus) {}
+
+    @Override
+    public MCycle t4(Registers registers, Bus bus) {
+      bus.wr().set(false);
+      registers.sp().decrement();
+      return new M4(address);
+    }
   }
 
-  @Override
-  protected Mem execute3() {
-    registers.pc().write(address);
-    return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
+  private static final class M4 implements MCycle {
+
+    private final short address;
+
+    private M4(short address) {
+      this.address = address;
+    }
+
+    @Override
+    public void t1(Registers registers, Bus bus) {
+      bus.addressBus().set(registers.sp().get());
+    }
+
+    @Override
+    public void t2(Registers registers, Bus bus) {
+      bus.dataBus().set(registers.pc().lo().get());
+      bus.wr().set(true);
+    }
+
+    @Override
+    public void t3(Registers registers, Bus bus) {
+      registers.pc().set(address);
+    }
+
+    @Override
+    public MCycle t4(Registers registers, Bus bus) {
+      bus.wr().set(false);
+      return new FetchOpcode();
+    }
   }
 }

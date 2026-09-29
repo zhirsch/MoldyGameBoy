@@ -1,6 +1,6 @@
 package com.zacharyhirsch.moldygameboy.emulator.ppu;
 
-import com.zacharyhirsch.moldygameboy.emulator.arch.InterruptRequestLine;
+import com.zacharyhirsch.moldygameboy.emulator.arch.Irqs;
 import com.zacharyhirsch.moldygameboy.emulator.io.Color;
 import com.zacharyhirsch.moldygameboy.emulator.io.Video;
 import com.zacharyhirsch.moldygameboy.emulator.memory.IoRegisters;
@@ -27,8 +27,8 @@ public final class Ppu {
   private final IoRegisters ioregs;
   private final Vram vram;
   private final Video video;
-  private final InterruptRequestLine vblank;
-  private final InterruptRequestLine lcd;
+  private final Irqs.Line vblank;
+  private final Irqs.Line lcd;
   private final Queue<Integer> fifo;
 
   private int dot = 0;
@@ -46,8 +46,8 @@ public final class Ppu {
       IoRegisters ioregs,
       Vram vram,
       Video video,
-      InterruptRequestLine vblank,
-      InterruptRequestLine lcd) {
+      Irqs.Line vblank,
+      Irqs.Line lcd) {
     this.ioregs = ioregs;
     this.vram = vram;
     this.video = video;
