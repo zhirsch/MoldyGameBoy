@@ -57,6 +57,7 @@ public final class Cpu {
         tcycle = TCycle.T3;
       }
       case T3 -> {
+        memory.tick(bus);
         mcycle.t3(registers, bus);
         tcycle = TCycle.T4;
       }
@@ -65,7 +66,6 @@ public final class Cpu {
         tcycle = TCycle.T1;
       }
     }
-    memory.tick(bus);
     //    if (vblank.get()) {
     //      ioregs.if_.set(ioregs.if_.get() | InterruptType.VBLANK.mask());
     //    }

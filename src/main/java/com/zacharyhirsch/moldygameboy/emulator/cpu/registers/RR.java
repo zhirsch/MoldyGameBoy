@@ -1,9 +1,23 @@
 package com.zacharyhirsch.moldygameboy.emulator.cpu.registers;
 
-public record RR(R hi, R lo) {
+import java.util.Objects;
 
-  public RR() {
-    this(new R(), new R());
+public abstract class RR {
+
+  private final R hi;
+  private final R lo;
+
+  protected RR(R hi, R lo) {
+    this.hi = hi;
+    this.lo = lo;
+  }
+
+  public R hi() {
+    return hi;
+  }
+
+  public R lo() {
+    return lo;
   }
 
   public short get() {
@@ -23,20 +37,21 @@ public record RR(R hi, R lo) {
     set((short) (get() - 1));
   }
 
-  public short getAndIncrement() {
-    short value = get();
-    increment();
-    return value;
-  }
-
-  public short getAndDecrement() {
-    short value = get();
-    decrement();
-    return value;
-  }
-
   @Override
   public String toString() {
     return "Register16{%04x}".formatted(get());
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (obj == this) return true;
+    if (obj == null || obj.getClass() != this.getClass()) return false;
+    var that = (RR) obj;
+    return Objects.equals(this.hi, that.hi) && Objects.equals(this.lo, that.lo);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(hi, lo);
   }
 }

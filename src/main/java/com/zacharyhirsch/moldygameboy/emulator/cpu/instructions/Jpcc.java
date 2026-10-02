@@ -1,15 +1,15 @@
 package com.zacharyhirsch.moldygameboy.emulator.cpu.instructions;
 
 import com.zacharyhirsch.moldygameboy.emulator.arch.Bus;
-import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.FlagsRegister;
+import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.F;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 import java.util.function.Predicate;
 
 public final class Jpcc implements Instruction {
 
-  private final Predicate<FlagsRegister> predicate;
+  private final Predicate<F> predicate;
 
-  public Jpcc(Predicate<FlagsRegister> predicate) {
+  public Jpcc(Predicate<F> predicate) {
     this.predicate = predicate;
   }
 

@@ -109,8 +109,7 @@ public final class Ld {
 
       @Override
       public void t3(Registers registers, Bus bus) {
-        R r = registers.a();
-        r.set(bus.dataBus().get());
+        registers.a().set(bus.dataBus().get());
         registers.hl().increment();
       }
 
@@ -143,8 +142,7 @@ public final class Ld {
 
       @Override
       public void t3(Registers registers, Bus bus) {
-        R r = registers.a();
-        r.set(bus.dataBus().get());
+        registers.a().set(bus.dataBus().get());
         registers.hl().decrement();
       }
 
@@ -189,8 +187,7 @@ public final class Ld {
 
       @Override
       public void t3(Registers registers, Bus bus) {
-        R r = registers.a();
-        r.set(bus.dataBus().get());
+        registers.a().set(bus.dataBus().get());
       }
 
       @Override
@@ -222,8 +219,7 @@ public final class Ld {
 
       @Override
       public void t3(Registers registers, Bus bus) {
-        R r = registers.a();
-        r.set(bus.dataBus().get());
+        registers.a().set(bus.dataBus().get());
       }
 
       @Override

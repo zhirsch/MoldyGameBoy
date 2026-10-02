@@ -140,8 +140,13 @@ public final class IoRegisters implements MemoryRegion {
   public void write(short address, byte value) {
     switch (Short.toUnsignedInt(address)) {
       case 0xff00 -> joyp.set((byte) (value & 0x30));
-      case 0xff01 -> sb.set((byte) (value & 0xff));
-      case 0xff02 -> sc.set((byte) (value & 0x81));
+      case 0xff01 -> {
+        sb.set((byte) (value & 0xff));
+      }
+      case 0xff02 -> {
+        sc.set((byte) (value & 0x81));
+        IO.print((char) sb.get());
+      }
       case 0xff04 -> div.set((byte) 0);
       case 0xff05 -> tima.set((byte) (value & 0xff));
       case 0xff06 -> tma.set((byte) (value & 0xff));

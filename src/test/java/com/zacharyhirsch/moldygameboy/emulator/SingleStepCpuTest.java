@@ -195,7 +195,7 @@ final class SingleStepCpuTest {
     while (!cycles.isEmpty()) {
       cpu.tick(bus);
     }
-    registers.pc().getAndDecrement();
+//    registers.pc().getAndDecrement();
 
     assertThat(registers.pc().get()).isEqualTo(final_.pc());
     assertThat(registers.sp().get()).isEqualTo(final_.sp());

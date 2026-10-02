@@ -1,15 +1,15 @@
 package com.zacharyhirsch.moldygameboy.emulator.cpu.instructions;
 
 import com.zacharyhirsch.moldygameboy.emulator.arch.Bus;
-import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.FlagsRegister;
+import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.F;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 import java.util.function.Predicate;
 
 public final class Callcc implements Instruction {
 
-  private final Predicate<FlagsRegister> predicate;
+  private final Predicate<F> predicate;
 
-  public Callcc(Predicate<FlagsRegister> predicate) {
+  public Callcc(Predicate<F> predicate) {
     this.predicate = predicate;
   }
 

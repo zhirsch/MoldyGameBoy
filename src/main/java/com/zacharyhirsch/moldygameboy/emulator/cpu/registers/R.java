@@ -1,6 +1,6 @@
 package com.zacharyhirsch.moldygameboy.emulator.cpu.registers;
 
-public final class R {
+public abstract class R {
 
   private byte value = 0;
 

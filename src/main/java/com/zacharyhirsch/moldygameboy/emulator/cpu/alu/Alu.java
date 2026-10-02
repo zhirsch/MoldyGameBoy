@@ -1,138 +1,275 @@
 package com.zacharyhirsch.moldygameboy.emulator.cpu.alu;
 
-import com.google.auto.value.AutoBuilder;
+import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.A;
+import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.F;
+import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.HL;
+import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.R;
+import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.RR;
+import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Sp;
+import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.WZ;
 
 public final class Alu {
 
   private Alu() {}
 
-  public record Result<T extends Number>(T result, boolean z, boolean n, boolean h, boolean c) {
-
-    static Builder<Byte> builder(byte result) {
-      return new AutoBuilder_Alu_Result_Builder<Byte>().result(result).z(result == 0);
-    }
-
-    static Builder<Short> builder(short result) {
-      return new AutoBuilder_Alu_Result_Builder<Short>().result(result).z(result == 0);
-    }
-
-    @AutoBuilder
-    public interface Builder<T extends Number> {
-
-      Builder<T> result(T result);
-
-      Builder<T> z(boolean z);
-
-      Builder<T> n(boolean n);
-
-      Builder<T> h(boolean h);
-
-      Builder<T> c(boolean c);
-
-      Result<T> build();
-    }
+  public static void adc(A a, R r, F flags) {
+    int lhs = Byte.toUnsignedInt(a.get());
+    int rhs = Byte.toUnsignedInt(r.get());
+    int carry = flags.c().get() ? 1 : 0;
+    byte result = (byte) (lhs + rhs + carry);
+    a.set(result);
+    flags.z().set(result == 0);
+    flags.n().set(false);
+    flags.h().set((lhs & 0x0f) + (rhs & 0x0f) + carry > 0x0f);
+    flags.c().set((lhs & 0xff) + (rhs & 0xff) + carry > 0xff);
   }
 
-  public static Result<Byte> adc(byte lhs, byte rhs, boolean carry) {
-    int c = carry ? 1 : 0;
-    return Result.builder((byte) (Byte.toUnsignedInt(lhs) + Byte.toUnsignedInt(rhs) + c))
-        .n(false)
-        .h((Byte.toUnsignedInt(lhs) & 0x0f) + (Byte.toUnsignedInt(rhs) & 0x0f) + c > 0x0f)
-        .c((Byte.toUnsignedInt(lhs) & 0xff) + (Byte.toUnsignedInt(rhs) & 0xff) + c > 0xff)
-        .build();
+  public static void add(A a, R r, F flags) {
+    int lhs = Byte.toUnsignedInt(a.get());
+    int rhs = Byte.toUnsignedInt(r.get());
+    byte result = (byte) (lhs + rhs);
+    a.set(result);
+    flags.z().set(result == 0);
+    flags.n().set(false);
+    flags.h().set((lhs & 0x0f) + (rhs & 0x0f) > 0x0f);
+    flags.c().set((lhs & 0xff) + (rhs & 0xff) > 0xff);
   }
 
-  public static Result<Byte> add(byte lhs, byte rhs) {
-    return adc(lhs, rhs, false);
+  public static void add16(HL hl, RR rr, F flags) {
+    int lhs = Short.toUnsignedInt(hl.get());
+    int rhs = Short.toUnsignedInt(rr.get());
+    hl.set((short) (lhs + rhs));
+    flags.n().set(false);
+    flags.h().set((lhs & 0x0fff) + (rhs & 0x0fff) > 0x0fff);
+    flags.c().set((lhs & 0xffff) + (rhs & 0xffff) > 0xffff);
   }
 
-  public static Result<Short> add16(short lhs, short rhs) {
-    return Result.builder((short) (Short.toUnsignedInt(lhs) + Short.toUnsignedInt(rhs)))
-        .n(false)
-        .h((Short.toUnsignedInt(lhs) & 0x0fff) + (Short.toUnsignedInt(rhs) & 0x0fff) > 0x0fff)
-        .c((Short.toUnsignedInt(lhs) & 0xffff) + (Short.toUnsignedInt(rhs) & 0xffff) > 0xffff)
-        .build();
+  public static void add16(Sp sp, WZ wz, F flags) {
+    int lhs = Short.toUnsignedInt(sp.get());
+    int rhs = Byte.toUnsignedInt(wz.lo().get());
+    wz.set((short) (lhs + (int) (byte) rhs)); // sign extend rhs
+    flags.z().set(false);
+    flags.n().set(false);
+    flags.h().set((lhs & 0x000f) + (rhs & 0x0f) > 0x000f);
+    flags.c().set((lhs & 0x00ff) + (rhs & 0xff) > 0x00ff);
   }
 
-  public static Result<Short> add16(short lhs, byte rhs) {
-    return Result.builder((short) (Short.toUnsignedInt(lhs) + (int) rhs)) // sign extend rhs
-        .z(false)
-        .n(false)
-        .h((Short.toUnsignedInt(lhs) & 0x000f) + (Byte.toUnsignedInt(rhs) & 0x0f) > 0x000f)
-        .c((Short.toUnsignedInt(lhs) & 0x00ff) + (Byte.toUnsignedInt(rhs) & 0xff) > 0x00ff)
-        .build();
+  public static void sbc(A a, R r, F flags) {
+    int lhs = Byte.toUnsignedInt(a.get());
+    int rhs = Byte.toUnsignedInt(r.get());
+    int carry = flags.c().get() ? 1 : 0;
+    byte result = (byte) (lhs - rhs - carry);
+    a.set(result);
+    flags.z().set(result == 0);
+    flags.n().set(true);
+    flags.h().set((lhs & 0x0f) - (rhs & 0x0f) - carry < 0);
+    flags.c().set((lhs & 0xff) - (rhs & 0xff) - carry < 0);
   }
 
-  public static Result<Byte> inc(byte value) {
-    return adc(value, (byte) 1, false);
+  public static void sub(A a, R r, F flags) {
+    int lhs = Byte.toUnsignedInt(a.get());
+    int rhs = Byte.toUnsignedInt(r.get());
+    byte result = (byte) (lhs - rhs);
+    a.set(result);
+    flags.z().set(result == 0);
+    flags.n().set(true);
+    flags.h().set((lhs & 0x0f) - (rhs & 0x0f) < 0);
+    flags.c().set((lhs & 0xff) - (rhs & 0xff) < 0);
   }
 
-  public static Result<Byte> and(byte lhs, byte rhs) {
-    byte result = (byte) (lhs & rhs);
-    return Result.builder(result).n(false).h(true).c(false).build();
+  public static void cp(A a, R r, F flags) {
+    int lhs = Byte.toUnsignedInt(a.get());
+    int rhs = Byte.toUnsignedInt(r.get());
+    byte result = (byte) (lhs - rhs);
+    flags.z().set(result == 0);
+    flags.n().set(true);
+    flags.h().set((lhs & 0x0f) - (rhs & 0x0f) < 0);
+    flags.c().set((lhs & 0xff) - (rhs & 0xff) < 0);
   }
 
-  public static Result<Byte> bit(byte value, int index) {
-    byte result = (byte) (value & (1 << index));
-    return Result.builder(result).n(false).h(true).c(false).build();
+  public static void inc(R r, F flags) {
+    int value = Byte.toUnsignedInt(r.get());
+    byte result = (byte) (value + 1);
+    r.set(result);
+    flags.z().set(result == 0);
+    flags.n().set(false);
+    flags.h().set((value & 0x0f) + 1 > 0x0f);
   }
 
-  public static Result<Byte> ccf(boolean carry) {
-    byte result = (byte) 0;
-    return Result.builder(result).n(false).h(false).c(!carry).build();
+  public static void dec(R r, F flags) {
+    int value = Byte.toUnsignedInt(r.get());
+    byte result = (byte) (value - 1);
+    r.set(result);
+    flags.z().set(result == 0);
+    flags.n().set(true);
+    flags.h().set((value & 0x0f) - 1 < 0);
   }
 
-  public static Result<Byte> cpl(byte value) {
-    byte result = (byte) ~value;
-    return Result.builder(result).n(true).h(true).c(false).build();
+  public static void and(A a, R r, F flags) {
+    byte result = (byte) (a.get() & r.get());
+    a.set(result);
+    flags.z().set(result == 0);
+    flags.n().set(false);
+    flags.h().set(true);
+    flags.c().set(false);
   }
 
-  public static Result<Byte> or(byte lhs, byte rhs) {
-    byte result = (byte) (lhs | rhs);
-    return Result.builder(result).n(false).h(false).c(false).build();
+  public static void bit(R r, F flags, int index) {
+    assert 0 <= index && index < 8;
+    flags.z().set((byte) (r.get() & (1 << index)) == 0);
+    flags.n().set(false);
+    flags.h().set(true);
   }
 
-  public static Result<Byte> res(byte value, int index) {
-    byte result = (byte) (value & ~(1 << index));
-    return Result.builder(result).n(false).h(false).c(false).build();
+  public static void ccf(F flags) {
+    flags.n().set(false);
+    flags.h().set(false);
+    flags.c().set(!flags.c().get());
   }
 
-  public static Result<Byte> rl(byte value, boolean carry) {
-    byte c = (byte) (carry ? 0x01 : 0x00);
-    byte result = (byte) ((Byte.toUnsignedInt(value) << 1) | c);
-    return Result.builder(result).n(false).h(false).c((value & 0x80) != 0).build();
+  public static void scf(F flags) {
+    flags.n().set(false);
+    flags.h().set(false);
+    flags.c().set(true);
   }
 
-  public static Result<Byte> rr(byte value, boolean carry) {
-    byte c = (byte) (carry ? 0x80 : 0x00);
-    byte result = (byte) ((Byte.toUnsignedInt(value) >>> 1) | c);
-    return Result.builder(result).n(false).h(false).c((value & 0x01) != 0).build();
+  public static void cpl(A a, F flags) {
+    a.set((byte) ~a.get());
+    flags.n().set(true);
+    flags.h().set(true);
   }
 
-  public static Result<Byte> set(byte value, int index) {
-    byte result = (byte) (value | (1 << index));
-    return Result.builder(result).n(false).h(false).c(false).build();
+  public static void or(A a, R r, F flags) {
+    byte result = (byte) (a.get() | r.get());
+    a.set(result);
+    flags.z().set(result == 0);
+    flags.n().set(false);
+    flags.h().set(false);
+    flags.c().set(false);
   }
 
-  public static Result<Byte> sub(byte lhs, byte rhs, boolean carry) {
-    byte c = (byte) (carry ? 1 : 0);
-    byte result = (byte) (lhs - rhs - c);
-    return Result.builder(result)
-        .n(true)
-        .h((lhs & 0x0f) - (rhs & 0x0f) - c < 0)
-        .c(Byte.toUnsignedInt(lhs) - Byte.toUnsignedInt(rhs) - c < 0)
-        .build();
+  public static void res(R r, F flags, int index) {
+    assert 0 <= index && index < 8;
+    r.set((byte) (r.get() & ~(1 << index)));
   }
 
-  public static Result<Byte> swap(byte value) {
-    byte l = (byte) (value & 0x0f);
-    byte h = (byte) (value & 0xf0);
-    byte result = (byte) ((Byte.toUnsignedInt(l) << 4) | (Byte.toUnsignedInt(h) >> 4));
-    return Result.builder(result).n(false).h(false).c(false).build();
+  public static void rl(R r, F flags) {
+    int value = Byte.toUnsignedInt(r.get());
+    int carry = flags.c().get() ? 1 : 0;
+    byte result = (byte) ((value << 1) | carry);
+    r.set(result);
+    flags.z().set(result == 0);
+    flags.n().set(false);
+    flags.h().set(false);
+    flags.c().set((value & 0x80) != 0);
   }
 
-  public static Result<Byte> xor(byte lhs, byte rhs) {
-    byte result = (byte) (lhs ^ rhs);
-    return Result.builder(result).n(false).h(false).c(false).build();
+  public static void rla(A a, F flags) {
+    rl(a, flags);
+    flags.z().set(false);
+  }
+
+  public static void rlc(R r, F flags) {
+    int value = Byte.toUnsignedInt(r.get());
+    int carry = (value & 0x80) != 0 ? 1 : 0;
+    byte result = (byte) ((value << 1) | carry);
+    r.set(result);
+    flags.z().set(result == 0);
+    flags.n().set(false);
+    flags.h().set(false);
+    flags.c().set((value & 0x80) != 0);
+  }
+
+  public static void rlca(A a, F flags) {
+    rlc(a, flags);
+    flags.z().set(false);
+  }
+
+  public static void sla(R r, F flags) {
+    int value = Byte.toUnsignedInt(r.get());
+    byte result = (byte) ((value << 1));
+    r.set(result);
+    flags.z().set(result == 0);
+    flags.n().set(false);
+    flags.h().set(false);
+    flags.c().set((value & 0x80) != 0);
+  }
+
+  public static void rr(R r, F flags) {
+    int value = Byte.toUnsignedInt(r.get());
+    int carry = flags.c().get() ? 0x80 : 0x00;
+    byte result = (byte) ((value >>> 1) | carry);
+    r.set(result);
+    flags.z().set(result == 0);
+    flags.n().set(false);
+    flags.h().set(false);
+    flags.c().set((value & 0x01) != 0);
+  }
+
+  public static void rra(A a, F flags) {
+    rr(a, flags);
+    flags.z().set(false);
+  }
+
+  public static void rrc(R r, F flags) {
+    int value = Byte.toUnsignedInt(r.get());
+    int carry = (r.get() & 0x01) != 0 ? 0x80 : 0x00;
+    byte result = (byte) ((value >>> 1) | carry);
+    r.set(result);
+    flags.z().set(result == 0);
+    flags.n().set(false);
+    flags.h().set(false);
+    flags.c().set((value & 0x01) != 0);
+  }
+
+  public static void rrca(A a, F flags) {
+    rrc(a, flags);
+    flags.z().set(false);
+  }
+
+  public static void sra(R r, F flags) {
+    int value = Byte.toUnsignedInt(r.get());
+    int carry = (r.get() & 0x80) != 0 ? 0x80 : 0x00;
+    byte result = (byte) ((value >>> 1) | carry);
+    r.set(result);
+    flags.z().set(result == 0);
+    flags.n().set(false);
+    flags.h().set(false);
+    flags.c().set((value & 0x01) != 0);
+  }
+
+  public static void srl(R r, F flags) {
+    int value = Byte.toUnsignedInt(r.get());
+    byte result = (byte) (value >>> 1);
+    r.set(result);
+    flags.z().set(result == 0);
+    flags.n().set(false);
+    flags.h().set(false);
+    flags.c().set((value & 0x01) != 0);
+  }
+
+  public static void set(R r, F flags, int index) {
+    assert 0 <= index && index < 8;
+    r.set((byte) (r.get() | (1 << index)));
+  }
+
+  public static void swap(R r, F flags) {
+    int lo = Byte.toUnsignedInt((byte) (r.get() & 0x0f));
+    int hi = Byte.toUnsignedInt((byte) (r.get() & 0xf0));
+    byte result = (byte) ((lo << 4) | (hi >> 4));
+    r.set(result);
+    flags.z().set(result == 0);
+    flags.n().set(false);
+    flags.h().set(false);
+    flags.c().set(false);
+  }
+
+  public static void xor(A a, R r, F flags) {
+    byte result = (byte) (a.get() ^ r.get());
+    a.set(result);
+    flags.z().set(result == 0);
+    flags.n().set(false);
+    flags.h().set(false);
+    flags.c().set(false);
   }
 }

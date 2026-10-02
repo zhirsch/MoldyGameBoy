@@ -19,9 +19,9 @@ final class BlarggCpuInstrTest {
   @Test
   void testAll() throws Exception {
     BootRom boot = new BootRom(read("dmg.bin"));
-    //    Rom rom = new Rom(read("cpu_instrs/cpu_instrs.gb"));
+    Rom rom = new Rom(read("cpu_instrs/cpu_instrs.gb"));
     //    Rom rom = new Rom(read("cpu_instrs/individual/01-special.gb"));
-    Rom rom = new Rom(read("cpu_instrs/individual/02-interrupts.gb"));
+    //    Rom rom = new Rom(read("cpu_instrs/individual/02-interrupts.gb"));
     //    Rom rom = new Rom(read("cpu_instrs/individual/03-op sp,hl.gb"));
     //    Rom rom = new Rom(read("cpu_instrs/individual/04-op r,imm.gb"));
     //    Rom rom = new Rom(read("cpu_instrs/individual/05-op rp.gb"));
