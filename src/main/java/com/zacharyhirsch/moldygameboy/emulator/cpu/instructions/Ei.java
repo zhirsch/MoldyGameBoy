@@ -7,7 +7,7 @@ public final class Ei implements Instruction {
 
   @Override
   public MCycle start(Registers registers, Bus bus) {
-    registers.ime().set((byte) 1);
-    return new FetchOpcode();
+    registers.ime().set(true, 1);
+    return null;
   }
 }

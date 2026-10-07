@@ -7,6 +7,6 @@ public final class Nop implements Instruction {
 
   @Override
   public MCycle start(Registers registers, Bus bus) {
-    return new FetchOpcode();
+    return null;
   }
 }

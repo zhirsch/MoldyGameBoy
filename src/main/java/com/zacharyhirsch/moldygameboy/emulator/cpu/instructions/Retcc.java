@@ -102,7 +102,7 @@ public final class Retcc implements Instruction {
 
       @Override
       public MCycle t4(Registers registers, Bus bus) {
-        return new FetchOpcode();
+        return null;
       }
     }
   }
@@ -122,7 +122,7 @@ public final class Retcc implements Instruction {
 
       @Override
       public MCycle t4(Registers registers, Bus bus) {
-        return new FetchOpcode();
+        return null;
       }
     }
   }

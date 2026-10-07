@@ -3,7 +3,7 @@ package com.zacharyhirsch.moldygameboy.emulator.cpu;
 import com.zacharyhirsch.moldygameboy.emulator.arch.Bus;
 import com.zacharyhirsch.moldygameboy.emulator.arch.InterruptType;
 import com.zacharyhirsch.moldygameboy.emulator.arch.Irqs;
-import com.zacharyhirsch.moldygameboy.emulator.cpu.instructions.FetchOpcode;
+import com.zacharyhirsch.moldygameboy.emulator.cpu.instructions.CpuOpcodeDecoder;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.instructions.MCycle;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 import com.zacharyhirsch.moldygameboy.emulator.memory.BootRom;
@@ -24,10 +24,11 @@ public final class Cpu {
     T1,
     T2,
     T3,
-    T4;
+    T4,
   }
 
   private final CpuMemoryController memory;
+  private final IoRegisters ioregs;
   private final Registers registers;
   private final Irqs irqs;
 
@@ -42,108 +43,244 @@ public final class Cpu {
       Registers registers,
       Irqs irqs) {
     this.memory = new CpuMemoryController(memory, boot, ioregs);
+    this.ioregs = ioregs;
     this.registers = registers;
     this.irqs = irqs;
   }
 
   public void tick(Bus bus) {
-    switch (tcycle) {
-      case T1 -> {
-        mcycle.t1(registers, bus);
-        tcycle = TCycle.T2;
-      }
-      case T2 -> {
-        mcycle.t2(registers, bus);
-        tcycle = TCycle.T3;
-      }
-      case T3 -> {
-        memory.tick(bus);
-        mcycle.t3(registers, bus);
-        tcycle = TCycle.T4;
-      }
-      case T4 -> {
-        mcycle = mcycle.t4(registers, bus);
-        tcycle = TCycle.T1;
-      }
-    }
-    //    if (vblank.get()) {
-    //      ioregs.if_.set(ioregs.if_.get() | InterruptType.VBLANK.mask());
-    //    }
-    //    if (lcd.get()) {
-    //      ioregs.if_.set(ioregs.if_.get() | InterruptType.LCD.mask());
-    //    }
-    //    if (timer.get()) {
-    //      ioregs.if_.set(ioregs.if_.get() | InterruptType.TIMER.mask());
-    //    }
-    //    if (serial.get()) {
-    //      ioregs.if_.set(ioregs.if_.get() | InterruptType.SERIAL.mask());
-    //    }
-    //    if (joypad.get()) {
-    //      ioregs.if_.set(ioregs.if_.get() | InterruptType.JOYPAD.mask());
-    //    }
+    tcycle =
+        switch (tcycle) {
+          case T1 -> tickT1(bus);
+          case T2 -> tickT2(bus);
+          case T3 -> tickT3(bus);
+          case T4 -> tickT4(bus);
+        };
     //    halted = halted && getPendingInterrupts() == 0;
     //    if (halted) {
     //      return;
     //    }
-    //    Mem mem = instruction.tick();
-    //    if (mem == null) {
-    //      instruction = next();
-    //      mem = instruction.tick();
-    //    }
-    //    ioregs.dma.prepare(bus::readDirect);
-    //    mem.prepare(bus);
-    //    ioregs.dma.commit(bus::writeDirect);
-    //    mem.commit(bus);
   }
 
-  //  private int getPendingInterrupts() {
-  //    return bus.getEnabledInterrupts() & ioregs.if_.get();
-  //  }
-  //
-  //  private boolean isInterruptPending(InterruptType interrupt) {
-  //    return (getPendingInterrupts() & interrupt.mask()) != 0;
-  //  }
-  //
-  //  private final class Isr extends AbstractInstruction5 {
-  //
-  //    private final Registers registers;
-  //
-  //    Isr(Registers registers) {
-  //      this.registers = registers;
-  //    }
-  //
-  //    @Override
-  //    protected Mem execute0() {
-  //      return Mem.none(registers.pc().getAndDecrement());
-  //    }
-  //
-  //    @Override
-  //    protected Mem execute1() {
-  //      return Mem.none(registers.sp().getAndDecrement());
-  //    }
-  //
-  //    @Override
-  //    protected Mem execute2() {
-  //      return Mem.write(registers.sp().getAndDecrement(), registers.pc().hi()::read);
-  //    }
-  //
-  //    @Override
-  //    protected Mem execute3() {
-  //      return Mem.write(registers.sp().read(), registers.pc().lo()::read);
-  //    }
-  //
-  //    @Override
-  //    protected Mem execute4() {
-  //      for (InterruptType interrupt : INTERRUPTS) {
-  //        if (!isInterruptPending(interrupt)) {
-  //          continue;
-  //        }
-  //        registers.ime().write((byte) 0);
-  //        ioregs.if_.set(ioregs.if_.get() | ~interrupt.mask());
-  //        registers.pc().write(interrupt.vector());
-  //        break;
-  //      }
-  //      return Mem.read(registers.pc().getAndIncrement(), registers.ir()::write);
-  //    }
-  //  }
+  private TCycle tickT1(Bus bus) {
+    mcycle.t1(registers, bus);
+    return TCycle.T2;
+  }
+
+  private TCycle tickT2(Bus bus) {
+    mcycle.t2(registers, bus);
+    return TCycle.T3;
+  }
+
+  private TCycle tickT3(Bus bus) {
+    memory.tick(bus);
+    mcycle.t3(registers, bus);
+    return TCycle.T4;
+  }
+
+  private TCycle tickT4(Bus bus) {
+    mcycle = mcycle.t4(registers, bus);
+    if (mcycle == null) {
+      registers.ime().tick();
+      mcycle = new FetchOpcode(ioregs, getPendingInterrupts());
+    }
+    return TCycle.T1;
+  }
+
+  private int getPendingInterrupts() {
+    return registers.ime().get() ? ioregs.if_.get() & memory.getEnabledInterrupts() & 0x1f : 0;
+  }
+
+  private void setPendingInterrupts() {
+    if (irqs.vblank().get()) {
+      ioregs.if_.set(ioregs.if_.get() | InterruptType.VBLANK.mask());
+    }
+    if (irqs.lcd().get()) {
+      ioregs.if_.set(ioregs.if_.get() | InterruptType.LCD.mask());
+    }
+    if (irqs.timer().get()) {
+      ioregs.if_.set(ioregs.if_.get() | InterruptType.TIMER.mask());
+    }
+    if (irqs.serial().get()) {
+      ioregs.if_.set(ioregs.if_.get() | InterruptType.SERIAL.mask());
+    }
+    if (irqs.joypad().get()) {
+      ioregs.if_.set(ioregs.if_.get() | InterruptType.JOYPAD.mask());
+    }
+  }
+
+  private static final class Isr {
+
+    private record M2(IoRegisters ioregs, InterruptType interrupt) implements MCycle {
+
+      @Override
+      public void t1(Registers registers, Bus bus) {}
+
+      @Override
+      public void t2(Registers registers, Bus bus) {}
+
+      @Override
+      public void t3(Registers registers, Bus bus) {}
+
+      @Override
+      public MCycle t4(Registers registers, Bus bus) {
+        return new M3(ioregs, interrupt);
+      }
+    }
+
+    private record M3(IoRegisters ioregs, InterruptType interrupt) implements MCycle {
+
+      @Override
+      public void t1(Registers registers, Bus bus) {
+        registers.sp().decrement();
+        bus.addressBus().set(registers.sp().get());
+      }
+
+      @Override
+      public void t2(Registers registers, Bus bus) {
+        bus.dataBus().set(registers.pc().hi().get());
+        bus.wr().set(true);
+      }
+
+      @Override
+      public void t3(Registers registers, Bus bus) {}
+
+      @Override
+      public MCycle t4(Registers registers, Bus bus) {
+        bus.wr().set(false);
+        return new M4(ioregs, interrupt);
+      }
+    }
+
+    private record M4(IoRegisters ioregs, InterruptType interrupt) implements MCycle {
+
+      @Override
+      public void t1(Registers registers, Bus bus) {
+        registers.sp().decrement();
+        bus.addressBus().set(registers.sp().get());
+      }
+
+      @Override
+      public void t2(Registers registers, Bus bus) {
+        bus.dataBus().set(registers.pc().lo().get());
+        bus.wr().set(true);
+      }
+
+      @Override
+      public void t3(Registers registers, Bus bus) {}
+
+      @Override
+      public MCycle t4(Registers registers, Bus bus) {
+        bus.wr().set(false);
+        return new M5(ioregs, interrupt);
+      }
+    }
+
+    private record M5(IoRegisters ioregs, InterruptType interrupt) implements MCycle {
+
+      @Override
+      public void t1(Registers registers, Bus bus) {}
+
+      @Override
+      public void t2(Registers registers, Bus bus) {
+        ioregs.if_.set(ioregs.if_.get() & ~interrupt.mask());
+      }
+
+      @Override
+      public void t3(Registers registers, Bus bus) {
+        registers.pc().set(interrupt.vector());
+      }
+
+      @Override
+      public MCycle t4(Registers registers, Bus bus) {
+        return null;
+      }
+    }
+  }
+
+  private static final class FetchOpcode implements MCycle {
+
+    private final IoRegisters ioregs;
+    private final int pendingInterrupts;
+
+    private InterruptType pendingInterrupt;
+
+    FetchOpcode() {
+      this(null, 0);
+    }
+
+    FetchOpcode(IoRegisters ioregs, int pendingInterrupts) {
+      this.ioregs = ioregs;
+      this.pendingInterrupts = pendingInterrupts;
+    }
+
+    @Override
+    public void t1(Registers registers, Bus bus) {
+      if (pendingInterrupts != 0) {
+        return;
+      }
+      bus.addressBus().set(registers.pc().get());
+    }
+
+    @Override
+    public void t2(Registers registers, Bus bus) {
+      if (pendingInterrupts != 0) {
+        return;
+      }
+      bus.rd().set(true);
+      registers.pc().increment();
+    }
+
+    @Override
+    public void t3(Registers registers, Bus bus) {
+      if (pendingInterrupts != 0) {
+        for (InterruptType interrupt : INTERRUPTS) {
+          if ((pendingInterrupts & interrupt.mask()) != 0) {
+            pendingInterrupt = interrupt;
+            return;
+          }
+        }
+        throw new IllegalStateException("No active interrupt");
+      }
+      registers.ir().set(bus.dataBus().get());
+    }
+
+    @Override
+    public MCycle t4(Registers registers, Bus bus) {
+      if (pendingInterrupts != 0) {
+        registers.ime().set(false, 0);
+        return new Isr.M2(ioregs, pendingInterrupt);
+      }
+      bus.rd().set(false);
+      if (Byte.toUnsignedInt(registers.ir().get()) == 0xcb) {
+        return new FetchOpcodePrefixed();
+      }
+      return CpuOpcodeDecoder.decode(registers).start(registers, bus);
+    }
+
+    private static final class FetchOpcodePrefixed implements MCycle {
+
+      @Override
+      public void t1(Registers registers, Bus bus) {
+        bus.addressBus().set(registers.pc().get());
+      }
+
+      @Override
+      public void t2(Registers registers, Bus bus) {
+        bus.rd().set(true);
+        registers.pc().increment();
+      }
+
+      @Override
+      public void t3(Registers registers, Bus bus) {
+        registers.ir().set(bus.dataBus().get());
+      }
+
+      @Override
+      public MCycle t4(Registers registers, Bus bus) {
+        bus.rd().set(false);
+        return CpuOpcodeDecoder.decodePrefixed(registers).start(registers, bus);
+      }
+    }
+  }
 }

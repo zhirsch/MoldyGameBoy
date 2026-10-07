@@ -72,12 +72,12 @@ public final class Reti implements Instruction {
 
     @Override
     public void t3(Registers registers, Bus bus) {
-      registers.ime().set((byte) 1);
+      registers.ime().set(true, 0);
     }
 
     @Override
     public MCycle t4(Registers registers, Bus bus) {
-      return new FetchOpcode();
+      return null;
     }
   }
 }

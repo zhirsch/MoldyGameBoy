@@ -123,7 +123,7 @@ public final class Call implements Instruction {
     public MCycle t4(Registers registers, Bus bus) {
       bus.wr().set(false);
       registers.pc().set(registers.wz().get());
-      return new FetchOpcode();
+      return null;
     }
   }
 }

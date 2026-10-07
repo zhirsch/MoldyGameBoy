@@ -51,7 +51,7 @@ public final class Jr implements Instruction {
 
     @Override
     public MCycle t4(Registers registers, Bus bus) {
-      return new FetchOpcode();
+      return null;
     }
   }
 }

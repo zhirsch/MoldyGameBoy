@@ -1,11 +1,9 @@
 package com.zacharyhirsch.moldygameboy.emulator.cpu.registers;
 
-public record Registers(Ir ir, Ie ie, AF af, BC bc, DE de, HL hl, WZ wz, Pc pc, Sp sp, Ime ime) {
+public record Registers(Ir ir, AF af, BC bc, DE de, HL hl, WZ wz, Pc pc, Sp sp, Ime ime) {
 
   public Registers() {
-    this(
-        new Ir(), new Ie(), new AF(), new BC(), new DE(), new HL(), new WZ(), new Pc(), new Sp(),
-        new Ime());
+    this(new Ir(), new AF(), new BC(), new DE(), new HL(), new WZ(), new Pc(), new Sp(), new Ime());
   }
 
   public A a() {

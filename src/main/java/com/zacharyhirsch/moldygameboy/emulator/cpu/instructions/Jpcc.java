@@ -85,7 +85,7 @@ public final class Jpcc implements Instruction {
 
       @Override
       public MCycle t4(Registers registers, Bus bus) {
-        return new FetchOpcode();
+        return null;
       }
     }
   }
@@ -138,7 +138,7 @@ public final class Jpcc implements Instruction {
       @Override
       public MCycle t4(Registers registers, Bus bus) {
         bus.rd().set(false);
-        return new FetchOpcode();
+        return null;
       }
     }
   }

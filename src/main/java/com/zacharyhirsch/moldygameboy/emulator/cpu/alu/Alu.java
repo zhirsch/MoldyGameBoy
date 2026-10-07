@@ -114,7 +114,7 @@ public final class Alu {
     flags.c().set(false);
   }
 
-  public static void bit(R r, F flags, int index) {
+  public static void bit(R r, int index, F flags) {
     assert 0 <= index && index < 8;
     flags.z().set((byte) (r.get() & (1 << index)) == 0);
     flags.n().set(false);
@@ -148,7 +148,7 @@ public final class Alu {
     flags.c().set(false);
   }
 
-  public static void res(R r, F flags, int index) {
+  public static void res(R r, int index, F flags) {
     assert 0 <= index && index < 8;
     r.set((byte) (r.get() & ~(1 << index)));
   }
@@ -248,7 +248,7 @@ public final class Alu {
     flags.c().set((value & 0x01) != 0);
   }
 
-  public static void set(R r, F flags, int index) {
+  public static void set(R r, int index, F flags) {
     assert 0 <= index && index < 8;
     r.set((byte) (r.get() | (1 << index)));
   }

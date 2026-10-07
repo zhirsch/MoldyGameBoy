@@ -98,7 +98,7 @@ public final class Rst implements Instruction {
     @Override
     public MCycle t4(Registers registers, Bus bus) {
       bus.wr().set(false);
-      return new FetchOpcode();
+      return null;
     }
   }
 }

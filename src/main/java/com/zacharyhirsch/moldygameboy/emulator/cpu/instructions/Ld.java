@@ -22,7 +22,7 @@ public final class Ld {
     @Override
     public MCycle start(Registers registers, Bus bus) {
       dst.set(src.get());
-      return new FetchOpcode();
+      return null;
     }
   }
 
@@ -40,7 +40,7 @@ public final class Ld {
     @Override
     public MCycle start(Registers registers, Bus bus) {
       dst.set(src.get());
-      return new FetchOpcode();
+      return null;
     }
   }
 
@@ -83,7 +83,7 @@ public final class Ld {
       @Override
       public MCycle t4(Registers registers, Bus bus) {
         bus.rd().set(false);
-        return new FetchOpcode();
+        return null;
       }
     }
   }
@@ -116,7 +116,7 @@ public final class Ld {
       @Override
       public MCycle t4(Registers registers, Bus bus) {
         bus.rd().set(false);
-        return new FetchOpcode();
+        return null;
       }
     }
   }
@@ -149,7 +149,7 @@ public final class Ld {
       @Override
       public MCycle t4(Registers registers, Bus bus) {
         bus.rd().set(false);
-        return new FetchOpcode();
+        return null;
       }
     }
   }
@@ -193,7 +193,7 @@ public final class Ld {
       @Override
       public MCycle t4(Registers registers, Bus bus) {
         bus.rd().set(false);
-        return new FetchOpcode();
+        return null;
       }
     }
   }
@@ -225,7 +225,7 @@ public final class Ld {
       @Override
       public MCycle t4(Registers registers, Bus bus) {
         bus.rd().set(false);
-        return new FetchOpcode();
+        return null;
       }
     }
   }
@@ -281,7 +281,7 @@ public final class Ld {
       @Override
       public MCycle t4(Registers registers, Bus bus) {
         bus.wr().set(false);
-        return new FetchOpcode();
+        return null;
       }
     }
   }
@@ -328,7 +328,7 @@ public final class Ld {
       @Override
       public MCycle t4(Registers registers, Bus bus) {
         bus.wr().set(false);
-        return new FetchOpcode();
+        return null;
       }
     }
   }
@@ -361,7 +361,7 @@ public final class Ld {
       @Override
       public MCycle t4(Registers registers, Bus bus) {
         bus.wr().set(false);
-        return new FetchOpcode();
+        return null;
       }
     }
   }
@@ -394,7 +394,7 @@ public final class Ld {
       @Override
       public MCycle t4(Registers registers, Bus bus) {
         bus.wr().set(false);
-        return new FetchOpcode();
+        return null;
       }
     }
   }
@@ -439,7 +439,7 @@ public final class Ld {
       @Override
       public MCycle t4(Registers registers, Bus bus) {
         bus.rd().set(false);
-        return new FetchOpcode();
+        return null;
       }
     }
   }
@@ -515,7 +515,7 @@ public final class Ld {
       @Override
       public MCycle t4(Registers registers, Bus bus) {
         bus.rd().set(false);
-        return new FetchOpcode();
+        return null;
       }
     }
   }
@@ -596,7 +596,7 @@ public final class Ld {
       @Override
       public MCycle t4(Registers registers, Bus bus) {
         bus.wr().set(false);
-        return new FetchOpcode();
+        return null;
       }
     }
   }
@@ -701,7 +701,7 @@ public final class Ld {
       @Override
       public MCycle t4(Registers registers, Bus bus) {
         bus.wr().set(false);
-        return new FetchOpcode();
+        return null;
       }
     }
   }
@@ -758,7 +758,7 @@ public final class Ld {
       @Override
       public MCycle t4(Registers registers, Bus bus) {
         bus.wr().set(false);
-        return new FetchOpcode();
+        return null;
       }
     }
   }
@@ -789,7 +789,7 @@ public final class Ld {
       @Override
       public MCycle t4(Registers registers, Bus bus) {
         bus.wr().set(false);
-        return new FetchOpcode();
+        return null;
       }
     }
   }
@@ -871,7 +871,7 @@ public final class Ld {
       @Override
       public MCycle t4(Registers registers, Bus bus) {
         bus.rd().set(false);
-        return new FetchOpcode();
+        return null;
       }
     }
   }
@@ -929,7 +929,7 @@ public final class Ld {
       @Override
       public MCycle t4(Registers registers, Bus bus) {
         bus.rd().set(false);
-        return new FetchOpcode();
+        return null;
       }
     }
   }
@@ -967,7 +967,7 @@ public final class Ld {
       @Override
       public MCycle t4(Registers registers, Bus bus) {
         bus.rd().set(false);
-        return new FetchOpcode();
+        return null;
       }
     }
   }

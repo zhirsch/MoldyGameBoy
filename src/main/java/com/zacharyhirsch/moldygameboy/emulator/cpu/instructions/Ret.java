@@ -74,7 +74,7 @@ public final class Ret implements Instruction {
     @Override
     public MCycle t4(Registers registers, Bus bus) {
       registers.pc().set(registers.wz().get());
-      return new FetchOpcode();
+      return null;
     }
   }
 }

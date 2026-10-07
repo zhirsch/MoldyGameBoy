@@ -71,7 +71,7 @@ public final class Pop implements Instruction {
     public MCycle t4(Registers registers, Bus bus) {
       register.hi().set(bus.dataBus().get());
       registers.sp().increment();
-      return new FetchOpcode();
+      return null;
     }
   }
 }

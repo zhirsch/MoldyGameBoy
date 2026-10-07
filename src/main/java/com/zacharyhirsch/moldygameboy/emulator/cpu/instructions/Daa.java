@@ -31,6 +31,6 @@ public final class Daa implements Instruction {
     r.set((byte) a);
     registers.f().z().set(((byte) a) == 0);
     registers.f().h().set(false);
-    return new FetchOpcode();
+    return null;
   }
 }

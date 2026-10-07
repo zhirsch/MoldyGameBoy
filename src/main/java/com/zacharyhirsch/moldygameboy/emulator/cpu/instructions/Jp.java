@@ -77,7 +77,7 @@ public final class Jp {
 
       @Override
       public MCycle t4(Registers registers, Bus bus) {
-        return new FetchOpcode();
+        return null;
       }
     }
   }
@@ -87,7 +87,7 @@ public final class Jp {
     @Override
     public MCycle start(Registers registers, Bus bus) {
       registers.pc().set(registers.hl().get());
-      return new FetchOpcode();
+      return null;
     }
   }
 }

@@ -40,7 +40,7 @@ public final class Dec {
 
       @Override
       public MCycle t4(Registers registers, Bus bus) {
-        return new FetchOpcode();
+        return null;
       }
     }
   }
