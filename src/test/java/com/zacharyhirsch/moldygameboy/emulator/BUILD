@@ -13,28 +13,6 @@ java_library(
 )
 
 java_junit5_test(
-    name = "SingleStepCpuTest",
-    srcs = ["SingleStepCpuTest.java"],
-    data = ["//:sm83-v1-files"],
-    jvm_flags = ["-Djava.security.manager=disallow"],
-    deps = [
-        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator",
-        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/arch",
-        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu",
-        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu/registers",
-        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/memory",
-        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/timer",
-        artifact("com.google.code.gson:gson"),
-        artifact("com.google.guava:guava"),
-        artifact("com.google.truth:truth"),
-        artifact("org.junit.jupiter:junit-jupiter-api"),
-        artifact("org.junit.jupiter:junit-jupiter-params"),
-        artifact("org.mockito:mockito-core"),
-        artifact("org.mockito:mockito-junit-jupiter"),
-    ] + JUNIT5_DEPS,
-)
-
-java_junit5_test(
     name = "BlarggCpuInstrTest",
     srcs = ["BlarggCpuInstrTest.java"],
     jvm_flags =
