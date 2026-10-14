@@ -135,7 +135,7 @@ public final class CpuOpcodeDecoder {
       case 0x73 -> new Ld.IndirectRegister(registers.e(), registers.hl());
       case 0x74 -> new Ld.IndirectRegister(registers.h(), registers.hl());
       case 0x75 -> new Ld.IndirectRegister(registers.l(), registers.hl());
-      //      case 0x76 -> new Halt(registers);
+      case 0x76 -> new Halt();
       case 0x77 -> new Ld.IndirectRegister(registers.a(), registers.hl());
       case 0x78 -> new Ld.RegisterRegister(registers.b(), registers.a());
       case 0x79 -> new Ld.RegisterRegister(registers.c(), registers.a());

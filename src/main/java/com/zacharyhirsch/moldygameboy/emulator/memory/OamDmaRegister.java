@@ -1,5 +1,6 @@
 package com.zacharyhirsch.moldygameboy.emulator.memory;
 
+import com.zacharyhirsch.moldygameboy.emulator.arch.IoRegister;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 

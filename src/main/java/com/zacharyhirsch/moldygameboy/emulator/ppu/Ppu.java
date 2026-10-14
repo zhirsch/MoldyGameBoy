@@ -4,7 +4,7 @@ import com.zacharyhirsch.moldygameboy.emulator.arch.Irqs;
 import com.zacharyhirsch.moldygameboy.emulator.io.Color;
 import com.zacharyhirsch.moldygameboy.emulator.io.Video;
 import com.zacharyhirsch.moldygameboy.emulator.memory.IoRegisters;
-import com.zacharyhirsch.moldygameboy.emulator.memory.Vram;
+import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
 import java.util.Queue;
 
@@ -25,7 +25,7 @@ public final class Ppu {
   }
 
   private final IoRegisters ioregs;
-  private final Vram vram;
+  private final ByteBuffer vram;
   private final Video video;
   private final Irqs.Line vblank;
   private final Irqs.Line lcd;
@@ -42,12 +42,7 @@ public final class Ppu {
   private int fineScx = 0;
   private int coarseScx = 0;
 
-  public Ppu(
-      IoRegisters ioregs,
-      Vram vram,
-      Video video,
-      Irqs.Line vblank,
-      Irqs.Line lcd) {
+  public Ppu(IoRegisters ioregs, ByteBuffer vram, Video video, Irqs.Line vblank, Irqs.Line lcd) {
     this.ioregs = ioregs;
     this.vram = vram;
     this.video = video;
@@ -156,7 +151,7 @@ public final class Ppu {
     int tileY = mapY / 8;
     int tileX = (fetcherX + coarseScx) & 0x1f;
     int address = base + (tileY * 32) + tileX;
-    tileId = vram.read((short) address);
+    tileId = vram.get(address - 0x8000);
     state = State.GET_TILE_DATA_LO;
   }
 
@@ -164,7 +159,7 @@ public final class Ppu {
     if (dot % 2 == 0) {
       return;
     }
-    tileDataLo = vram.read((short) computeTileAddress());
+    tileDataLo = vram.get(computeTileAddress());
     state = State.GET_TILE_DATA_HI;
   }
 
@@ -172,7 +167,7 @@ public final class Ppu {
     if (dot % 2 == 0) {
       return;
     }
-    tileDataHi = vram.read((short) (computeTileAddress() + 1));
+    tileDataHi = vram.get(computeTileAddress() + 1);
     state = State.PUSH_TO_FIFO;
   }
 
@@ -193,12 +188,10 @@ public final class Ppu {
   }
 
   private int computeTileAddress() {
-    int base;
-    if (ioregs.lcdc.bit(4)) {
-      base = Byte.toUnsignedInt(tileId) <= 127 ? 0x8000 : 0x8800;
-    } else {
-      base = Byte.toUnsignedInt(tileId) <= 127 ? 0x9000 : 0x8800;
-    }
+    int base =
+        ioregs.lcdc.bit(4)
+            ? Byte.toUnsignedInt(tileId) <= 127 ? 0x0000 : 0x0800
+            : Byte.toUnsignedInt(tileId) <= 127 ? 0x1000 : 0x0800;
     int tileOffset = Byte.toUnsignedInt(tileId) * 16;
     int tileLine = (ioregs.ly.get() + ioregs.scy.get()) % 8;
     return base + tileOffset + (tileLine * 2);

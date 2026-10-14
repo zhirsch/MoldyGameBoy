@@ -1,6 +1,8 @@
 package com.zacharyhirsch.moldygameboy.emulator.memory;
 
-public final class IoRegisters implements MemoryRegion {
+import com.zacharyhirsch.moldygameboy.emulator.arch.IoRegister;
+
+public final class IoRegisters {
 
   /* ff00 */ public final IoRegister joyp = IoRegister.create("joyp", (short) 0xff00);
 
@@ -71,7 +73,6 @@ public final class IoRegisters implements MemoryRegion {
 
   /* ff50 */ public final IoRegister bank = IoRegister.create("bank", (short) 0xff50);
 
-  @Override
   public byte read(short address) {
     return switch (Short.toUnsignedInt(address)) {
       case 0xff00 -> (byte) (joyp.get() | 0xcf);
@@ -136,13 +137,10 @@ public final class IoRegisters implements MemoryRegion {
     };
   }
 
-  @Override
   public void write(short address, byte value) {
     switch (Short.toUnsignedInt(address)) {
       case 0xff00 -> joyp.set((byte) (value & 0x30));
-      case 0xff01 -> {
-        sb.set((byte) (value & 0xff));
-      }
+      case 0xff01 -> sb.set((byte) (value & 0xff));
       case 0xff02 -> {
         sc.set((byte) (value & 0x81));
         IO.print((char) sb.get());

@@ -2,26 +2,30 @@ package com.zacharyhirsch.moldygameboy.emulator.arch;
 
 public record Irqs(Line vblank, Line lcd, Line timer, Line serial, Line joypad) {
 
-  public Irqs() {
-    this(new Line(), new Line(), new Line(), new Line(), new Line());
+  public Irqs(IoRegister if_) {
+    this(
+        new Line(InterruptType.VBLANK, if_),
+        new Line(InterruptType.LCD, if_),
+        new Line(InterruptType.TIMER, if_),
+        new Line(InterruptType.SERIAL, if_),
+        new Line(InterruptType.JOYPAD, if_));
   }
 
   public static final class Line {
 
+    private final InterruptType interrupt;
+    private final IoRegister if_;
+
     private boolean oldValue = false;
-    private boolean asserted = false;
 
-    public Line() {}
-
-    public boolean get() {
-      boolean asserted = this.asserted;
-      this.asserted = false;
-      return asserted;
+    public Line(InterruptType interrupt, IoRegister if_) {
+      this.interrupt = interrupt;
+      this.if_ = if_;
     }
 
     public void set(boolean newValue) {
       if (!oldValue && newValue) {
-        asserted = true;
+        if_.set(if_.get() | interrupt.mask());
       }
       oldValue = newValue;
     }

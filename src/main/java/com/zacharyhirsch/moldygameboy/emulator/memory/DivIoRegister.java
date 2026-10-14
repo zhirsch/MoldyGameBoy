@@ -1,5 +1,7 @@
 package com.zacharyhirsch.moldygameboy.emulator.memory;
 
+import com.zacharyhirsch.moldygameboy.emulator.arch.IoRegister;
+
 public final class DivIoRegister implements IoRegister {
 
   private short counter = 0;
@@ -12,6 +14,11 @@ public final class DivIoRegister implements IoRegister {
   @Override
   public void set(int value) {
     counter = 0;
+  }
+
+  @Override
+  public boolean bit(int index) {
+    return (counter & (1 << index)) != 0;
   }
 
   public void increment() {

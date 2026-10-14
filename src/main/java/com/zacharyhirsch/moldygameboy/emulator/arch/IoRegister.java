@@ -1,4 +1,4 @@
-package com.zacharyhirsch.moldygameboy.emulator.memory;
+package com.zacharyhirsch.moldygameboy.emulator.arch;
 
 public interface IoRegister {
 

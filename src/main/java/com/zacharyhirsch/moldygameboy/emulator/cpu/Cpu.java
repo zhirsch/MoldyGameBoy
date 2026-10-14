@@ -6,9 +6,9 @@ import com.zacharyhirsch.moldygameboy.emulator.arch.Irqs;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.instructions.CpuOpcodeDecoder;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.instructions.MCycle;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
-import com.zacharyhirsch.moldygameboy.emulator.memory.BootRom;
 import com.zacharyhirsch.moldygameboy.emulator.memory.IoRegisters;
-import com.zacharyhirsch.moldygameboy.emulator.memory.MainMemoryController;
+import com.zacharyhirsch.moldygameboy.emulator.memory.Mapper;
+import java.nio.ByteBuffer;
 
 public final class Cpu {
 
@@ -29,37 +29,51 @@ public final class Cpu {
 
   private final CpuMemoryController memory;
   private final IoRegisters ioregs;
-  private final Registers registers;
   private final Irqs irqs;
+  private final Registers registers;
 
-  private MCycle mcycle = new FetchOpcode();
+  private MCycle mcycle;
   private TCycle tcycle = TCycle.T1;
-  private boolean halted = false;
 
-  public Cpu(
-      MainMemoryController memory,
-      BootRom boot,
-      IoRegisters ioregs,
-      Registers registers,
-      Irqs irqs) {
-    this.memory = new CpuMemoryController(memory, boot, ioregs);
+  public Cpu(ByteBuffer boot, ByteBuffer rom, ByteBuffer vram, IoRegisters ioregs, Irqs irqs) {
+    this.memory = new CpuMemoryController(Mapper.create(rom), boot, vram, ioregs);
     this.ioregs = ioregs;
-    this.registers = registers;
     this.irqs = irqs;
+    this.registers = new Registers();
+
+    this.mcycle = new FetchOpcode(ioregs, 0);
+  }
+
+  public Registers registers() {
+    return registers;
   }
 
   public void tick(Bus bus) {
-    tcycle =
-        switch (tcycle) {
-          case T1 -> tickT1(bus);
-          case T2 -> tickT2(bus);
-          case T3 -> tickT3(bus);
-          case T4 -> tickT4(bus);
-        };
-    //    halted = halted && getPendingInterrupts() == 0;
-    //    if (halted) {
-    //      return;
-    //    }
+    if (registers.halted().get()) {
+      tcycle =
+          switch (tcycle) {
+            case T1 -> TCycle.T2;
+            case T2 -> TCycle.T3;
+            case T3 -> TCycle.T4;
+            case T4 -> {
+              registers
+                  .halted()
+                  .set((ioregs.if_.get() & memory.getEnabledInterrupts() & 0x1f) == 0);
+              if (!registers.halted().get()) {
+                mcycle = new FetchOpcode(ioregs, getPendingInterrupts());
+              }
+              yield TCycle.T1;
+            }
+          };
+    } else {
+      tcycle =
+          switch (tcycle) {
+            case T1 -> tickT1(bus);
+            case T2 -> tickT2(bus);
+            case T3 -> tickT3(bus);
+            case T4 -> tickT4(bus);
+          };
+    }
   }
 
   private TCycle tickT1(Bus bus) {
@@ -89,24 +103,6 @@ public final class Cpu {
 
   private int getPendingInterrupts() {
     return registers.ime().get() ? ioregs.if_.get() & memory.getEnabledInterrupts() & 0x1f : 0;
-  }
-
-  private void setPendingInterrupts() {
-    if (irqs.vblank().get()) {
-      ioregs.if_.set(ioregs.if_.get() | InterruptType.VBLANK.mask());
-    }
-    if (irqs.lcd().get()) {
-      ioregs.if_.set(ioregs.if_.get() | InterruptType.LCD.mask());
-    }
-    if (irqs.timer().get()) {
-      ioregs.if_.set(ioregs.if_.get() | InterruptType.TIMER.mask());
-    }
-    if (irqs.serial().get()) {
-      ioregs.if_.set(ioregs.if_.get() | InterruptType.SERIAL.mask());
-    }
-    if (irqs.joypad().get()) {
-      ioregs.if_.set(ioregs.if_.get() | InterruptType.JOYPAD.mask());
-    }
   }
 
   private static final class Isr {
@@ -204,10 +200,6 @@ public final class Cpu {
     private final int pendingInterrupts;
 
     private InterruptType pendingInterrupt;
-
-    FetchOpcode() {
-      this(null, 0);
-    }
 
     FetchOpcode(IoRegisters ioregs, int pendingInterrupts) {
       this.ioregs = ioregs;
