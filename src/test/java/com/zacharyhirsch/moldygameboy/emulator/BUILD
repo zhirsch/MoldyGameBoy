@@ -13,8 +13,8 @@ java_library(
 )
 
 java_junit5_test(
-    name = "BlarggCpuInstrTest",
-    srcs = ["BlarggCpuInstrTest.java"],
+    name = "BlarggTests",
+    srcs = ["BlarggTests.java"],
     jvm_flags =
         select({
             "//:macos": ["-XstartOnFirstThread"],
@@ -23,20 +23,9 @@ java_junit5_test(
             "--enable-native-access=ALL-UNNAMED",
         ],
     resources = [
+        "//:blargg-test-suite",
         "//src/main/resources:dmg.bin",
         "//src/main/resources:logback.xml",
-        "//src/test/resources/cpu_instrs:cpu_instrs.gb",
-        "//src/test/resources/cpu_instrs:individual/01-special.gb",
-        "//src/test/resources/cpu_instrs:individual/02-interrupts.gb",
-        "//src/test/resources/cpu_instrs:individual/03-op sp,hl.gb",
-        "//src/test/resources/cpu_instrs:individual/04-op r,imm.gb",
-        "//src/test/resources/cpu_instrs:individual/05-op rp.gb",
-        "//src/test/resources/cpu_instrs:individual/06-ld r,r.gb",
-        "//src/test/resources/cpu_instrs:individual/07-jr,jp,call,ret,rst.gb",
-        "//src/test/resources/cpu_instrs:individual/08-misc instrs.gb",
-        "//src/test/resources/cpu_instrs:individual/09-op r,r.gb",
-        "//src/test/resources/cpu_instrs:individual/10-bit ops.gb",
-        "//src/test/resources/cpu_instrs:individual/11-op a,(hl).gb",
     ],
     deps = [
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator",

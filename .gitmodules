@@ -10,3 +10,6 @@
 [submodule "mooneye-test-suite"]
 	path = mooneye-test-suite
 	url = https://github.com/Gekkio/mooneye-test-suite
+[submodule "blargg-test-suite"]
+	path = blargg-test-suite
+	url = https://github.com/retrio/gb-test-roms
