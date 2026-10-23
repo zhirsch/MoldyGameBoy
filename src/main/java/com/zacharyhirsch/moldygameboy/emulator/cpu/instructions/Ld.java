@@ -39,8 +39,35 @@ public final class Ld {
 
     @Override
     public MCycle start(Registers registers, Bus bus) {
-      dst.set(src.get());
-      return null;
+      return new M2(src, dst);
+    }
+
+    // LD SP,HL takes 2 M-cycles: the second is an internal delay with no bus access.
+    private static final class M2 implements MCycle {
+
+      private final RR src;
+      private final RR dst;
+
+      private M2(RR src, RR dst) {
+        this.src = src;
+        this.dst = dst;
+      }
+
+      @Override
+      public void t1(Registers registers, Bus bus) {}
+
+      @Override
+      public void t2(Registers registers, Bus bus) {}
+
+      @Override
+      public void t3(Registers registers, Bus bus) {
+        dst.set(src.get());
+      }
+
+      @Override
+      public MCycle t4(Registers registers, Bus bus) {
+        return null;
+      }
     }
   }
 
@@ -967,6 +994,24 @@ public final class Ld {
       @Override
       public MCycle t4(Registers registers, Bus bus) {
         bus.rd().set(false);
+        return new M3();
+      }
+    }
+
+    // LD HL,SP+e takes 3 M-cycles: the third is an internal delay with no bus access.
+    private static final class M3 implements MCycle {
+
+      @Override
+      public void t1(Registers registers, Bus bus) {}
+
+      @Override
+      public void t2(Registers registers, Bus bus) {}
+
+      @Override
+      public void t3(Registers registers, Bus bus) {}
+
+      @Override
+      public MCycle t4(Registers registers, Bus bus) {
         return null;
       }
     }
