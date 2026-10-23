@@ -18,6 +18,16 @@ final class BlarggTests {
     doTest("blargg-test-suite/instr_timing/instr_timing.gb");
   }
 
+  @Test
+  void testMemTiming() throws Exception {
+    doTest("blargg-test-suite/mem_timing-2/mem_timing.gb");
+  }
+
+  @Test
+  void testInterruptTime() throws Exception {
+    doTest("blargg-test-suite/interrupt_time/interrupt_time.gb");
+  }
+
   private static void doTest(String path) throws Exception {
     try (Io io = IoFactory.sdl()) {
       MoldyGameBoy gb = new MoldyGameBoy(readRom("dmg.bin"), readRom(path), io);

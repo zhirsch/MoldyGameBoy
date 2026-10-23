@@ -12,9 +12,9 @@ final class Mbc1Mapper implements Mapper {
   private byte ramBankNumber = 0;
   private byte bankingModeSelect = 0;
 
-  Mbc1Mapper(ByteBuffer rom) {
+  Mbc1Mapper(ByteBuffer rom, ByteBuffer ram) {
     this.rom = rom;
-    this.ram = ByteBuffer.allocate(0x8000);
+    this.ram = ram;
   }
 
   @Override
@@ -66,7 +66,7 @@ final class Mbc1Mapper implements Mapper {
 
   @Override
   public MemoryRegion mapRam() {
-    if (ramEnable == 0) {
+    if (ram == null || ram.limit() == 0 || ramEnable == 0) {
       return new OpenBus();
     }
     return new MemoryRegion() {
