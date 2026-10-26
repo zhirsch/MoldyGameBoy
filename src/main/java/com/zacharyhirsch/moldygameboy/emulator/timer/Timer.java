@@ -11,8 +11,12 @@ public final class Timer {
   private byte tma = 0;
   private byte tac = 0;
   private boolean prevSignal = false;
-  private boolean reload = false;
-  private int reloadDelay = 0;
+
+  // Overflow/reload state machine, counted in T-ticks after TIMA overflows:
+  //   8..5  TIMA reads 00; a TIMA write cancels the reload and the interrupt
+  //   4..1  reload cycle; TIMA is loaded from TMA, TIMA writes are ignored
+  //   0     idle
+  private int reloadState = 0;
 
   public Timer(Irqs.Line irq) {
     this.irq = irq;
@@ -31,10 +35,11 @@ public final class Timer {
   }
 
   public void setTima(byte value) {
-    this.tima = value;
-    if (reload && reloadDelay > 1) {
-      reload = false;
+    if (1 <= reloadState && reloadState <= 4) {
+      return;
     }
+    reloadState = 0;
+    tima = value;
   }
 
   public byte getTma() {
@@ -42,7 +47,10 @@ public final class Timer {
   }
 
   public void setTma(byte value) {
-    this.tma = value;
+    tma = value;
+    if (1 <= reloadState && reloadState <= 4) {
+      tima = value;
+    }
   }
 
   public byte getTac() {
@@ -50,14 +58,13 @@ public final class Timer {
   }
 
   public void setTac(byte value) {
-    this.tac = value;
+    tac = value;
   }
 
   public void tick() {
-    if (reload) {
-      reloadDelay--;
-      if (reloadDelay == 0) {
-        reload = false;
+    if (reloadState > 0) {
+      reloadState--;
+      if (reloadState == 4) {
         tima = tma;
         irq.set(true);
       }
@@ -78,8 +85,7 @@ public final class Timer {
     boolean signal = bit16(counter, bit) && bit8(tac, 2);
     if (prevSignal && !signal) {
       if (Byte.toUnsignedInt(tima) == 0xff) {
-        reload = true;
-        reloadDelay = 4;
+        reloadState = 8;
       }
       tima = (byte) (tima + 1);
     }
