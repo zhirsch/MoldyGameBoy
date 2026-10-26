@@ -17,7 +17,7 @@ final class MooneyeTest {
   }
 
   private static void test(String path) throws Exception {
-    try (Io io = IoFactory.none()) {
+    try (Io io = IoFactory.sdl()) {
       MoldyGameBoy gb = new MoldyGameBoy(readRom("dmg.bin"), readRom(path), io);
       try {
         io.eventLoop().run(gb::tick);

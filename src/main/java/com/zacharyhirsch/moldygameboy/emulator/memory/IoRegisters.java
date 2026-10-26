@@ -8,11 +8,11 @@ public final class IoRegisters {
 
   /* ff01 */ public final IoRegister sb = IoRegister.create("sb", (short) 0xff01);
   /* ff02 */ public final IoRegister sc = IoRegister.create("sc", (short) 0xff02);
-  /* ff04 */ public final DivIoRegister div = new DivIoRegister();
-  /* ff05 */ public final IoRegister tima = IoRegister.create("tima", (short) 0xff05);
-  /* ff06 */ public final IoRegister tma = IoRegister.create("tma", (short) 0xff06);
-  /* ff07 */ public final IoRegister tac = IoRegister.create("tac", (short) 0xff07);
-  /* ff0f */ public final IoRegister if_ = IoRegister.create("if", (short) 0xff0f);
+  /* ff04 */ public final IoRegister div;
+  /* ff05 */ public final IoRegister tima;
+  /* ff06 */ public final IoRegister tma;
+  /* ff07 */ public final IoRegister tac;
+  /* ff0f */ public final IoRegister if_;
 
   /* ff10 */ public final IoRegister nr10 = IoRegister.create("nr10", (short) 0xff10);
   /* ff11 */ public final IoRegister nr11 = IoRegister.create("nr11", (short) 0xff11);
@@ -72,6 +72,15 @@ public final class IoRegisters {
   /* ff4b */ public final IoRegister wx = IoRegister.create("wx", (short) 0xff4b);
 
   /* ff50 */ public final IoRegister bank = IoRegister.create("bank", (short) 0xff50);
+
+  public IoRegisters(
+      IoRegister div, IoRegister tima, IoRegister tma, IoRegister tac, IoRegister if_) {
+    this.div = div;
+    this.tima = tima;
+    this.tma = tma;
+    this.tac = tac;
+    this.if_ = if_;
+  }
 
   public byte read(short address) {
     return switch (Short.toUnsignedInt(address)) {
