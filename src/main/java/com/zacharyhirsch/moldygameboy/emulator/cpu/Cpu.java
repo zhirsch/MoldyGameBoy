@@ -19,30 +19,12 @@ public final class Cpu {
     InterruptType.JOYPAD,
   };
 
-  private enum TCycle {
-    T1,
-    T2,
-    T3,
-    T4,
-    ;
-
-    TCycle next() {
-      return switch (this) {
-        case T1 -> T2;
-        case T2 -> T3;
-        case T3 -> T4;
-        case T4 -> T1;
-      };
-    }
-  }
-
   private final CpuMemoryController memory;
   private final IoRegisters ioregs;
   private final Registers registers;
   private final Bus bus;
 
   private MCycle mcycle;
-  private TCycle tcycle = TCycle.T1;
 
   public Cpu(ByteBuffer boot, ByteBuffer rom, ByteBuffer vram, IoRegisters ioregs) {
     this.memory = new CpuMemoryController(Mapper.create(rom), boot, vram, ioregs);
@@ -57,46 +39,43 @@ public final class Cpu {
     return registers;
   }
 
-  public void tick() {
+  public void tickT1() {
     if (registers.halted().get()) {
-      switch (tcycle) {
-        case T1, T2, T3 -> {}
-        case T4 -> {
-          if (getPendingInterrupts() != 0) {
-            registers.halted().set(false);
-            mcycle = new FetchOpcode(ioregs, registers.ime().get() ? getPendingInterrupts() : 0);
-          }
-        }
+      // Do nothing while halted.
+    } else {
+      mcycle.t1(registers, bus);
+    }
+  }
+
+  public void tickT2() {
+    if (registers.halted().get()) {
+      // Do nothing while halted.
+    } else {
+      mcycle.t2(registers, bus);
+    }
+  }
+
+  public void tickT3() {
+    if (registers.halted().get()) {
+      // Do nothing while halted.
+    } else {
+      memory.tick(bus);
+      mcycle.t3(registers, bus);
+    }
+  }
+
+  public void tickT4() {
+    if (registers.halted().get()) {
+      if (getPendingInterrupts() != 0) {
+        registers.halted().set(false);
+        mcycle = new FetchOpcode(ioregs, registers.ime().get() ? getPendingInterrupts() : 0);
       }
     } else {
-      switch (tcycle) {
-        case T1 -> tickT1();
-        case T2 -> tickT2();
-        case T3 -> tickT3();
-        case T4 -> tickT4();
+      mcycle = mcycle.t4(registers, bus);
+      if (mcycle == null) {
+        registers.ime().tick();
+        mcycle = new FetchOpcode(ioregs, registers.ime().get() ? getPendingInterrupts() : 0);
       }
-    }
-    tcycle = tcycle.next();
-  }
-
-  private void tickT1() {
-    mcycle.t1(registers, bus);
-  }
-
-  private void tickT2() {
-    mcycle.t2(registers, bus);
-  }
-
-  private void tickT3() {
-    memory.tick(bus);
-    mcycle.t3(registers, bus);
-  }
-
-  private void tickT4() {
-    mcycle = mcycle.t4(registers, bus);
-    if (mcycle == null) {
-      registers.ime().tick();
-      mcycle = new FetchOpcode(ioregs, registers.ime().get() ? getPendingInterrupts() : 0);
     }
   }
 

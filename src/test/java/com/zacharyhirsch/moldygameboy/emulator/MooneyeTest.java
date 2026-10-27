@@ -3,7 +3,6 @@ package com.zacharyhirsch.moldygameboy.emulator;
 import static com.zacharyhirsch.moldygameboy.emulator.RegistersSubject.assertThat;
 
 import com.google.common.io.Resources;
-import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 import com.zacharyhirsch.moldygameboy.emulator.io.Io;
 import com.zacharyhirsch.moldygameboy.emulator.io.IoFactory;
 import java.io.IOException;
@@ -338,6 +337,23 @@ final class MooneyeTest {
   @Test
   void test__acceptance__serial__boot_sclk_align_dmgABCmgb() throws Exception {
     test("mooneye-test-suite/build/acceptance/serial/boot_sclk_align-dmgABCmgb.gb");
+  }
+
+  @Test
+  void test_timer() throws Exception {
+    test("mooneye-test-suite/build/acceptance/timer/div_write.gb");
+    test("mooneye-test-suite/build/acceptance/timer/rapid_toggle.gb");
+    test("mooneye-test-suite/build/acceptance/timer/tim00_div_trigger.gb");
+    test("mooneye-test-suite/build/acceptance/timer/tim00.gb");
+    test("mooneye-test-suite/build/acceptance/timer/tim01_div_trigger.gb");
+    test("mooneye-test-suite/build/acceptance/timer/tim01.gb");
+    test("mooneye-test-suite/build/acceptance/timer/tim10_div_trigger.gb");
+    test("mooneye-test-suite/build/acceptance/timer/tim10.gb");
+    test("mooneye-test-suite/build/acceptance/timer/tim11_div_trigger.gb");
+    test("mooneye-test-suite/build/acceptance/timer/tim11.gb");
+    test("mooneye-test-suite/build/acceptance/timer/tima_reload.gb");
+    test("mooneye-test-suite/build/acceptance/timer/tima_write_reloading.gb");
+    test("mooneye-test-suite/build/acceptance/timer/tma_write_reloading.gb");
   }
 
   @Test

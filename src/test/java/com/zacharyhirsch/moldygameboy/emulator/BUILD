@@ -35,7 +35,6 @@ java_junit5_test(
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/io",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/io:factory",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/memory",
-        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/timer",
         artifact("com.google.guava:guava"),
         artifact("com.google.truth:truth"),
         artifact("org.junit.jupiter:junit-jupiter-api"),

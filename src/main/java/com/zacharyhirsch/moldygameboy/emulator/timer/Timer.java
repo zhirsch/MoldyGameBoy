@@ -1,104 +1,167 @@
 package com.zacharyhirsch.moldygameboy.emulator.timer;
 
+import com.zacharyhirsch.moldygameboy.emulator.arch.IoRegister;
 import com.zacharyhirsch.moldygameboy.emulator.arch.Irqs;
 
 public final class Timer {
 
+  private enum State {
+    RUNNING,
+    RELOADING, // TIMA reads 00, TMA not yet loaded visible, IF not yet set
+    RELOADED, // reload cycle
+  }
+
+  private static final int[] TRIGGER_BITS = {1 << 9, 1 << 3, 1 << 5, 1 << 7};
+
   private final Irqs.Line irq;
 
-  private short counter = 0;
-  private byte tima = 0;
-  private byte tma = 0;
-  private byte tac = 0;
-  private boolean prevSignal = false;
-
-  // Overflow/reload state machine, counted in T-ticks after TIMA overflows:
-  //   8..5  TIMA reads 00; a TIMA write cancels the reload and the interrupt
-  //   4..1  reload cycle; TIMA is loaded from TMA, TIMA writes are ignored
-  //   0     idle
-  private int reloadState = 0;
+  private int counter = 0; // 16-bit system counter, advances 4 per M-cycle
+  private int tima = 0;
+  private int tma = 0;
+  private int tac = 0;
+  private State state = State.RUNNING;
 
   public Timer(Irqs.Line irq) {
     this.irq = irq;
   }
 
-  public byte getDiv() {
-    return (byte) (counter >>> 8);
+  public IoRegister div() {
+    return new IoRegister() {
+      @Override
+      public int get() {
+        return Byte.toUnsignedInt((byte) (counter >>> 8));
+      }
+
+      @Override
+      public void set(int value) {
+        setCounter((short) 0);
+      }
+
+      @Override
+      public String toString() {
+        return "div @ ff04 = %02x".formatted(get());
+      }
+    };
   }
 
-  public void resetDiv() {
-    counter = 0;
+  public IoRegister tima() {
+    return new IoRegister() {
+      @Override
+      public int get() {
+        return state == State.RELOADING ? 0 : tima;
+      }
+
+      @Override
+      public void set(int value) {
+        if (state != State.RELOADED) {
+          tima = value;
+        }
+      }
+
+      @Override
+      public String toString() {
+        return "tima @ ff05 = %02x".formatted(get());
+      }
+    };
   }
 
-  public byte getTima() {
-    return tima;
+  public IoRegister tma() {
+    return new IoRegister() {
+      @Override
+      public int get() {
+        return tma;
+      }
+
+      @Override
+      public void set(int value) {
+        tma = value;
+        if (state != State.RUNNING) {
+          tima = tma;
+        }
+      }
+
+      @Override
+      public String toString() {
+        return "tma @ ff06 = %02x".formatted(get());
+      }
+    };
   }
 
-  public void setTima(byte value) {
-    if (1 <= reloadState && reloadState <= 4) {
-      return;
-    }
-    reloadState = 0;
-    tima = value;
+  public IoRegister tac() {
+    return new IoRegister() {
+      @Override
+      public int get() {
+        return tac;
+      }
+
+      @Override
+      public void set(int value) {
+        int newTac = Byte.toUnsignedInt((byte) value);
+        if (isTimerEnabled(tac) && isFrequencyBitSet(counter, tac)) {
+          if (!isTimerEnabled(newTac)) {
+            increaseTima();
+          }
+          if (isTimerEnabled(newTac) && !isFrequencyBitSet(counter, newTac)) {
+            increaseTima();
+          }
+        }
+        tac = newTac;
+      }
+
+      @Override
+      public String toString() {
+        return "tac @ ff07 = %02x".formatted(get());
+      }
+    };
   }
 
-  public byte getTma() {
-    return tma;
+  public void tickT1() {
+    setCounter((short) (counter + 1));
   }
 
-  public void setTma(byte value) {
-    tma = value;
-    if (1 <= reloadState && reloadState <= 4) {
-      tima = value;
-    }
+  public void tickT2() {
+    setCounter((short) (counter + 1));
   }
 
-  public byte getTac() {
-    return tac;
-  }
-
-  public void setTac(byte value) {
-    tac = value;
-  }
-
-  public void tick() {
-    if (reloadState > 0) {
-      reloadState--;
-      if (reloadState == 4) {
-        tima = tma;
+  public void tickT3() {
+    switch (state) {
+      case RELOADED -> {
+        irq.set(false);
+        state = State.RUNNING;
+      }
+      case RELOADING -> {
         irq.set(true);
+        state = State.RELOADED;
       }
-    } else {
-      irq.set(false);
     }
-
-    counter++;
-
-    int bit =
-        switch (tac & 0b0000_0011) {
-          case 0b00 -> 9;
-          case 0b01 -> 3;
-          case 0b10 -> 5;
-          case 0b11 -> 7;
-          default -> throw new IllegalStateException();
-        };
-    boolean signal = bit16(counter, bit) && bit8(tac, 2);
-    if (prevSignal && !signal) {
-      if (Byte.toUnsignedInt(tima) == 0xff) {
-        reloadState = 8;
-      }
-      tima = (byte) (tima + 1);
-    }
-    prevSignal = signal;
+    setCounter((short) (counter + 1));
   }
 
-  private static boolean bit8(byte value, int index) {
-    assert 0 <= index && index < 8;
-    return (value & (1 << index)) != 0;
+  public void tickT4() {
+    setCounter((short) (counter + 1));
   }
 
-  private static boolean bit16(short value, int index) {
-    assert 0 <= index && index < 16;
-    return (value & (1 << index)) != 0;
+  private void setCounter(short value) {
+    int newCounter = Short.toUnsignedInt(value);
+    if (isTimerEnabled(tac) && isFrequencyBitSet(counter & ~newCounter, tac)) {
+      increaseTima();
+    }
+    counter = newCounter;
+  }
+
+  private void increaseTima() {
+    tima = Byte.toUnsignedInt((byte) (tima + 1));
+    if (tima == 0) {
+      tima = tma;
+      state = State.RELOADING;
+    }
+  }
+
+  private static boolean isTimerEnabled(int tac) {
+    return (tac & 0b0000_0100) != 0;
+  }
+
+  private static boolean isFrequencyBitSet(int counter, int tac) {
+    return ((counter & 0xffff) & TRIGGER_BITS[tac & 0b0000_0011]) != 0;
   }
 }
