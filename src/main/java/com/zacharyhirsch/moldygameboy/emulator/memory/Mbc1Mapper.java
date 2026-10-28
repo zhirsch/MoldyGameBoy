@@ -6,15 +6,19 @@ final class Mbc1Mapper implements Mapper {
 
   private final ByteBuffer rom;
   private final ByteBuffer ram;
+  private final int romBankCount;
+  private final int ramBankCount;
 
   private byte ramEnable = 0;
   private byte romBankNumber = 0;
-  private byte ramBankNumber = 0;
+  private byte secondaryBankNumber = 0;
   private byte bankingModeSelect = 0;
 
   Mbc1Mapper(ByteBuffer rom, ByteBuffer ram) {
     this.rom = rom;
     this.ram = ram;
+    this.romBankCount = rom.limit() / 0x4000;
+    this.ramBankCount = ram.limit() / 0x2000;
   }
 
   @Override
@@ -24,14 +28,11 @@ final class Mbc1Mapper implements Mapper {
       public byte read(short address) {
         int addr = Short.toUnsignedInt(address);
         assert 0x0000 <= addr && addr <= 0x7fff;
-        assert 0 <= romBankNumber && romBankNumber <= 31;
         if (0x0000 <= addr && addr <= 0x3fff) {
-          int bank = 0;
-          return rom.get((bank << 14) | (addr - 0x0000));
+          return rom.get((getRomBank0() << 14) | (addr - 0x0000));
         }
         if (0x4000 <= addr && addr <= 0x7fff) {
-          int bank = romBankNumber == 0 ? 1 : romBankNumber;
-          return rom.get((bank << 14) | (addr - 0x4000));
+          return rom.get((getRomBank() << 14) | (addr - 0x4000));
         }
         throw new IllegalArgumentException("%04x".formatted(address));
       }
@@ -49,14 +50,11 @@ final class Mbc1Mapper implements Mapper {
           return;
         }
         if (0x4000 <= addr && addr <= 0x5fff) {
-          ramBankNumber = (byte) (value & 0b0000_0011);
+          secondaryBankNumber = (byte) (value & 0b0000_0011);
           return;
         }
         if (0x6000 <= addr && addr <= 0x7fff) {
           bankingModeSelect = (byte) (value & 0b0000_0001);
-          if (bankingModeSelect != 0) {
-            throw new UnsupportedOperationException();
-          }
           return;
         }
         throw new IllegalArgumentException("%04x".formatted(address));
@@ -74,17 +72,40 @@ final class Mbc1Mapper implements Mapper {
       public byte read(short address) {
         int addr = Short.toUnsignedInt(address);
         assert 0xa000 <= addr && addr <= 0xbfff;
-        assert 0 <= ramBankNumber && ramBankNumber <= 3;
-        return ram.get((ramBankNumber << 13) | (addr - 0xa000));
+        return ram.get((getRamBank() << 13) | (addr - 0xa000));
       }
 
       @Override
       public void write(short address, byte value) {
         int addr = Short.toUnsignedInt(address);
         assert 0xa000 <= addr && addr <= 0xbfff;
-        assert 0 <= ramBankNumber && ramBankNumber <= 3;
-        ram.put((ramBankNumber << 13) | (addr - 0xa000), value);
+        ram.put((getRamBank() << 13) | (addr - 0xa000), value);
       }
+    };
+  }
+
+  private int getRomBank0() {
+    assert 0 <= secondaryBankNumber && secondaryBankNumber <= 3;
+    return switch (bankingModeSelect) {
+      case 0 -> 0;
+      case 1 -> (secondaryBankNumber << 5) & (romBankCount - 1);
+      default -> throw new IllegalStateException();
+    };
+  }
+
+  private int getRomBank() {
+    assert 0 <= romBankNumber && romBankNumber <= 31;
+    assert 0 <= secondaryBankNumber && secondaryBankNumber <= 3;
+    int bank = romBankNumber == 0 ? 1 : romBankNumber;
+    return ((secondaryBankNumber << 5) | bank) & (romBankCount - 1);
+  }
+
+  private int getRamBank() {
+    assert 0 <= secondaryBankNumber && secondaryBankNumber <= 3;
+    return switch (bankingModeSelect) {
+      case 0 -> 0;
+      case 1 -> ramBankCount == 4 ? secondaryBankNumber : 0;
+      default -> throw new IllegalStateException();
     };
   }
 }
