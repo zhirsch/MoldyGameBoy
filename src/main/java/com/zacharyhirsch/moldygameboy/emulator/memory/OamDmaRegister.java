@@ -27,7 +27,11 @@ public final class OamDmaRegister implements IoRegister {
   @Override
   public void set(int baseHi) {
     value = baseHi & 0xff;
-    pending = new Internal(memory, (short) (value << 8));
+    int base = value << 8;
+    if (base >= 0xe000) {
+      base -= 0x2000; // DMG: $E0xx-$FFxx sources read from WRAM
+    }
+    pending = new Internal(memory, (short) base);
     pendingDelay = 1;
   }
 
@@ -36,21 +40,16 @@ public final class OamDmaRegister implements IoRegister {
   public void tickT2() {}
 
   public void tickT3() {
-    if (pending != null) {
-      if (pendingDelay > 0) {
-        pendingDelay--;
-        if (running != null && !running.tick()) {
-          running = null;
-        }
-        return;
-      }
-      // Startup: the new transfer takes over (and OAM is blocked) from the next M-cycle.
+    // The previous M-cycle copied the last byte; OAM is accessible again from here.
+    if (running != null && running.done()) {
+      running = null;
+    }
+    if (pending != null && pendingDelay-- == 0) {
       running = pending;
       pending = null;
-      return;
     }
-    if (running != null && !running.tick()) {
-      running = null;
+    if (running != null) {
+      running.tick();
     }
   }
 
@@ -73,13 +72,15 @@ public final class OamDmaRegister implements IoRegister {
       this.base = base;
     }
 
-    boolean tick() {
+    void tick() {
       short src = (short) (base + offset);
       short dst = (short) (0xfe00 + offset);
-      byte value = memory.read(src);
-      memory.write(dst, value);
+      memory.write(dst, memory.read(src));
       offset++;
-      return offset < 160;
+    }
+
+    public boolean done() {
+      return offset >= 160;
     }
 
     @Override

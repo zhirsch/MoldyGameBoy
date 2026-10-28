@@ -66,7 +66,7 @@ final class Mbc1Mapper implements Mapper {
 
   @Override
   public MemoryRegion mapRam() {
-    if (ram == null || ram.limit() == 0 || ramEnable == 0) {
+    if (ram.limit() == 0 || ramEnable == 0) {
       return new OpenBus();
     }
     return new MemoryRegion() {

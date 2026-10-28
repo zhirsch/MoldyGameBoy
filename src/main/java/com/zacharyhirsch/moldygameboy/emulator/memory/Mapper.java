@@ -11,9 +11,15 @@ public interface Mapper {
     byte type = rom.get(0x0147);
     return switch (type) {
       case 0x00 -> new NullMapper(rom);
-      case 0x01 -> new Mbc1Mapper(rom, null);
+      case 0x01 -> new Mbc1Mapper(rom, ByteBuffer.allocate(0));
       case 0x02 -> new Mbc1Mapper(rom, newRamBuffer(rom));
       case 0x03 -> new Mbc1Mapper(rom, loadRamBuffer(rom));
+      case 0x19 -> new Mbc5Mapper(rom, ByteBuffer.allocate(0), false);
+      case 0x1a -> new Mbc5Mapper(rom, newRamBuffer(rom), false);
+      case 0x1b -> new Mbc5Mapper(rom, loadRamBuffer(rom), false);
+      case 0x1c -> new Mbc5Mapper(rom, ByteBuffer.allocate(0), true);
+      case 0x1d -> new Mbc5Mapper(rom, newRamBuffer(rom), true);
+      case 0x1e -> new Mbc5Mapper(rom, loadRamBuffer(rom), true);
       default -> throw new IllegalArgumentException("Unknown mapper %02x".formatted(type));
     };
   }
