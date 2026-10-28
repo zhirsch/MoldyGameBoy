@@ -1,6 +1,5 @@
 package com.zacharyhirsch.moldygameboy.emulator;
 
-import com.zacharyhirsch.moldygameboy.emulator.arch.IoRegister;
 import com.zacharyhirsch.moldygameboy.emulator.arch.Irqs;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.Cpu;
 import com.zacharyhirsch.moldygameboy.emulator.io.Io;
@@ -36,10 +35,12 @@ final class MoldyGameBoy {
 
   public MoldyGameBoy(ByteBuffer boot, ByteBuffer rom, Io io) {
     ByteBuffer vram = ByteBuffer.allocate(0x2000);
-    IoRegister if_ = IoRegister.create("if", (short) 0xff0f);
-    Irqs irqs = new Irqs(if_);
+
+    Irqs irqs = new Irqs();
+
     this.timer = new Timer(irqs.timer());
-    IoRegisters ioregs = new IoRegisters(timer.div(), timer.tima(), timer.tma(), timer.tac(), if_);
+
+    var ioregs = new IoRegisters(timer.div(), timer.tima(), timer.tma(), timer.tac(), irqs.if_());
 
     this.cpu = new Cpu(boot, rom, vram, ioregs);
     this.ppu = new Ppu(ioregs, vram, io.video(), irqs.vblank(), irqs.lcd());

@@ -1,7 +1,7 @@
 package com.zacharyhirsch.moldygameboy.emulator.timer;
 
 import com.zacharyhirsch.moldygameboy.emulator.arch.IoRegister;
-import com.zacharyhirsch.moldygameboy.emulator.arch.Irqs;
+import com.zacharyhirsch.moldygameboy.emulator.arch.Irq;
 
 public final class Timer {
 
@@ -13,7 +13,7 @@ public final class Timer {
 
   private static final int[] TRIGGER_BITS = {1 << 9, 1 << 3, 1 << 5, 1 << 7};
 
-  private final Irqs.Line irq;
+  private final Irq irq;
 
   private int counter = 0; // 16-bit system counter, advances 4 per M-cycle
   private int tima = 0;
@@ -21,7 +21,7 @@ public final class Timer {
   private int tac = 0;
   private State state = State.RUNNING;
 
-  public Timer(Irqs.Line irq) {
+  public Timer(Irq irq) {
     this.irq = irq;
   }
 

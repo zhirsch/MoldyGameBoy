@@ -1,33 +1,44 @@
 package com.zacharyhirsch.moldygameboy.emulator.arch;
 
-public record Irqs(Line vblank, Line lcd, Line timer, Line serial, Line joypad) {
+public final class Irqs {
 
-  public Irqs(IoRegister if_) {
-    this(
-        new Line(InterruptType.VBLANK, if_),
-        new Line(InterruptType.LCD, if_),
-        new Line(InterruptType.TIMER, if_),
-        new Line(InterruptType.SERIAL, if_),
-        new Line(InterruptType.JOYPAD, if_));
+  private final IoRegister if_;
+  private final Irq vblank;
+  private final Irq lcd;
+  private final Irq timer;
+  private final Irq serial;
+  private final Irq joypad;
+
+  public Irqs() {
+    this.if_ = IoRegister.create("if", (short) 0xff0f);
+    this.vblank = new Irq(InterruptType.VBLANK, if_);
+    this.lcd = new Irq(InterruptType.LCD, if_);
+    this.timer = new Irq(InterruptType.TIMER, if_);
+    this.serial = new Irq(InterruptType.SERIAL, if_);
+    this.joypad = new Irq(InterruptType.JOYPAD, if_);
   }
 
-  public static final class Line {
+  public IoRegister if_() {
+    return if_;
+  }
 
-    private final InterruptType interrupt;
-    private final IoRegister if_;
+  public Irq vblank() {
+    return vblank;
+  }
 
-    private boolean oldValue = false;
+  public Irq lcd() {
+    return lcd;
+  }
 
-    public Line(InterruptType interrupt, IoRegister if_) {
-      this.interrupt = interrupt;
-      this.if_ = if_;
-    }
+  public Irq timer() {
+    return timer;
+  }
 
-    public void set(boolean newValue) {
-      if (!oldValue && newValue) {
-        if_.set(if_.get() | interrupt.mask());
-      }
-      oldValue = newValue;
-    }
+  public Irq serial() {
+    return serial;
+  }
+
+  public Irq joypad() {
+    return joypad;
   }
 }
