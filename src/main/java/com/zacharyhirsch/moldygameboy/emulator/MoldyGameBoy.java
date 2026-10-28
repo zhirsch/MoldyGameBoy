@@ -27,21 +27,18 @@ final class MoldyGameBoy {
     }
   }
 
+  private final Timer timer;
+  private final IoRegisters ioregs;
   private final Cpu cpu;
   private final Ppu ppu;
-  private final Timer timer;
 
   private TCycle tcycle = TCycle.T1;
 
   public MoldyGameBoy(ByteBuffer boot, ByteBuffer rom, Io io) {
     ByteBuffer vram = ByteBuffer.allocate(0x2000);
-
     Irqs irqs = new Irqs();
-
     this.timer = new Timer(irqs.timer());
-
-    var ioregs = new IoRegisters(timer.div(), timer.tima(), timer.tma(), timer.tac(), irqs.if_());
-
+    this.ioregs = new IoRegisters(timer.div(), timer.tima(), timer.tma(), timer.tac(), irqs.if_());
     this.cpu = new Cpu(boot, rom, vram, ioregs);
     this.ppu = new Ppu(ioregs, vram, io.video(), irqs.vblank(), irqs.lcd());
   }

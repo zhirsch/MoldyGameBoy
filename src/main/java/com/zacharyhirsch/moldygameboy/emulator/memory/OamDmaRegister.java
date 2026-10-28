@@ -6,8 +6,10 @@ import java.util.function.Function;
 
 public final class OamDmaRegister implements IoRegister {
 
+  private int value = 0xff;
   private Internal running = null;
   private Internal pending = null;
+  private int pendingDelay = 0;
 
   public boolean isActive() {
     return running != null;
@@ -15,33 +17,31 @@ public final class OamDmaRegister implements IoRegister {
 
   @Override
   public int get() {
-    if (running != null) {
-      return running.current();
-    }
-    return 0xff;
+    return value;
   }
 
   @Override
   public void set(int baseHi) {
-    pending = new Internal((short) (baseHi << 8));
+    value = baseHi & 0xff;
+    pending = new Internal((short) (value << 8));
+    pendingDelay = 1;
   }
 
-  public void prepare(Function<Short, Byte> reader) {
-    if (running != null) {
-      running.tick(reader);
-    }
-  }
-
-  public void commit(BiConsumer<Short, Byte> writer) {
+  public void tick(Function<Short, Byte> reader, BiConsumer<Short, Byte> writer) {
     if (pending != null) {
+      if (pendingDelay > 0) {
+        pendingDelay--;
+        if (running != null && !running.tick(reader, writer)) {
+          running = null;
+        }
+        return;
+      }
+      // Startup: the new transfer takes over (and OAM is blocked) from the next M-cycle.
       running = pending;
       pending = null;
       return;
     }
-    if (running == null) {
-      return;
-    }
-    if (!running.commit(writer)) {
+    if (running != null && !running.tick(reader, writer)) {
       running = null;
     }
   }
@@ -66,14 +66,12 @@ public final class OamDmaRegister implements IoRegister {
       return current;
     }
 
-    void tick(Function<Short, Byte> reader) {
-      short address = (short) (base + offset);
-      current = reader.apply(address);
-    }
-
-    boolean commit(BiConsumer<Short, Byte> writer) {
-      short address = (short) (0xfe00 + offset++);
-      writer.accept(address, current);
+    boolean tick(Function<Short, Byte> reader, BiConsumer<Short, Byte> writer) {
+      short src = (short) (base + offset);
+      short dst = (short) (0xfe00 + offset);
+      current = reader.apply(src);
+      writer.accept(dst, current);
+      offset++;
       return offset < 160;
     }
 

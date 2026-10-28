@@ -51,9 +51,27 @@ public final class CpuMemoryController {
     if (0x0000 <= addr && addr <= 0x00ff && ioregs.bank.get() == 0) {
       return boot.get(address);
     }
-    if (0x0000 <= addr && addr <= 0xfeff && ioregs.dma.isActive()) {
-      return new OpenBus().read(address);
+    if (0x0000 <= addr && addr <= 0xfeff) {
+      if (ioregs.dma.isActive()) {
+        return new OpenBus().read(address);
+      }
+      return readExternal(address);
     }
+    if (0x0ff00 <= addr && addr <= 0xff7f) {
+      return ioregs.read(address);
+    }
+    if (0xff80 <= addr && addr <= 0xfffe) {
+      return hram.get(addr - 0xff80);
+    }
+    if (addr == 0xffff) {
+      return ie;
+    }
+    throw new IllegalArgumentException("%04x".formatted(address));
+  }
+
+  public byte readExternal(short address) {
+    int addr = Short.toUnsignedInt(address);
+    assert 0x0000 <= addr && addr <= 0xfeff;
     if (0x0000 <= addr && addr <= 0x7fff) {
       return mapper.mapRom().read(address);
     }
@@ -71,15 +89,6 @@ public final class CpuMemoryController {
     }
     if (0xfea0 <= addr && addr <= 0xfeff) {
       return new OpenBus().read(address);
-    }
-    if (0x0ff00 <= addr && addr <= 0xff7f) {
-      return ioregs.read(address);
-    }
-    if (0xff80 <= addr && addr <= 0xfffe) {
-      return hram.get(addr - 0xff80);
-    }
-    if (addr == 0xffff) {
-      return ie;
     }
     throw new IllegalArgumentException("%04x".formatted(address));
   }
@@ -110,7 +119,7 @@ public final class CpuMemoryController {
       return;
     }
     if (0xfe00 <= addr && addr <= 0xfe9f) {
-      oam.put(addr - 0xfe00, value);
+      writeOam(address, value);
       return;
     }
     if (0xfea0 <= addr && addr <= 0xfeff) {
@@ -127,6 +136,24 @@ public final class CpuMemoryController {
     }
     if (addr == 0xffff) {
       ie = value;
+      return;
+    }
+    throw new IllegalArgumentException("%04x".formatted(address));
+  }
+
+  public byte readDmaSource(short address) {
+    int addr = Short.toUnsignedInt(address);
+    if (addr >= 0xe000) {
+      return wram.get(addr & 0x1fff);
+    }
+    return readExternal(address);
+  }
+
+  public void writeOam(short address, byte value) {
+    int addr = Short.toUnsignedInt(address);
+    assert 0xfe00 <= addr && addr <= 0xfe9f;
+    if (0xfe00 <= addr && addr <= 0xfe9f) {
+      oam.put(addr - 0xfe00, value);
       return;
     }
     throw new IllegalArgumentException("%04x".formatted(address));

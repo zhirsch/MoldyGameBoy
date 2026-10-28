@@ -205,6 +205,16 @@ final class MooneyeTest {
   }
 
   @Test
+  void test_oam_dma() throws Exception {
+    test("mooneye-test-suite/build/acceptance/oam_dma_restart.gb");
+    test("mooneye-test-suite/build/acceptance/oam_dma_start.gb");
+    test("mooneye-test-suite/build/acceptance/oam_dma_timing.gb");
+    test("mooneye-test-suite/build/acceptance/oam_dma/basic.gb");
+    test("mooneye-test-suite/build/acceptance/oam_dma/reg_read.gb");
+    test("mooneye-test-suite/build/acceptance/oam_dma/sources-GS.gb");
+  }
+
+  @Test
   void test__acceptance__oam_dma_restart() throws Exception {
     test("mooneye-test-suite/build/acceptance/oam_dma_restart.gb");
   }

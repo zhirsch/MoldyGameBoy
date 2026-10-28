@@ -60,6 +60,7 @@ public final class Cpu {
       // Do nothing while halted.
     } else {
       memory.tick(bus);
+      ioregs.dma.tick(memory::readDmaSource, memory::writeOam);
       mcycle.t3(registers, bus);
     }
   }
