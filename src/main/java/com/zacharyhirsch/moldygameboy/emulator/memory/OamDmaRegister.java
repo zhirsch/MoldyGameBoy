@@ -1,15 +1,19 @@
 package com.zacharyhirsch.moldygameboy.emulator.memory;
 
 import com.zacharyhirsch.moldygameboy.emulator.arch.IoRegister;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
 
 public final class OamDmaRegister implements IoRegister {
+
+  private final Memory memory;
 
   private int value = 0xff;
   private Internal running = null;
   private Internal pending = null;
   private int pendingDelay = 0;
+
+  public OamDmaRegister(Memory memory) {
+    this.memory = memory;
+  }
 
   public boolean isActive() {
     return running != null;
@@ -23,15 +27,19 @@ public final class OamDmaRegister implements IoRegister {
   @Override
   public void set(int baseHi) {
     value = baseHi & 0xff;
-    pending = new Internal((short) (value << 8));
+    pending = new Internal(memory, (short) (value << 8));
     pendingDelay = 1;
   }
 
-  public void tick(Function<Short, Byte> reader, BiConsumer<Short, Byte> writer) {
+  public void tickT1() {}
+
+  public void tickT2() {}
+
+  public void tickT3() {
     if (pending != null) {
       if (pendingDelay > 0) {
         pendingDelay--;
-        if (running != null && !running.tick(reader, writer)) {
+        if (running != null && !running.tick()) {
           running = null;
         }
         return;
@@ -41,10 +49,12 @@ public final class OamDmaRegister implements IoRegister {
       pending = null;
       return;
     }
-    if (running != null && !running.tick(reader, writer)) {
+    if (running != null && !running.tick()) {
       running = null;
     }
   }
+
+  public void tickT4() {}
 
   @Override
   public String toString() {
@@ -53,24 +63,21 @@ public final class OamDmaRegister implements IoRegister {
 
   private static final class Internal {
 
+    private final Memory memory;
     private final short base;
 
     private int offset = 0;
-    private byte current = (byte) 0xff;
 
-    Internal(short base) {
+    Internal(Memory memory, short base) {
+      this.memory = memory;
       this.base = base;
     }
 
-    byte current() {
-      return current;
-    }
-
-    boolean tick(Function<Short, Byte> reader, BiConsumer<Short, Byte> writer) {
+    boolean tick() {
       short src = (short) (base + offset);
       short dst = (short) (0xfe00 + offset);
-      current = reader.apply(src);
-      writer.accept(dst, current);
+      byte value = memory.read(src);
+      memory.write(dst, value);
       offset++;
       return offset < 160;
     }

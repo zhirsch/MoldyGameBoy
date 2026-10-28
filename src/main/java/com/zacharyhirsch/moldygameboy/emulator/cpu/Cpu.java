@@ -6,7 +6,7 @@ import com.zacharyhirsch.moldygameboy.emulator.cpu.instructions.CpuOpcodeDecoder
 import com.zacharyhirsch.moldygameboy.emulator.cpu.instructions.MCycle;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 import com.zacharyhirsch.moldygameboy.emulator.memory.IoRegisters;
-import com.zacharyhirsch.moldygameboy.emulator.memory.Mapper;
+import com.zacharyhirsch.moldygameboy.emulator.memory.Memory;
 import java.nio.ByteBuffer;
 
 public final class Cpu {
@@ -26,8 +26,8 @@ public final class Cpu {
 
   private MCycle mcycle;
 
-  public Cpu(ByteBuffer boot, ByteBuffer rom, ByteBuffer vram, IoRegisters ioregs) {
-    this.memory = new CpuMemoryController(Mapper.create(rom), boot, vram, ioregs);
+  public Cpu(ByteBuffer boot, Memory memory, IoRegisters ioregs) {
+    this.memory = new CpuMemoryController(boot, memory, ioregs);
     this.ioregs = ioregs;
     this.registers = new Registers();
     this.bus = new Bus();
@@ -40,27 +40,20 @@ public final class Cpu {
   }
 
   public void tickT1() {
-    if (registers.halted().get()) {
-      // Do nothing while halted.
-    } else {
+    if (!registers.halted().get()) {
       mcycle.t1(registers, bus);
     }
   }
 
   public void tickT2() {
-    if (registers.halted().get()) {
-      // Do nothing while halted.
-    } else {
+    if (!registers.halted().get()) {
       mcycle.t2(registers, bus);
     }
   }
 
   public void tickT3() {
-    if (registers.halted().get()) {
-      // Do nothing while halted.
-    } else {
+    if (!registers.halted().get()) {
       memory.tick(bus);
-      ioregs.dma.tick(memory::readDmaSource, memory::writeOam);
       mcycle.t3(registers, bus);
     }
   }

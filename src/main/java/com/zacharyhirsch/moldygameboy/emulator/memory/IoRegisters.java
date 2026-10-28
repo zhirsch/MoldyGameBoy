@@ -63,8 +63,7 @@ public final class IoRegisters {
   /* ff43 */ public final IoRegister scx = IoRegister.create("scx", (short) 0xff43);
   /* ff44 */ public final IoRegister ly = IoRegister.create("ly", (short) 0xff44);
   /* ff45 */ public final IoRegister lyc = IoRegister.create("lyc", (short) 0xff45);
-//  /* ff46 */ public final IoRegister dma = IoRegister.create("dma", (short) 0xff46);
-  /* ff46 */ public final OamDmaRegister dma = new OamDmaRegister();
+  /* ff46 */ public final OamDmaRegister dma;
   /* ff47 */ public final IoRegister bgp = IoRegister.create("bgp", (short) 0xff47);
   /* ff48 */ public final IoRegister obp0 = IoRegister.create("obp0", (short) 0xff48);
   /* ff49 */ public final IoRegister obp1 = IoRegister.create("obp1", (short) 0xff49);
@@ -74,12 +73,18 @@ public final class IoRegisters {
   /* ff50 */ public final IoRegister bank = IoRegister.create("bank", (short) 0xff50);
 
   public IoRegisters(
-      IoRegister div, IoRegister tima, IoRegister tma, IoRegister tac, IoRegister if_) {
+      IoRegister div,
+      IoRegister tima,
+      IoRegister tma,
+      IoRegister tac,
+      IoRegister if_,
+      Memory memory) {
     this.div = div;
     this.tima = tima;
     this.tma = tma;
     this.tac = tac;
     this.if_ = if_;
+    this.dma = new OamDmaRegister(memory);
   }
 
   public byte read(short address) {

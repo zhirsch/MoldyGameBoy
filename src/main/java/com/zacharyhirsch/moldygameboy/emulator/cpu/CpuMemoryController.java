@@ -2,30 +2,24 @@ package com.zacharyhirsch.moldygameboy.emulator.cpu;
 
 import com.zacharyhirsch.moldygameboy.emulator.arch.Bus;
 import com.zacharyhirsch.moldygameboy.emulator.memory.IoRegisters;
-import com.zacharyhirsch.moldygameboy.emulator.memory.Mapper;
+import com.zacharyhirsch.moldygameboy.emulator.memory.Memory;
 import com.zacharyhirsch.moldygameboy.emulator.memory.OpenBus;
 import java.nio.ByteBuffer;
 
 public final class CpuMemoryController {
 
-  private final Mapper mapper;
   private final ByteBuffer boot;
-  private final ByteBuffer vram;
-  private final ByteBuffer wram;
-  private final ByteBuffer oam;
   private final ByteBuffer hram;
   private final IoRegisters ioregs;
+  private final Memory memory;
 
   private byte ie = 0;
 
-  public CpuMemoryController(Mapper mapper, ByteBuffer boot, ByteBuffer vram, IoRegisters ioregs) {
-    this.mapper = mapper;
+  public CpuMemoryController(ByteBuffer boot, Memory memory, IoRegisters ioregs) {
     this.boot = boot;
-    this.vram = vram;
-    this.wram = ByteBuffer.allocate(0x2000);
-    this.oam = ByteBuffer.allocate(0x00a0);
     this.hram = ByteBuffer.allocate(0x007f);
     this.ioregs = ioregs;
+    this.memory = memory;
   }
 
   public int getEnabledInterrupts() {
@@ -69,61 +63,17 @@ public final class CpuMemoryController {
     throw new IllegalArgumentException("%04x".formatted(address));
   }
 
-  public byte readExternal(short address) {
-    int addr = Short.toUnsignedInt(address);
-    assert 0x0000 <= addr && addr <= 0xfeff;
-    if (0x0000 <= addr && addr <= 0x7fff) {
-      return mapper.mapRom().read(address);
-    }
-    if (0x8000 <= addr && addr <= 0x9fff) {
-      return vram.get(addr - 0x8000);
-    }
-    if (0xa000 <= addr && addr <= 0xbfff) {
-      return mapper.mapRam().read(address);
-    }
-    if (0xc000 <= addr && addr <= 0xfdff) {
-      return wram.get((addr & 0xdfff) - 0xc000);
-    }
-    if (0xfe00 <= addr && addr <= 0xfe9f) {
-      return oam.get(addr - 0xfe00);
-    }
-    if (0xfea0 <= addr && addr <= 0xfeff) {
-      return new OpenBus().read(address);
-    }
-    throw new IllegalArgumentException("%04x".formatted(address));
-  }
-
   public void write(short address, byte value) {
     int addr = Short.toUnsignedInt(address);
     if (0x0000 <= addr && addr <= 0x00ff && ioregs.bank.get() == 0) {
       throw new UnsupportedOperationException();
     }
-    if (0x0000 <= addr && addr <= 0xfeff && ioregs.dma.isActive()) {
-      new OpenBus().write(address, value);
-      return;
-    }
-    if (0x0000 <= addr && addr <= 0x7fff) {
-      mapper.mapRom().write(address, value);
-      return;
-    }
-    if (0x8000 <= addr && addr <= 0x9fff) {
-      vram.put(addr - 0x8000, value);
-      return;
-    }
-    if (0xa000 <= addr && addr <= 0xbfff) {
-      mapper.mapRam().write(address, value);
-      return;
-    }
-    if (0xc000 <= addr && addr <= 0xfdff) {
-      wram.put((addr & 0xdfff) - 0xc000, value);
-      return;
-    }
-    if (0xfe00 <= addr && addr <= 0xfe9f) {
-      writeOam(address, value);
-      return;
-    }
-    if (0xfea0 <= addr && addr <= 0xfeff) {
-      new OpenBus().write(address, value);
+    if (0x0000 <= addr && addr <= 0xfeff) {
+      if (ioregs.dma.isActive()) {
+        new OpenBus().write(address, value);
+        return;
+      }
+      writeExternal(address, value);
       return;
     }
     if (0x0ff00 <= addr && addr <= 0xff7f) {
@@ -141,21 +91,11 @@ public final class CpuMemoryController {
     throw new IllegalArgumentException("%04x".formatted(address));
   }
 
-  public byte readDmaSource(short address) {
-    int addr = Short.toUnsignedInt(address);
-    if (addr >= 0xe000) {
-      return wram.get(addr & 0x1fff);
-    }
-    return readExternal(address);
+  public byte readExternal(short address) {
+    return memory.read(address);
   }
 
-  public void writeOam(short address, byte value) {
-    int addr = Short.toUnsignedInt(address);
-    assert 0xfe00 <= addr && addr <= 0xfe9f;
-    if (0xfe00 <= addr && addr <= 0xfe9f) {
-      oam.put(addr - 0xfe00, value);
-      return;
-    }
-    throw new IllegalArgumentException("%04x".formatted(address));
+  public void writeExternal(short address, byte value) {
+    memory.write(address, value);
   }
 }
