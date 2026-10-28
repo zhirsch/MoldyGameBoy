@@ -8,17 +8,19 @@ final class Mbc1Mapper implements Mapper {
   private final ByteBuffer ram;
   private final int romBankCount;
   private final int ramBankCount;
+  private final boolean multicart;
 
   private byte ramEnable = 0;
-  private byte romBankNumber = 0;
-  private byte secondaryBankNumber = 0;
-  private byte bankingModeSelect = 0;
+  private byte bank1 = 0;
+  private byte bank2 = 0;
+  private byte mode = 0;
 
-  Mbc1Mapper(ByteBuffer rom, ByteBuffer ram) {
+  Mbc1Mapper(ByteBuffer rom, ByteBuffer ram, boolean multicart) {
     this.rom = rom;
     this.ram = ram;
     this.romBankCount = rom.limit() / 0x4000;
     this.ramBankCount = ram.limit() / 0x2000;
+    this.multicart = multicart;
   }
 
   @Override
@@ -32,7 +34,8 @@ final class Mbc1Mapper implements Mapper {
           return rom.get((getRomBank0() << 14) | (addr - 0x0000));
         }
         if (0x4000 <= addr && addr <= 0x7fff) {
-          return rom.get((getRomBank() << 14) | (addr - 0x4000));
+          int bank = bank1 == 0 ? 1 : bank1;
+          return rom.get((getRomBank(bank) << 14) | (addr - 0x4000));
         }
         throw new IllegalArgumentException("%04x".formatted(address));
       }
@@ -46,15 +49,15 @@ final class Mbc1Mapper implements Mapper {
           return;
         }
         if (0x2000 <= addr && addr <= 0x3fff) {
-          romBankNumber = (byte) (value & 0b0001_1111);
+          bank1 = (byte) (value & 0b0001_1111);
           return;
         }
         if (0x4000 <= addr && addr <= 0x5fff) {
-          secondaryBankNumber = (byte) (value & 0b0000_0011);
+          bank2 = (byte) (value & 0b0000_0011);
           return;
         }
         if (0x6000 <= addr && addr <= 0x7fff) {
-          bankingModeSelect = (byte) (value & 0b0000_0001);
+          mode = (byte) (value & 0b0000_0001);
           return;
         }
         throw new IllegalArgumentException("%04x".formatted(address));
@@ -85,26 +88,25 @@ final class Mbc1Mapper implements Mapper {
   }
 
   private int getRomBank0() {
-    assert 0 <= secondaryBankNumber && secondaryBankNumber <= 3;
-    return switch (bankingModeSelect) {
+    return switch (mode) {
       case 0 -> 0;
-      case 1 -> (secondaryBankNumber << 5) & (romBankCount - 1);
+      case 1 -> getRomBank(0);
       default -> throw new IllegalStateException();
     };
   }
 
-  private int getRomBank() {
-    assert 0 <= romBankNumber && romBankNumber <= 31;
-    assert 0 <= secondaryBankNumber && secondaryBankNumber <= 3;
-    int bank = romBankNumber == 0 ? 1 : romBankNumber;
-    return ((secondaryBankNumber << 5) | bank) & (romBankCount - 1);
+  private int getRomBank(int bank) {
+    if (multicart) {
+      return ((bank2 << 4) | (bank & 0b0000_1111)) & (romBankCount - 1);
+    } else {
+      return ((bank2 << 5) | (bank & 0b0001_1111)) & (romBankCount - 1);
+    }
   }
 
   private int getRamBank() {
-    assert 0 <= secondaryBankNumber && secondaryBankNumber <= 3;
-    return switch (bankingModeSelect) {
+    return switch (mode) {
       case 0 -> 0;
-      case 1 -> ramBankCount == 4 ? secondaryBankNumber : 0;
+      case 1 -> bank2 & (ramBankCount - 1);
       default -> throw new IllegalStateException();
     };
   }
