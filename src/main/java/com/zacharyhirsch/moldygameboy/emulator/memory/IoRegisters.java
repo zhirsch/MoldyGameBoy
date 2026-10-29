@@ -1,6 +1,7 @@
 package com.zacharyhirsch.moldygameboy.emulator.memory;
 
 import com.zacharyhirsch.moldygameboy.emulator.arch.IoRegister;
+import java.util.function.Consumer;
 
 public final class IoRegisters {
 
@@ -72,6 +73,8 @@ public final class IoRegisters {
 
   /* ff50 */ public final IoRegister bank = IoRegister.create("bank", (short) 0xff50);
 
+  private Consumer<Character> serialOutput = IO::print;
+
   public IoRegisters(
       IoRegister div,
       IoRegister tima,
@@ -85,6 +88,11 @@ public final class IoRegisters {
     this.tac = tac;
     this.if_ = if_;
     this.dma = new OamDmaRegister(memory);
+  }
+
+  /** Where bytes sent over the serial port go. Defaults to stdout. */
+  public void setSerialOutput(Consumer<Character> serialOutput) {
+    this.serialOutput = serialOutput;
   }
 
   public byte read(short address) {
@@ -157,7 +165,7 @@ public final class IoRegisters {
       case 0xff01 -> sb.set((byte) (value & 0xff));
       case 0xff02 -> {
         sc.set((byte) (value & 0x81));
-        IO.print((char) sb.get());
+        serialOutput.accept((char) sb.get());
       }
       case 0xff04 -> div.set((byte) 0);
       case 0xff05 -> tima.set((byte) (value & 0xff));

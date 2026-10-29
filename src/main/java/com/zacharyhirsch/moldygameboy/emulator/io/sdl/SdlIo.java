@@ -15,15 +15,19 @@ public final class SdlIo implements Io {
   private static final double FPS = 60.0988;
   private static final int CPU_CYCLES_PER_SECOND = (int) (341 * 262 * FPS / 3);
 
-  private final SdlEventLoop eventLoop;
   private final SdlAudio audio;
   private final SdlVideo video;
   private final SdlJoypads joypads;
+  private final SdlEventLoop eventLoop;
 
   public SdlIo(Arena arena) {
+    this.audio = new SdlAudio(arena, CPU_CYCLES_PER_SECOND);
+    this.video = new SdlVideo(arena);
+    this.joypads = new SdlJoypads();
     this.eventLoop =
         new SdlEventLoop(
             arena,
+            video,
             this::onGamepadAdded,
             this::onGamepadRemoved,
             this::onGamepadAxisMotion,
@@ -31,9 +35,6 @@ public final class SdlIo implements Io {
             this::onGamepadButtonUp,
             this::onKeyDown,
             this::onKeyUp);
-    this.audio = new SdlAudio(arena, CPU_CYCLES_PER_SECOND);
-    this.video = new SdlVideo(arena);
-    this.joypads = new SdlJoypads();
   }
 
   @Override

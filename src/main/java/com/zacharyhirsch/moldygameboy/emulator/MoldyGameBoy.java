@@ -9,6 +9,7 @@ import com.zacharyhirsch.moldygameboy.emulator.memory.Memory;
 import com.zacharyhirsch.moldygameboy.emulator.ppu.Ppu;
 import com.zacharyhirsch.moldygameboy.emulator.timer.Timer;
 import java.nio.ByteBuffer;
+import java.util.function.Consumer;
 
 final class MoldyGameBoy {
 
@@ -30,6 +31,7 @@ final class MoldyGameBoy {
     }
   }
 
+  private final Memory memory;
   private final Timer timer;
   private final IoRegisters ioregs;
   private final Cpu cpu;
@@ -39,7 +41,7 @@ final class MoldyGameBoy {
 
   public MoldyGameBoy(ByteBuffer boot, ByteBuffer rom, Io io) {
     ByteBuffer vram = ByteBuffer.allocate(0x2000);
-    Memory memory = new Memory(Mapper.create(rom), vram);
+    this.memory = new Memory(Mapper.create(rom), vram);
     Irqs irqs = new Irqs();
     this.timer = new Timer(irqs.timer());
     this.ioregs =
@@ -80,5 +82,15 @@ final class MoldyGameBoy {
 
   public Cpu cpu() {
     return cpu;
+  }
+
+  /** Redirects bytes sent over the serial port (stdout by default). */
+  void setSerialOutput(Consumer<Character> output) {
+    ioregs.setSerialOutput(output);
+  }
+
+  /** Reads $0000-$FEFF the way the DMA unit does, without CPU-side blocking. For tests. */
+  byte peek(int address) {
+    return memory.read((short) address);
   }
 }

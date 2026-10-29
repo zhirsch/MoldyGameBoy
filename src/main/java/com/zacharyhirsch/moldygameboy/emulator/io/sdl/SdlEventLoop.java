@@ -4,6 +4,8 @@ import static com.zacharyhirsch.jna.sdl3.SDL.*;
 
 import com.zacharyhirsch.jna.sdl3.SDL_Event;
 import com.zacharyhirsch.moldygameboy.emulator.io.EventLoop;
+import com.zacharyhirsch.moldygameboy.emulator.io.Ticker;
+import com.zacharyhirsch.moldygameboy.emulator.io.Video;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.util.function.Consumer;
@@ -11,6 +13,7 @@ import java.util.function.Consumer;
 final class SdlEventLoop implements EventLoop {
 
   private final MemorySegment event;
+  private final Video video;
   private final Consumer<MemorySegment> onGamepadAdded;
   private final Consumer<MemorySegment> onGamepadRemoved;
   private final Consumer<MemorySegment> onGamepadAxisMotion;
@@ -23,6 +26,7 @@ final class SdlEventLoop implements EventLoop {
 
   SdlEventLoop(
       Arena arena,
+      Video video,
       Consumer<MemorySegment> onGamepadAdded,
       Consumer<MemorySegment> onGamepadRemoved,
       Consumer<MemorySegment> onGamepadAxisMotion,
@@ -31,6 +35,7 @@ final class SdlEventLoop implements EventLoop {
       Consumer<MemorySegment> onKeyDown,
       Consumer<MemorySegment> onKeyUp) {
     this.event = SDL_Event.allocate(arena);
+    this.video = video;
     this.onGamepadAdded = onGamepadAdded;
     this.onGamepadRemoved = onGamepadRemoved;
     this.onGamepadAxisMotion = onGamepadAxisMotion;
@@ -40,11 +45,19 @@ final class SdlEventLoop implements EventLoop {
     this.onKeyUp = onKeyUp;
   }
 
-  @Override
-  public void run(Runnable tick) {
+  public void run(Ticker ticker) {
+    try {
+      loop(ticker::tick);
+    } catch (Exception e) {
+      video.setError(e);
+      loop(() -> {});
+    }
+  }
+
+  private void loop(Runnable runner) {
     int i = 0;
     while (!quit) {
-      tick.run();
+      runner.run();
       if ((i++ % 100) == 0) {
         pump();
       }
