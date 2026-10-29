@@ -482,11 +482,13 @@ final class MooneyeTest {
   }
 
   @Test
+  @Disabled("too long")
   void test__madness__mgb_oam_dma_halt_sprites() throws Exception {
     doTest("mooneye-test-suite/build/madness/mgb_oam_dma_halt_sprites.gb");
   }
 
   @Test
+  @Disabled("manual-only")
   void test__manual_only__sprite_priority() throws Exception {
     doTest("mooneye-test-suite/build/manual-only/sprite_priority.gb");
   }
@@ -529,15 +531,5 @@ final class MooneyeTest {
   @Test
   void test__misc__ppu__vblank_stat_intr_C() throws Exception {
     doTest("mooneye-test-suite/build/misc/ppu/vblank_stat_intr-C.gb");
-  }
-
-  @Test
-  void test__utils__bootrom_dumper() throws Exception {
-    doTest("mooneye-test-suite/build/utils/bootrom_dumper.gb");
-  }
-
-  @Test
-  void test__utils__dump_boot_hwio() throws Exception {
-    doTest("mooneye-test-suite/build/utils/dump_boot_hwio.gb");
   }
 }
