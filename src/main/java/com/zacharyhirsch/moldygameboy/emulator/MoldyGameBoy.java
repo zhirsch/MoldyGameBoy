@@ -31,7 +31,6 @@ final class MoldyGameBoy {
     }
   }
 
-  private final Memory memory;
   private final Timer timer;
   private final IoRegisters ioregs;
   private final Cpu cpu;
@@ -41,7 +40,7 @@ final class MoldyGameBoy {
 
   public MoldyGameBoy(ByteBuffer boot, ByteBuffer rom, Io io) {
     ByteBuffer vram = ByteBuffer.allocate(0x2000);
-    this.memory = new Memory(Mapper.create(rom), vram);
+    Memory memory = new Memory(Mapper.create(rom), vram);
     Irqs irqs = new Irqs();
     this.timer = new Timer(irqs.timer());
     this.ioregs =

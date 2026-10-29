@@ -45,6 +45,7 @@ final class SdlEventLoop implements EventLoop {
     this.onKeyUp = onKeyUp;
   }
 
+  @Override
   public void run(Ticker ticker) {
     try {
       loop(ticker::tick);
