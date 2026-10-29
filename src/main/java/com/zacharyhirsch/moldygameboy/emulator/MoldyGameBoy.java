@@ -88,9 +88,4 @@ final class MoldyGameBoy {
   void setSerialOutput(Consumer<Character> output) {
     ioregs.setSerialOutput(output);
   }
-
-  /** Reads $0000-$FEFF the way the DMA unit does, without CPU-side blocking. For tests. */
-  byte peek(int address) {
-    return memory.read((short) address);
-  }
 }
