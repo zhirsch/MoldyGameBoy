@@ -40,7 +40,13 @@ public final class Ppu {
   private Mode mode = Mode.OAM_SCAN;
   private int dot = 0;
   private int screenX = 0;
-  private int fineScx = 0;
+  private int pixelsToDiscard = 0;
+
+  // Window state: wyTriggered latches once LY == WY during a frame; windowLine is the window's
+  // own line counter, which only advances on lines where the window was actually drawn.
+  private boolean wyTriggered = false;
+  private boolean windowActive = false;
+  private int windowLine = 0;
 
   public Ppu(IoRegisters ioregs, ByteBuffer vram, Video video, Irq vblank, Irq lcd) {
     this.ioregs = ioregs;
@@ -58,6 +64,9 @@ public final class Ppu {
       mode = Mode.OAM_SCAN;
       dot = 4;
       screenX = 0;
+      wyTriggered = false;
+      windowActive = false;
+      windowLine = 0;
       fetcher.reset();
       fifo.clear();
       ioregs.ly.set(0);
@@ -99,10 +108,16 @@ public final class Ppu {
     if (dot == 455) {
       dot = 0;
       screenX = 0;
+      if (windowActive) {
+        windowActive = false;
+        windowLine++;
+      }
       fetcher.reset();
       fifo.clear();
       if (ioregs.ly.get() == 153) {
         ioregs.ly.set(0);
+        wyTriggered = false;
+        windowLine = 0;
         video.present();
       } else {
         ioregs.ly.set(ioregs.ly.get() + 0b0000_0001);
@@ -118,15 +133,27 @@ public final class Ppu {
     }
   }
 
-  private static void tickOamScan() {}
+  private void tickOamScan() {
+    if (ioregs.ly.get() == ioregs.wy.get()) {
+      wyTriggered = true;
+    }
+  }
 
   private void tickDrawing() {
     if (dot == 80) {
-      fineScx = (ioregs.scx.get() & 0b0000_0111) >>> 0;
+      pixelsToDiscard = (ioregs.scx.get() & 0b0000_0111) >>> 0;
       fetcher.latchScroll();
     }
     if (80 <= dot && dot < 84) {
     } else {
+      if (shouldStartWindow()) {
+        // Starting the window throws away the background pixels in flight and restarts the
+        // fetcher on the window tile map. WX < 7 starts the window partially off-screen.
+        windowActive = true;
+        fifo.clear();
+        fetcher.startWindow(windowLine);
+        pixelsToDiscard = Math.max(0, 7 - ioregs.wx.get());
+      }
       if (!fifo.isEmpty()) {
         render(fifo.remove());
       }
@@ -134,13 +161,20 @@ public final class Ppu {
     }
   }
 
+  private boolean shouldStartWindow() {
+    return !windowActive
+        && wyTriggered
+        && ioregs.lcdc.bit(5)
+        && screenX + 7 >= ioregs.wx.get();
+  }
+
   private static void tickHBlank() {}
 
   private static void tickVBlank() {}
 
   private void render(int pixel) {
-    if (fineScx > 0) {
-      fineScx--;
+    if (pixelsToDiscard > 0) {
+      pixelsToDiscard--;
       return;
     }
     int colorIdx =

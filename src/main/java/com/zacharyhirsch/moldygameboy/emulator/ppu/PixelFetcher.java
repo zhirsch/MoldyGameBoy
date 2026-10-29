@@ -23,6 +23,8 @@ final class PixelFetcher {
 
   private int fetcherX = 0;
   private int coarseScx = 0;
+  private boolean window = false;
+  private int windowLine = 0;
   private byte tileId;
   private byte tileDataLo;
   private byte tileDataHi;
@@ -37,6 +39,13 @@ final class PixelFetcher {
     state = State.GET_TILE_ID;
     secondDot = false;
     fetcherX = 0;
+    window = false;
+  }
+
+  void startWindow(int windowLine) {
+    reset();
+    this.window = true;
+    this.windowLine = windowLine;
   }
 
   void latchScroll() {
@@ -58,10 +67,9 @@ final class PixelFetcher {
   }
 
   private void getTileId() {
-    int base = ioregs.lcdc.bit(3) ? 0x9c00 : 0x9800;
-    int mapY = (ioregs.ly.get() + ioregs.scy.get()) & 0xff;
-    int tileY = mapY / 8;
-    int tileX = (fetcherX + coarseScx) & 0x1f;
+    int base = ioregs.lcdc.bit(window ? 6 : 3) ? 0x9c00 : 0x9800;
+    int tileY = mapY() / 8;
+    int tileX = (window ? fetcherX : fetcherX + coarseScx) & 0x1f;
     int address = base + (tileY * 32) + tileX;
     tileId = vram.get(address - 0x8000);
     state = State.GET_TILE_DATA_LO;
@@ -96,7 +104,11 @@ final class PixelFetcher {
             ? Byte.toUnsignedInt(tileId) <= 127 ? 0x0000 : 0x0800
             : Byte.toUnsignedInt(tileId) <= 127 ? 0x1000 : 0x0800;
     int tileOffset = Byte.toUnsignedInt(tileId) * 16;
-    int tileLine = (ioregs.ly.get() + ioregs.scy.get()) % 8;
+    int tileLine = mapY() % 8;
     return base + tileOffset + (tileLine * 2);
+  }
+
+  private int mapY() {
+    return window ? windowLine : (ioregs.ly.get() + ioregs.scy.get()) & 0xff;
   }
 }
