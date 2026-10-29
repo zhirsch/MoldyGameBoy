@@ -52,6 +52,20 @@ public final class Ppu {
   }
 
   public void tick() {
+    if (!ioregs.lcdc.bit(7)) {
+      // LCD off: the PPU is held in reset. LY reads 0, STAT reports mode 0. Line 0 after
+      // enabling is 4 dots short (see mooneye ppu/lcdon_timing-GS), so start it at dot 4.
+      dot = 4;
+      screenX = 0;
+      fetcherX = 0;
+      state = State.GET_TILE_ID;
+      fifo.clear();
+      ioregs.ly.set(0);
+      ioregs.stat.set(ioregs.stat.get() & 0b1111_1000);
+      vblank.set(false);
+      lcd.set(false);
+      return;
+    }
     assert 0 <= dot && dot <= 455;
     assert 0 <= ioregs.ly.get() && ioregs.ly.get() <= 153;
     int mode;

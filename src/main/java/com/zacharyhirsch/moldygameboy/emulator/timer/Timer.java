@@ -15,7 +15,10 @@ public final class Timer {
 
   private final Irq irq;
 
-  private int counter = 0; // 16-bit system counter, advances 4 per M-cycle
+  // 16-bit system counter, advances 4 per M-cycle. At reset it runs 2 M-cycles ahead of the
+  // CPU: with that, DIV after the boot ROM matches hardware (mooneye boot_div-dmg0 with the DMG0
+  // boot ROM, and boot_div-dmgABCmgb with the DMG and MGB boot ROMs).
+  private int counter = 8;
   private int tima = 0;
   private int tma = 0;
   private int tac = 0;
