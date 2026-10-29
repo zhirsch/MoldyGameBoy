@@ -238,12 +238,32 @@ final class MooneyeTest {
   }
 
   @Test
-  void test_oam_dma() throws Exception {
+  void test__acceptance__oam_dma_restart() throws Exception {
     doTest("mooneye-test-suite/build/acceptance/oam_dma_restart.gb");
+  }
+
+  @Test
+  void test__acceptance__oam_dma_start() throws Exception {
     doTest("mooneye-test-suite/build/acceptance/oam_dma_start.gb");
+  }
+
+  @Test
+  void test__acceptance__oam_dma_timing() throws Exception {
     doTest("mooneye-test-suite/build/acceptance/oam_dma_timing.gb");
+  }
+
+  @Test
+  void test__acceptance__oam_dma__basic() throws Exception {
     doTest("mooneye-test-suite/build/acceptance/oam_dma/basic.gb");
+  }
+
+  @Test
+  void test__acceptance__oam_dma__reg_read() throws Exception {
     doTest("mooneye-test-suite/build/acceptance/oam_dma/reg_read.gb");
+  }
+
+  @Test
+  void test__acceptance__oam_dma__sources_GS() throws Exception {
     doTest("mooneye-test-suite/build/acceptance/oam_dma/sources-GS.gb");
   }
 
@@ -418,19 +438,67 @@ final class MooneyeTest {
   }
 
   @Test
-  void test_mbc1() throws Exception {
+  void test__emulator_only__mbc1__bits_bank1() throws Exception {
     doTest("mooneye-test-suite/build/emulator-only/mbc1/bits_bank1.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc1__bits_bank2() throws Exception {
     doTest("mooneye-test-suite/build/emulator-only/mbc1/bits_bank2.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc1__bits_mode() throws Exception {
     doTest("mooneye-test-suite/build/emulator-only/mbc1/bits_mode.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc1__bits_ramg() throws Exception {
     doTest("mooneye-test-suite/build/emulator-only/mbc1/bits_ramg.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc1__multicart_rom_8Mb() throws Exception {
     doTest("mooneye-test-suite/build/emulator-only/mbc1/multicart_rom_8Mb.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc1__ram_256kb() throws Exception {
     doTest("mooneye-test-suite/build/emulator-only/mbc1/ram_256kb.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc1__ram_64kb() throws Exception {
     doTest("mooneye-test-suite/build/emulator-only/mbc1/ram_64kb.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc1__rom_16Mb() throws Exception {
     doTest("mooneye-test-suite/build/emulator-only/mbc1/rom_16Mb.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc1__rom_1Mb() throws Exception {
     doTest("mooneye-test-suite/build/emulator-only/mbc1/rom_1Mb.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc1__rom_2Mb() throws Exception {
     doTest("mooneye-test-suite/build/emulator-only/mbc1/rom_2Mb.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc1__rom_4Mb() throws Exception {
     doTest("mooneye-test-suite/build/emulator-only/mbc1/rom_4Mb.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc1__rom_512kb() throws Exception {
     doTest("mooneye-test-suite/build/emulator-only/mbc1/rom_512kb.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc1__rom_8Mb() throws Exception {
     doTest("mooneye-test-suite/build/emulator-only/mbc1/rom_8Mb.gb");
   }
 
@@ -470,14 +538,42 @@ final class MooneyeTest {
   }
 
   @Test
-  void test_mbc5() throws Exception {
+  void test__emulator_only__mbc5__rom_16Mb() throws Exception {
     doTest("mooneye-test-suite/build/emulator-only/mbc5/rom_16Mb.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc5__rom_1Mb() throws Exception {
     doTest("mooneye-test-suite/build/emulator-only/mbc5/rom_1Mb.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc5__rom_2Mb() throws Exception {
     doTest("mooneye-test-suite/build/emulator-only/mbc5/rom_2Mb.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc5__rom_32Mb() throws Exception {
     doTest("mooneye-test-suite/build/emulator-only/mbc5/rom_32Mb.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc5__rom_4Mb() throws Exception {
     doTest("mooneye-test-suite/build/emulator-only/mbc5/rom_4Mb.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc5__rom_512kb() throws Exception {
     doTest("mooneye-test-suite/build/emulator-only/mbc5/rom_512kb.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc5__rom_64Mb() throws Exception {
     doTest("mooneye-test-suite/build/emulator-only/mbc5/rom_64Mb.gb");
+  }
+
+  @Test
+  void test__emulator_only__mbc5__rom_8Mb() throws Exception {
     doTest("mooneye-test-suite/build/emulator-only/mbc5/rom_8Mb.gb");
   }
 
