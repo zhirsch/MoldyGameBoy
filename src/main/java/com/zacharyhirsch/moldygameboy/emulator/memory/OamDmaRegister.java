@@ -19,6 +19,15 @@ public final class OamDmaRegister implements IoRegister {
     return running != null;
   }
 
+  public short getActiveBase() {
+    assert isActive();
+    return running.base;
+  }
+
+  public byte getCurrentValue() {
+    return isActive() ? running.current : (byte) 0xff;
+  }
+
   @Override
   public int get() {
     return value;
@@ -66,6 +75,7 @@ public final class OamDmaRegister implements IoRegister {
     private final short base;
 
     private int offset = 0;
+    private byte current = (byte) 0xff;
 
     Internal(Memory memory, short base) {
       this.memory = memory;
@@ -75,7 +85,8 @@ public final class OamDmaRegister implements IoRegister {
     void tick() {
       short src = (short) (base + offset);
       short dst = (short) (0xfe00 + offset);
-      memory.write(dst, memory.read(src));
+      current = memory.read(src);
+      memory.write(dst, current);
       offset++;
     }
 

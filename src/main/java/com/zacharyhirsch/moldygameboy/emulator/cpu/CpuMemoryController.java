@@ -3,7 +3,6 @@ package com.zacharyhirsch.moldygameboy.emulator.cpu;
 import com.zacharyhirsch.moldygameboy.emulator.arch.Bus;
 import com.zacharyhirsch.moldygameboy.emulator.memory.IoRegisters;
 import com.zacharyhirsch.moldygameboy.emulator.memory.Memory;
-import com.zacharyhirsch.moldygameboy.emulator.memory.OpenBus;
 import java.nio.ByteBuffer;
 
 public final class CpuMemoryController {
@@ -45,9 +44,15 @@ public final class CpuMemoryController {
     if (0x0000 <= addr && addr <= 0x00ff && ioregs.bank.get() == 0) {
       return boot.get(address);
     }
-    if (0x0000 <= addr && addr <= 0xfeff) {
+    if (0x0000 <= addr && addr <= 0xfdff) {
+      if (ioregs.dma.isActive() && isVramBus(address) == isVramBus(ioregs.dma.getActiveBase())) {
+        return ioregs.dma.getCurrentValue();
+      }
+      return readExternal(address);
+    }
+    if (0xfe00 <= addr && addr <= 0xfeff) {
       if (ioregs.dma.isActive()) {
-        return new OpenBus().read(address);
+        return (byte) 0xff;
       }
       return readExternal(address);
     }
@@ -68,9 +73,15 @@ public final class CpuMemoryController {
     if (0x0000 <= addr && addr <= 0x00ff && ioregs.bank.get() == 0) {
       throw new UnsupportedOperationException();
     }
-    if (0x0000 <= addr && addr <= 0xfeff) {
+    if (0x0000 <= addr && addr <= 0xfdff) {
+      if (ioregs.dma.isActive() && isVramBus(address) == isVramBus(ioregs.dma.getActiveBase())) {
+        return;
+      }
+      writeExternal(address, value);
+      return;
+    }
+    if (0xfe00 <= addr && addr <= 0xfeff) {
       if (ioregs.dma.isActive()) {
-        new OpenBus().write(address, value);
         return;
       }
       writeExternal(address, value);
@@ -97,5 +108,10 @@ public final class CpuMemoryController {
 
   public void writeExternal(short address, byte value) {
     memory.write(address, value);
+  }
+
+  private static boolean isVramBus(short address) {
+    int addr = Short.toUnsignedInt(address);
+    return 0x8000 <= addr && addr <= 0x9fff;
   }
 }
