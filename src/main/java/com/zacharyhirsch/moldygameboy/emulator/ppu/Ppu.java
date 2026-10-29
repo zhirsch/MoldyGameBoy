@@ -17,6 +17,19 @@ public final class Ppu {
     new Color((byte) 0x00, (byte) 0x00, (byte) 0x00), // black
   };
 
+  enum Mode {
+    HBLANK(0b0000_0000),
+    VBLANK(0b0000_0001),
+    OAM_SCAN(0b0000_0010),
+    DRAWING(0b0000_0011);
+
+    final int bits;
+
+    Mode(int bits) {
+      this.bits = bits;
+    }
+  }
+
   private final IoRegisters ioregs;
   private final Video video;
   private final Irq vblank;
@@ -24,6 +37,7 @@ public final class Ppu {
   private final Queue<Integer> fifo;
   private final PixelFetcher fetcher;
 
+  private Mode mode = Mode.OAM_SCAN;
   private int dot = 0;
   private int screenX = 0;
   private int fineScx = 0;
@@ -41,6 +55,7 @@ public final class Ppu {
     if (!ioregs.lcdc.bit(7)) {
       // LCD off: the PPU is held in reset. LY reads 0, STAT reports mode 0. Line 0 after
       // enabling is 4 dots short (see mooneye ppu/lcdon_timing-GS), so start it at dot 4.
+      mode = Mode.OAM_SCAN;
       dot = 4;
       screenX = 0;
       fetcher.reset();
@@ -53,35 +68,33 @@ public final class Ppu {
     }
     assert 0 <= dot && dot <= 455;
     assert 0 <= ioregs.ly.get() && ioregs.ly.get() <= 153;
-    int mode;
-    if (0 <= ioregs.ly.get() && ioregs.ly.get() <= 143) {
-      assert 0 <= dot && dot < 456;
-      if (0 <= dot && dot < 80) {
-        mode = 0b0000_0010;
+    switch (mode) {
+      case OAM_SCAN -> {
+        assert 0 <= dot && dot < 80;
         tickOamScan();
-      } else if (0 <= screenX && screenX < 160) {
-        assert 80 <= dot && dot < 369;
-        mode = 0b0000_0011;
-        tickDrawing();
-      } else if (252 <= dot && dot < 456) {
-        mode = 0b0000_0000;
-        tickHBlank();
-      } else {
-        throw new IllegalStateException("dot=%03d screenX=%03d".formatted(dot, screenX));
       }
-    } else {
-      mode = 0b0000_0001;
-      tickVBlank();
+      case DRAWING -> {
+        assert 80 <= dot && dot < 369;
+        tickDrawing();
+      }
+      case HBLANK -> {
+        assert 252 <= dot && dot < 456;
+        tickHBlank();
+      }
+      case VBLANK -> {
+        assert 144 <= ioregs.ly.get() && ioregs.ly.get() <= 153;
+        tickVBlank();
+      }
     }
-    vblank.set(mode == 0b0000_0001);
+    vblank.set(mode == Mode.VBLANK);
     ioregs.stat.set(
         (ioregs.stat.get() & 0b1111_1000)
             | (ioregs.ly.get() == ioregs.lyc.get() ? 0b0000_0100 : 0b0000_0000)
-            | mode);
+            | mode.bits);
     lcd.set(
-        (ioregs.stat.bit(5) && mode == 0b0000_0010)
-            || (ioregs.stat.bit(4) && mode == 0b0000_0001)
-            || (ioregs.stat.bit(3) && mode == 0b0000_0000)
+        (ioregs.stat.bit(5) && mode == Mode.OAM_SCAN)
+            || (ioregs.stat.bit(4) && mode == Mode.VBLANK)
+            || (ioregs.stat.bit(3) && mode == Mode.HBLANK)
             || (ioregs.stat.bit(6) && ioregs.stat.bit(2)));
     if (dot == 455) {
       dot = 0;
@@ -94,8 +107,14 @@ public final class Ppu {
       } else {
         ioregs.ly.set(ioregs.ly.get() + 0b0000_0001);
       }
+      mode = ioregs.ly.get() <= 143 ? Mode.OAM_SCAN : Mode.VBLANK;
     } else {
       dot++;
+      if (mode == Mode.OAM_SCAN && dot == 80) {
+        mode = Mode.DRAWING;
+      } else if (mode == Mode.DRAWING && screenX == 160) {
+        mode = Mode.HBLANK;
+      }
     }
   }
 
