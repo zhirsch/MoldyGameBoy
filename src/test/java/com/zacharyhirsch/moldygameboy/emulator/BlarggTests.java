@@ -1,7 +1,6 @@
 package com.zacharyhirsch.moldygameboy.emulator;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.io.Resources;
 import com.zacharyhirsch.moldygameboy.emulator.io.Io;
@@ -26,7 +25,7 @@ final class BlarggTests {
 
   @Test
   void testMemTiming() throws Exception {
-    doTest("blargg-test-suite/mem_timing-2/mem_timing.gb");
+    doTest("blargg-test-suite/mem_timing/mem_timing.gb");
   }
 
   @Test
@@ -40,6 +39,10 @@ final class BlarggTests {
       MoldyGameBoy gb = new MoldyGameBoy(readRom("dmg.bin"), readRom(path), io);
       BlarggTicker ticker = new BlarggTicker(gb);
       io.eventLoop().run(ticker);
+
+      String output = ticker.serial().toString();
+      assertThat(output).contains("Passed");
+      assertThat(output).doesNotContain("Failed");
     }
   }
 
@@ -52,45 +55,14 @@ final class BlarggTests {
 
     @Override
     public void tick() {
-      gb.tick();
+      gb().tick();
     }
 
     @Override
     public boolean isDone() {
-      Integer status = memoryStatus(gb);
-      if (status != null) {
-        assertWithMessage(memoryText(gb)).that(status).isEqualTo(0);
-        return true;
-      }
-      String output = serial.toString();
+      String output = serial().toString();
       int verdict = Math.max(output.lastIndexOf("Passed"), output.lastIndexOf("Failed"));
-      if (verdict >= 0 && output.indexOf('\n', verdict) >= 0) {
-        assertThat(output).doesNotContain("Failed");
-        return true;
-      }
-      return false;
-    }
-
-    private static Integer memoryStatus(MoldyGameBoy gb) {
-      if (gb.peek(0xa001) == (byte) 0xde
-          && gb.peek(0xa002) == (byte) 0xb0
-          && gb.peek(0xa003) == (byte) 0x61) {
-        int status = Byte.toUnsignedInt(gb.peek(0xa000));
-        return status == 0x80 ? null : status;
-      }
-      return null;
-    }
-
-    private static String memoryText(MoldyGameBoy gb) {
-      StringBuilder text = new StringBuilder();
-      for (int addr = 0xa004; addr <= 0xbfff; addr++) {
-        byte b = gb.peek(addr);
-        if (b == 0) {
-          break;
-        }
-        text.append((char) b);
-      }
-      return text.toString();
+      return verdict >= 0 && output.indexOf('\n', verdict) >= 0;
     }
   }
 

@@ -45,6 +45,5 @@ java_binary(
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/io:factory",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/memory",
         artifact("com.google.guava:guava"),
-        artifact("org.slf4j:slf4j-api"),
     ],
 )

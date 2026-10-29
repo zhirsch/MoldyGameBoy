@@ -51,6 +51,7 @@ final class SdlEventLoop implements EventLoop {
     } catch (Exception e) {
       video.setError(e);
       loop(() -> {});
+      throw e;
     }
   }
 

@@ -9,7 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 final class MoldyGameBoyMain {
-  
+
   static void main(String[] args) throws Exception {
     try (Io io = IoFactory.sdl()) {
       MoldyGameBoy gb =

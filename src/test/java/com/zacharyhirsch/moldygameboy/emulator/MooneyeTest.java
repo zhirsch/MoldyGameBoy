@@ -22,6 +22,7 @@ final class MooneyeTest {
     try (Io io = Boolean.getBoolean("moldy.gui") ? IoFactory.sdl() : IoFactory.none()) {
       MoldyGameBoy gb = new MoldyGameBoy(readRom("dmg.bin"), readRom(path), io);
       io.eventLoop().run(new BreakpointTicker(gb));
+      assertThat(gb.cpu().registers()).isMooneyeSuccess();
     }
   }
 
@@ -34,14 +35,7 @@ final class MooneyeTest {
 
     @Override
     public boolean isDone() {
-      if (isAtBreakpoint(gb.cpu().registers())) {
-        assertThat(gb.cpu().registers()).isMooneyeSuccess();
-        return true;
-      }
-      return false;
-    }
-
-    private static boolean isAtBreakpoint(Registers r) {
+      Registers r = gb.cpu().registers();
       if (r.ir().get() != (byte) 0x40) {
         return false;
       }
