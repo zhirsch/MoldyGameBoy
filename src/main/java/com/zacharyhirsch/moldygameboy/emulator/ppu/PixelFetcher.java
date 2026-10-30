@@ -99,10 +99,9 @@ final class PixelFetcher {
   }
 
   private int computeTileAddress() {
-    int base =
-        ioregs.lcdc.bit(4)
-            ? Byte.toUnsignedInt(tileId) <= 127 ? 0x0000 : 0x0800
-            : Byte.toUnsignedInt(tileId) <= 127 ? 0x1000 : 0x0800;
+    // LCDC.4 set: tiles 0-255 at $8000-$8FFF. Clear: tiles 0-127 at $9000-$97FF and 128-255 at
+    // $8800-$8FFF, i.e. only tiles 0-127 move.
+    int base = !ioregs.lcdc.bit(4) && Byte.toUnsignedInt(tileId) <= 127 ? 0x1000 : 0x0000;
     int tileOffset = Byte.toUnsignedInt(tileId) * 16;
     int tileLine = mapY() % 8;
     return base + tileOffset + (tileLine * 2);
