@@ -61,75 +61,68 @@ public final class Ppu {
     if (!ioregs.lcdc.bit(7)) {
       // LCD off: the PPU is held in reset. LY reads 0, STAT reports mode 0. Line 0 after
       // enabling is 4 dots short (see mooneye ppu/lcdon_timing-GS), so start it at dot 4.
-      mode = Mode.OAM_SCAN;
-      dot = 4;
-      screenX = 0;
-      wyTriggered = false;
+      startLine(0, 4);
+      updateStatAndIrqs();
+      return;
+    }
+    switch (mode) {
+      case OAM_SCAN -> tickOamScan();
+      case DRAWING -> tickDrawing();
+      case HBLANK -> tickHBlank();
+      case VBLANK -> tickVBlank();
+    }
+    dot++;
+    if (dot == 456) {
+      int nextLy = (ioregs.ly.get() == 153) ? 0 : (ioregs.ly.get() + 1);
+      startLine(nextLy, 0);
+      if (nextLy == 0) {
+        video.present();
+      }
+    } else if (dot == 80) {
+      if (mode == Mode.OAM_SCAN) {
+        mode = Mode.DRAWING;
+      }
+    } else if (screenX == 160) {
+      if (mode == Mode.DRAWING) {
+        mode = Mode.HBLANK;
+      }
+    }
+    updateStatAndIrqs();
+  }
+
+  private void startLine(int line, int firstDot) {
+    mode = line <= 143 ? Mode.OAM_SCAN : Mode.VBLANK;
+    dot = firstDot;
+    screenX = 0;
+    fetcher.reset();
+    fifo.clear();
+    ioregs.ly.set(line);
+    if (windowActive) {
+      windowLine++;
       windowActive = false;
+    }
+    if (line == 0) {
       windowLine = 0;
-      fetcher.reset();
-      fifo.clear();
-      ioregs.ly.set(0);
+      wyTriggered = false;
+    }
+  }
+
+  private void updateStatAndIrqs() {
+    if (!ioregs.lcdc.bit(7)) {
       ioregs.stat.set(ioregs.stat.get() & 0b1111_1000);
       vblank.set(false);
       lcd.set(false);
-      return;
-    }
-    assert 0 <= dot && dot <= 455;
-    assert 0 <= ioregs.ly.get() && ioregs.ly.get() <= 153;
-    switch (mode) {
-      case OAM_SCAN -> {
-        assert 0 <= dot && dot < 80;
-        tickOamScan();
-      }
-      case DRAWING -> {
-        assert 80 <= dot && dot < 369;
-        tickDrawing();
-      }
-      case HBLANK -> {
-        assert 252 <= dot && dot < 456;
-        tickHBlank();
-      }
-      case VBLANK -> {
-        assert 144 <= ioregs.ly.get() && ioregs.ly.get() <= 153;
-        tickVBlank();
-      }
-    }
-    vblank.set(mode == Mode.VBLANK);
-    ioregs.stat.set(
-        (ioregs.stat.get() & 0b1111_1000)
-            | (ioregs.ly.get() == ioregs.lyc.get() ? 0b0000_0100 : 0b0000_0000)
-            | mode.bits);
-    lcd.set(
-        (ioregs.stat.bit(5) && mode == Mode.OAM_SCAN)
-            || (ioregs.stat.bit(4) && mode == Mode.VBLANK)
-            || (ioregs.stat.bit(3) && mode == Mode.HBLANK)
-            || (ioregs.stat.bit(6) && ioregs.stat.bit(2)));
-    if (dot == 455) {
-      dot = 0;
-      screenX = 0;
-      if (windowActive) {
-        windowActive = false;
-        windowLine++;
-      }
-      fetcher.reset();
-      fifo.clear();
-      if (ioregs.ly.get() == 153) {
-        ioregs.ly.set(0);
-        wyTriggered = false;
-        windowLine = 0;
-        video.present();
-      } else {
-        ioregs.ly.set(ioregs.ly.get() + 0b0000_0001);
-      }
-      mode = ioregs.ly.get() <= 143 ? Mode.OAM_SCAN : Mode.VBLANK;
     } else {
-      dot++;
-      if (mode == Mode.OAM_SCAN && dot == 80) {
-        mode = Mode.DRAWING;
-      } else if (mode == Mode.DRAWING && screenX == 160) {
-        mode = Mode.HBLANK;
-      }
+      ioregs.stat.set(
+          (ioregs.stat.get() & 0b1111_1000)
+              | (ioregs.ly.get() == ioregs.lyc.get() ? 0b0000_0100 : 0b0000_0000)
+              | mode.bits);
+      vblank.set(mode == Mode.VBLANK);
+      lcd.set(
+          (ioregs.stat.bit(5) && mode == Mode.OAM_SCAN)
+              || (ioregs.stat.bit(4) && mode == Mode.VBLANK)
+              || (ioregs.stat.bit(3) && mode == Mode.HBLANK)
+              || (ioregs.stat.bit(6) && ioregs.stat.bit(2)));
     }
   }
 
