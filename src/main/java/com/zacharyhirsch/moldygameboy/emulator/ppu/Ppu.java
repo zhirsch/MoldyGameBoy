@@ -177,6 +177,10 @@ public final class Ppu {
       pixelsToDiscard--;
       return;
     }
+    if (!ioregs.lcdc.bit(0)) {
+      // On DMG, LCDC.0 clear blanks both the background and the window to color 0.
+      pixel = 0;
+    }
     int colorIdx =
         switch (pixel) {
           case 0 -> (ioregs.bgp.get() & 0b0000_0011) >>> 0;
