@@ -9,9 +9,9 @@ public class Memory {
   private final ByteBuffer vram;
   private final ByteBuffer wram;
 
-  public Memory(Mapper mapper, ByteBuffer vram) {
+  public Memory(Mapper mapper, ByteBuffer vram, ByteBuffer oam) {
     this.mapper = mapper;
-    this.oam = ByteBuffer.allocate(0x00a0);
+    this.oam = oam;
     this.vram = vram;
     this.wram = ByteBuffer.allocate(0x2000);
   }

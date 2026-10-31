@@ -40,13 +40,14 @@ final class MoldyGameBoy {
 
   public MoldyGameBoy(ByteBuffer boot, ByteBuffer rom, Io io) {
     ByteBuffer vram = ByteBuffer.allocate(0x2000);
-    Memory memory = new Memory(Mapper.create(rom), vram);
+    ByteBuffer oam = ByteBuffer.allocate(0x00a0);
+    Memory memory = new Memory(Mapper.create(rom), vram, oam);
     Irqs irqs = new Irqs();
     this.timer = new Timer(irqs.timer());
     this.ioregs =
         new IoRegisters(timer.div(), timer.tima(), timer.tma(), timer.tac(), irqs.if_(), memory);
     this.cpu = new Cpu(boot, memory, ioregs);
-    this.ppu = new Ppu(ioregs, vram, io.video(), irqs.vblank(), irqs.lcd());
+    this.ppu = new Ppu(ioregs, vram, oam, io.video(), irqs.vblank(), irqs.lcd());
   }
 
   public void tick() {

@@ -31,6 +31,7 @@ public final class Ppu {
   }
 
   private final IoRegisters ioregs;
+  private final OamScanner oamScanner;
   private final Video video;
   private final Irq vblank;
   private final Irq lcd;
@@ -48,8 +49,10 @@ public final class Ppu {
   private boolean windowActive = false;
   private int windowLine = 0;
 
-  public Ppu(IoRegisters ioregs, ByteBuffer vram, Video video, Irq vblank, Irq lcd) {
+  public Ppu(
+      IoRegisters ioregs, ByteBuffer vram, ByteBuffer oam, Video video, Irq vblank, Irq lcd) {
     this.ioregs = ioregs;
+    this.oamScanner = new OamScanner(ioregs, oam);
     this.video = video;
     this.vblank = vblank;
     this.lcd = lcd;
@@ -94,6 +97,7 @@ public final class Ppu {
     mode = line <= 143 ? Mode.OAM_SCAN : Mode.VBLANK;
     dot = firstDot;
     screenX = 0;
+    oamScanner.reset();
     fetcher.reset();
     fifo.clear();
     ioregs.ly.set(line);
@@ -130,6 +134,7 @@ public final class Ppu {
     if (ioregs.ly.get() == ioregs.wy.get()) {
       wyTriggered = true;
     }
+    oamScanner.tick();
   }
 
   private void tickDrawing() {
