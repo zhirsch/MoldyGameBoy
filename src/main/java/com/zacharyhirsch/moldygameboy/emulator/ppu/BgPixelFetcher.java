@@ -4,9 +4,9 @@ import com.zacharyhirsch.moldygameboy.emulator.memory.IoRegisters;
 import java.nio.ByteBuffer;
 import java.util.Queue;
 
-final class PixelFetcher {
+final class BgPixelFetcher {
 
-  enum State {
+  private enum State {
     GET_TILE_ID,
     GET_TILE_DATA_LO,
     GET_TILE_DATA_HI,
@@ -29,7 +29,7 @@ final class PixelFetcher {
   private byte tileDataLo;
   private byte tileDataHi;
 
-  PixelFetcher(IoRegisters ioregs, ByteBuffer vram, Queue<Integer> fifo) {
+  BgPixelFetcher(IoRegisters ioregs, ByteBuffer vram, Queue<Integer> fifo) {
     this.ioregs = ioregs;
     this.vram = vram;
     this.fifo = fifo;
@@ -46,6 +46,10 @@ final class PixelFetcher {
     reset();
     this.window = true;
     this.windowLine = windowLine;
+  }
+
+  boolean isBetweenTiles() {
+    return state == State.PUSH_TO_FIFO || (state == State.GET_TILE_ID && !secondDot);
   }
 
   void latchScroll() {
