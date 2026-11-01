@@ -48,8 +48,9 @@ final class BgPixelFetcher {
     this.windowLine = windowLine;
   }
 
-  boolean isBetweenTiles() {
-    return state == State.PUSH_TO_FIFO || (state == State.GET_TILE_ID && !secondDot);
+  /** Whether the fetcher has a whole tile row fetched and is waiting to push it. */
+  boolean hasTileData() {
+    return state == State.PUSH_TO_FIFO;
   }
 
   void latchScroll() {
@@ -57,6 +58,11 @@ final class BgPixelFetcher {
   }
 
   void tick() {
+    // Pushing isn't a two-dot step: the fetcher retries every dot until the FIFO is empty.
+    if (state == State.PUSH_TO_FIFO) {
+      pushToFifo();
+      return;
+    }
     if (!secondDot) {
       secondDot = true;
       return;
@@ -66,7 +72,7 @@ final class BgPixelFetcher {
       case GET_TILE_ID -> getTileId();
       case GET_TILE_DATA_LO -> getTileDataLo();
       case GET_TILE_DATA_HI -> getTileDataHi();
-      case PUSH_TO_FIFO -> pushToFifo();
+      case PUSH_TO_FIFO -> throw new IllegalStateException();
     }
   }
 
@@ -90,7 +96,7 @@ final class BgPixelFetcher {
   }
 
   private void pushToFifo() {
-    if (fifo.size() >= 8) {
+    if (!fifo.isEmpty()) {
       return;
     }
     for (int bit = 7; bit >= 0; bit--) {

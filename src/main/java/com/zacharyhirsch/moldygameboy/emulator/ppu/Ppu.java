@@ -56,6 +56,7 @@ public final class Ppu {
   private int dot = 0;
   private int screenX = 0;
   private int pixelsToDiscard = 0;
+  private int junkPixels = 0;
 
   // Window state: wyTriggered latches once LY == WY during a frame; windowLine is the window's
   // own line counter, which only advances on lines where the window was actually drawn.
@@ -127,6 +128,7 @@ public final class Ppu {
     mode = line <= 143 ? Mode.OAM_SCAN : Mode.VBLANK;
     dot = firstDot;
     screenX = 0;
+    junkPixels = 0;
     oamScanner.reset();
     bgFifo.clear();
     objFifo.clear();
@@ -172,14 +174,10 @@ public final class Ppu {
     // The mode 2 STAT condition is also raised for the first M-cycle of line 144, at the same
     // time as the VBlank interrupt (see mooneye ppu/vblank_stat_intr-GS).
     boolean oamCondition = oamScan || (ioregs.ly.get() == 144 && dot < 4);
-    // The mode 0 interrupt fires 3 dots before STAT reports mode 0, which puts it in the M-cycle
-    // before (see mooneye ppu/intr_2_0_timing, ppu/intr_2_mode0_timing and
-    // ppu/hblank_ly_scx_timing-GS).
-    boolean hblankCondition = mode == Mode.HBLANK || (drawing && screenX >= 160 - 3);
     lcd.set(
         (ioregs.stat.bit(5) && oamCondition)
             || (ioregs.stat.bit(4) && mode == Mode.VBLANK)
-            || (ioregs.stat.bit(3) && hblankCondition)
+            || (ioregs.stat.bit(3) && mode == Mode.HBLANK)
             || (ioregs.stat.bit(6) && ioregs.stat.bit(2)));
   }
 
@@ -196,22 +194,24 @@ public final class Ppu {
     if (dot == DRAWING_START) {
       pixelsToDiscard = ioregs.scx.get() & 0b0000_0111;
       bgFetcher.latchScroll();
-    }
-    if (dot < DRAWING_START + 4) {
+      // The line starts with 8 junk pixels that are shifted out but never shown, while the
+      // fetcher fetches the first real tile. Sprites with X < 8 are hit during these pixels, so
+      // they stall for the same 5 - min(5, X % 8) dots as any other sprite. Mode 3 is 169 dots
+      // without SCX or sprites (see mooneye ppu/intr_2_mode0_timing_sprites,
+      // ppu/intr_2_0_timing and ppu/hblank_ly_scx_timing-GS).
+      for (int i = 0; i < 8; i++) {
+        bgFifo.add(0);
+      }
+      junkPixels = 8;
       return;
     }
 
     if (objFetcher.isActive()) {
-      objFetcher.tick();
-      if (objFetcher.isDone()) {
-        mergeIntoObjFifo(objFetcher.sprite(), objFetcher.attr(), objFetcher.lo(), objFetcher.hi());
-        objsFetched[objFetcher.slot()] = true;
-        objFetcher.reset();
-      }
+      tickObjFetcher();
       return;
     }
 
-    if (shouldStartWindow()) {
+    if (junkPixels == 0 && shouldStartWindow()) {
       // Starting the window throws away the background pixels in flight and restarts the
       // fetcher on the window tile map. WX < 7 starts the window partially off-screen.
       windowActive = true;
@@ -222,17 +222,21 @@ public final class Ppu {
 
     int slot = nextSpriteSlot();
     if (slot >= 0) {
-      if (bgFetcher.isBetweenTiles() && !bgFifo.isEmpty()) {
+      // Output stops while the background fetcher finishes the tile it's working on; the sprite
+      // fetch can start on the same dot that the tile's data arrives, and then takes 6 dots.
+      bgFetcher.tick();
+      if (bgFetcher.hasTileData() && !bgFifo.isEmpty()) {
         objFetcher.start(slot, oamScanner.selected().get(slot));
-      } else {
-        bgFetcher.tick();
+        tickObjFetcher();
       }
       return;
     }
 
     if (!bgFifo.isEmpty()) {
       int bgPixel = bgFifo.remove();
-      if (pixelsToDiscard > 0) {
+      if (junkPixels > 0) {
+        junkPixels--;
+      } else if (pixelsToDiscard > 0) {
         pixelsToDiscard--;
       } else {
         ObjPixel objPixel = objFifo.isEmpty() ? null : objFifo.removeFirst();
@@ -243,6 +247,15 @@ public final class Ppu {
     bgFetcher.tick();
   }
 
+  private void tickObjFetcher() {
+    objFetcher.tick();
+    if (objFetcher.isDone()) {
+      mergeIntoObjFifo(objFetcher.sprite(), objFetcher.attr(), objFetcher.lo(), objFetcher.hi());
+      objsFetched[objFetcher.slot()] = true;
+      objFetcher.reset();
+    }
+  }
+
   private static void tickHBlank() {}
 
   private static void tickVBlank() {}
@@ -250,7 +263,7 @@ public final class Ppu {
   private int nextSpriteSlot() {
     List<Sprite> sprites = oamScanner.selected();
     for (int i = 0; i < sprites.size(); i++) {
-      if (!objsFetched[i] && sprites.get(i).x() <= screenX + 8) {
+      if (!objsFetched[i] && sprites.get(i).x() <= screenX + 8 - junkPixels) {
         return i;
       }
     }
