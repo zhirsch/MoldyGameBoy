@@ -9,9 +9,9 @@ import com.zacharyhirsch.moldygameboy.emulator.memory.Memory;
 import com.zacharyhirsch.moldygameboy.emulator.memory.VideoMemoryLock;
 import com.zacharyhirsch.moldygameboy.emulator.ppu.Ppu;
 import com.zacharyhirsch.moldygameboy.emulator.serial.Serial;
+import com.zacharyhirsch.moldygameboy.emulator.serial.SerialDevice;
 import com.zacharyhirsch.moldygameboy.emulator.timer.Timer;
 import java.nio.ByteBuffer;
-import java.util.function.Consumer;
 
 final class MoldyGameBoy {
 
@@ -102,8 +102,8 @@ final class MoldyGameBoy {
     return cpu;
   }
 
-  /** Redirects bytes sent over the serial port (stdout by default). */
-  void setSerialOutput(Consumer<Character> output) {
-    ioregs.setSerialOutput(output);
+  /** Plugs a device into the link port. */
+  void connectSerial(SerialDevice device) {
+    serial.connect(device);
   }
 }

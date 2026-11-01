@@ -5,11 +5,11 @@ import com.zacharyhirsch.moldygameboy.emulator.arch.Irq;
 import java.util.function.IntSupplier;
 
 /**
- * The serial port, with nothing connected to it. A transfer using the internal clock shifts one
- * bit every 512 dots (8192 Hz), on edges divided from the system counter, so they're aligned to
- * the reset time rather than to the SC write. The edges come 4 dots before bit 8 of the system
- * counter falls (see mooneye serial/boot_sclk_align-dmgABCmgb). With no other Game Boy attached,
- * every received bit is 1, and transfers using the external clock never finish.
+ * The serial port. A transfer using the internal clock exchanges one bit with the connected
+ * {@link SerialDevice} every 512 dots (8192 Hz), on edges divided from the system counter, so
+ * they're aligned to the reset time rather than to the SC write. The edges come 4 dots before bit
+ * 8 of the system counter falls (see mooneye serial/boot_sclk_align-dmgABCmgb). Transfers using
+ * the external clock never finish, since no device can drive the clock.
  */
 public final class Serial {
 
@@ -19,6 +19,7 @@ public final class Serial {
   private final IntSupplier counter;
   private final Irq irq;
 
+  private SerialDevice device = SerialDevice.DISCONNECTED;
   private int sb = 0;
   private int sc = 0;
   private int bitsLeft = 0;
@@ -27,6 +28,10 @@ public final class Serial {
   public Serial(IntSupplier counter, Irq irq) {
     this.counter = counter;
     this.irq = irq;
+  }
+
+  public void connect(SerialDevice device) {
+    this.device = device;
   }
 
   public IoRegister sb() {
@@ -71,7 +76,8 @@ public final class Serial {
   public void tick() {
     boolean newClock = ((counter.getAsInt() + CLOCK_OFFSET) & CLOCK_BIT) != 0;
     if (clock && !newClock && bitsLeft > 0) {
-      sb = ((sb << 1) | 1) & 0xff;
+      int in = device.exchange((sb >>> 7) & 1);
+      sb = ((sb << 1) | (in & 1)) & 0xff;
       if (--bitsLeft == 0) {
         sc &= 0x7f;
         irq.set(true);

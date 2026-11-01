@@ -6,6 +6,7 @@ import com.google.common.io.Resources;
 import com.zacharyhirsch.moldygameboy.emulator.io.Io;
 import com.zacharyhirsch.moldygameboy.emulator.io.IoFactory;
 import com.zacharyhirsch.moldygameboy.emulator.io.Ticker;
+import com.zacharyhirsch.moldygameboy.emulator.serial.SerialDevice;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import org.junit.jupiter.api.Disabled;
@@ -40,29 +41,60 @@ final class BlarggTests {
       BlarggTicker ticker = new BlarggTicker(gb);
       io.eventLoop().run(ticker);
 
-      String output = ticker.serial().toString();
+      String output = ticker.serial();
       assertThat(output).contains("Passed");
       assertThat(output).doesNotContain("Failed");
     }
   }
 
-  private record BlarggTicker(MoldyGameBoy gb, StringBuilder serial) implements Ticker {
+  private record BlarggTicker(MoldyGameBoy gb, SerialReceiver receiver) implements Ticker {
 
     BlarggTicker(MoldyGameBoy gb) {
-      this(gb, new StringBuilder());
-      gb.setSerialOutput(serial::append);
+      this(gb, new SerialReceiver());
+      gb.connectSerial(receiver);
+    }
+
+    String serial() {
+      return receiver.output().toString();
     }
 
     @Override
     public void tick() {
-      gb().tick();
+      gb.tick();
     }
 
     @Override
     public boolean isDone() {
-      String output = serial().toString();
+      String output = serial();
       int verdict = Math.max(output.lastIndexOf("Passed"), output.lastIndexOf("Failed"));
       return verdict >= 0 && output.indexOf('\n', verdict) >= 0;
+    }
+  }
+
+  /**
+   * A link partner that collects the bytes Blargg's tests print by sending them over the serial
+   * port, and sends back $FF like an unconnected port.
+   */
+  private static final class SerialReceiver implements SerialDevice {
+
+    private final StringBuilder output = new StringBuilder();
+
+    private int bits = 0;
+    private int value = 0;
+
+    StringBuilder output() {
+      return output;
+    }
+
+    @Override
+    public int exchange(int bit) {
+      value = (value << 1) | bit;
+      if (++bits == 8) {
+        output.append((char) value);
+        bits = 0;
+        value = 0;
+      }
+      return 1;
     }
   }
 
