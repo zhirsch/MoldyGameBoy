@@ -7,8 +7,8 @@ public final class IoRegisters {
 
   /* ff00 */ public final IoRegister joyp = IoRegister.create("joyp", (short) 0xff00);
 
-  /* ff01 */ public final IoRegister sb = IoRegister.create("sb", (short) 0xff01);
-  /* ff02 */ public final IoRegister sc = IoRegister.create("sc", (short) 0xff02);
+  /* ff01 */ public final IoRegister sb;
+  /* ff02 */ public final IoRegister sc;
   /* ff04 */ public final IoRegister div;
   /* ff05 */ public final IoRegister tima;
   /* ff06 */ public final IoRegister tma;
@@ -76,12 +76,16 @@ public final class IoRegisters {
   private Consumer<Character> serialOutput = IO::print;
 
   public IoRegisters(
+      IoRegister sb,
+      IoRegister sc,
       IoRegister div,
       IoRegister tima,
       IoRegister tma,
       IoRegister tac,
       IoRegister if_,
       Memory memory) {
+    this.sb = sb;
+    this.sc = sc;
     this.div = div;
     this.tima = tima;
     this.tma = tma;
@@ -109,20 +113,20 @@ public final class IoRegisters {
       case 0xff11 -> (byte) (nr11.get() | 0x3f);
       case 0xff12 -> (byte) nr12.get();
       case 0xff13 -> (byte) (nr13.get() | 0xff);
-      case 0xff14 -> (byte) (nr14.get() | 0x38);
+      case 0xff14 -> (byte) (nr14.get() | 0xbf);
       case 0xff16 -> (byte) (nr21.get() | 0x3f);
       case 0xff17 -> (byte) nr22.get();
       case 0xff18 -> (byte) (nr23.get() | 0xff);
-      case 0xff19 -> (byte) (nr24.get() | 0x38);
+      case 0xff19 -> (byte) (nr24.get() | 0xbf);
       case 0xff1a -> (byte) (nr30.get() | 0x7f);
       case 0xff1b -> (byte) (nr31.get() | 0xff);
       case 0xff1c -> (byte) (nr32.get() | 0x9f);
       case 0xff1d -> (byte) (nr33.get() | 0xff);
-      case 0xff1e -> (byte) (nr34.get() | 0x38);
+      case 0xff1e -> (byte) (nr34.get() | 0xbf);
       case 0xff20 -> (byte) (nr41.get() | 0xff);
       case 0xff21 -> (byte) nr42.get();
       case 0xff22 -> (byte) nr43.get();
-      case 0xff23 -> (byte) (nr44.get() | 0x3f);
+      case 0xff23 -> (byte) (nr44.get() | 0xbf);
       case 0xff24 -> (byte) nr50.get();
       case 0xff25 -> (byte) nr51.get();
       case 0xff26 -> (byte) (nr52.get() | 0x70);
@@ -174,25 +178,50 @@ public final class IoRegisters {
       case 0xff0f -> if_.set((byte) (value & 0x1f));
       case 0xff10 -> nr10.set((byte) (value & 0x7f));
       case 0xff11 -> nr11.set((byte) (value & 0xff));
-      case 0xff12 -> nr12.set((byte) (value & 0xff));
+      case 0xff12 -> {
+        nr12.set((byte) (value & 0xff));
+        updateDac(0, isDacOn(value));
+      }
       case 0xff13 -> nr13.set((byte) (value & 0xff));
-      case 0xff14 -> nr14.set((byte) (value & 0x87));
+      case 0xff14 -> {
+        nr14.set((byte) (value & 0x40));
+        trigger(0, value, isDacOn(nr12.get()));
+      }
       case 0xff16 -> nr21.set((byte) (value & 0xff));
-      case 0xff17 -> nr22.set((byte) (value & 0xff));
+      case 0xff17 -> {
+        nr22.set((byte) (value & 0xff));
+        updateDac(1, isDacOn(value));
+      }
       case 0xff18 -> nr23.set((byte) (value & 0xff));
-      case 0xff19 -> nr24.set((byte) (value & 0x87));
-      case 0xff1a -> nr30.set((byte) (value & 0x80));
+      case 0xff19 -> {
+        nr24.set((byte) (value & 0x40));
+        trigger(1, value, isDacOn(nr22.get()));
+      }
+      case 0xff1a -> {
+        nr30.set((byte) (value & 0x80));
+        updateDac(2, (value & 0x80) != 0);
+      }
       case 0xff1b -> nr31.set((byte) (value & 0xff));
       case 0xff1c -> nr32.set((byte) (value & 0x60));
       case 0xff1d -> nr33.set((byte) (value & 0xff));
-      case 0xff1e -> nr34.set((byte) (value & 0x87));
+      case 0xff1e -> {
+        nr34.set((byte) (value & 0x40));
+        trigger(2, value, nr30.bit(7));
+      }
       case 0xff20 -> nr41.set((byte) (value & 0x3f));
-      case 0xff21 -> nr42.set((byte) (value & 0xff));
+      case 0xff21 -> {
+        nr42.set((byte) (value & 0xff));
+        updateDac(3, isDacOn(value));
+      }
       case 0xff22 -> nr43.set((byte) (value & 0xff));
-      case 0xff23 -> nr44.set((byte) (value & 0x80));
+      case 0xff23 -> {
+        nr44.set((byte) (value & 0x40));
+        trigger(3, value, isDacOn(nr42.get()));
+      }
       case 0xff24 -> nr50.set((byte) (value & 0xff));
       case 0xff25 -> nr51.set((byte) (value & 0xff));
-      case 0xff26 -> nr52.set((byte) (value & 0x80));
+      // Turning the APU off also turns off every channel.
+      case 0xff26 -> nr52.set((value & 0x80) != 0 ? nr52.get() | 0x80 : 0x00);
       case 0xff30 -> wave0.set((byte) (value & 0xff));
       case 0xff31 -> wave1.set((byte) (value & 0xff));
       case 0xff32 -> wave2.set((byte) (value & 0xff));
@@ -222,6 +251,25 @@ public final class IoRegisters {
       case 0xff4b -> wx.set((byte) (value & 0xff));
       case 0xff50 -> bank.set((byte) (value & 0x01));
       default -> {}
+    }
+  }
+
+  // There's no APU yet, so NR52 only tracks which channels are on: a channel turns on when it's
+  // triggered with its DAC on, and off when its DAC is turned off. Length timers aren't modelled.
+
+  private static boolean isDacOn(int envelope) {
+    return (envelope & 0xf8) != 0;
+  }
+
+  private void trigger(int channel, int nrx4, boolean dacOn) {
+    if ((nrx4 & 0x80) != 0 && dacOn && nr52.bit(7)) {
+      nr52.set(nr52.get() | (1 << channel));
+    }
+  }
+
+  private void updateDac(int channel, boolean dacOn) {
+    if (!dacOn) {
+      nr52.set(nr52.get() & ~(1 << channel));
     }
   }
 }

@@ -11,6 +11,12 @@ public final class Ime {
   }
 
   public void set(boolean value, int delay) {
+    if (value && pending) {
+      // An EI while an enable is already pending doesn't delay it further, so in a sequence of
+      // EIs, IME is still set after the second one (see mooneye ei_sequence).
+      this.delay = Math.min(this.delay, delay);
+      return;
+    }
     this.pending = value;
     this.delay = delay;
   }

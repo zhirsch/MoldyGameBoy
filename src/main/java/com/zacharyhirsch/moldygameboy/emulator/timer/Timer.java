@@ -28,6 +28,11 @@ public final class Timer {
     this.irq = irq;
   }
 
+  /** The 16-bit system counter that DIV is the upper byte of. */
+  public int counter() {
+    return counter;
+  }
+
   public IoRegister div() {
     return new IoRegister() {
       @Override

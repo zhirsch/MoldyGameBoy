@@ -16,6 +16,7 @@ java_library(
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/io",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/memory",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/ppu",
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/serial",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/timer",
     ],
 )

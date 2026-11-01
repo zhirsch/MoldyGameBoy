@@ -8,6 +8,7 @@ import com.zacharyhirsch.moldygameboy.emulator.memory.Mapper;
 import com.zacharyhirsch.moldygameboy.emulator.memory.Memory;
 import com.zacharyhirsch.moldygameboy.emulator.memory.VideoMemoryLock;
 import com.zacharyhirsch.moldygameboy.emulator.ppu.Ppu;
+import com.zacharyhirsch.moldygameboy.emulator.serial.Serial;
 import com.zacharyhirsch.moldygameboy.emulator.timer.Timer;
 import java.nio.ByteBuffer;
 import java.util.function.Consumer;
@@ -33,6 +34,7 @@ final class MoldyGameBoy {
   }
 
   private final Timer timer;
+  private final Serial serial;
   private final IoRegisters ioregs;
   private final Cpu cpu;
   private final Ppu ppu;
@@ -46,8 +48,17 @@ final class MoldyGameBoy {
     VideoMemoryLock videoMemoryLock = new VideoMemoryLock();
     Irqs irqs = new Irqs();
     this.timer = new Timer(irqs.timer());
+    this.serial = new Serial(timer::counter, irqs.serial());
     this.ioregs =
-        new IoRegisters(timer.div(), timer.tima(), timer.tma(), timer.tac(), irqs.if_(), memory);
+        new IoRegisters(
+            serial.sb(),
+            serial.sc(),
+            timer.div(),
+            timer.tima(),
+            timer.tma(),
+            timer.tac(),
+            irqs.if_(),
+            memory);
     this.cpu = new Cpu(boot, memory, ioregs, videoMemoryLock);
     this.ppu =
         new Ppu(ioregs, vram, oam, videoMemoryLock, io.video(), irqs.vblank(), irqs.lcd());
@@ -60,24 +71,28 @@ final class MoldyGameBoy {
         ioregs.dma.tickT1();
         cpu.tickT1();
         timer.tickT1();
+        serial.tick();
       }
       case T2 -> {
         ppu.tick();
         ioregs.dma.tickT2();
         cpu.tickT2();
         timer.tickT2();
+        serial.tick();
       }
       case T3 -> {
         ppu.tick();
         ioregs.dma.tickT3();
         cpu.tickT3();
         timer.tickT3();
+        serial.tick();
       }
       case T4 -> {
         ppu.tick();
         ioregs.dma.tickT4();
         cpu.tickT4();
         timer.tickT4();
+        serial.tick();
       }
     }
     tcycle = tcycle.next();
