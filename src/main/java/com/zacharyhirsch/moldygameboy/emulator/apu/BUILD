@@ -8,5 +8,6 @@ java_library(
     ],
     deps = [
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/arch",
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/io",
     ],
 )

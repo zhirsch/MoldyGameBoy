@@ -9,6 +9,7 @@ java_library(
     ),
     visibility = [
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator:__pkg__",
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/apu:__pkg__",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/io/capturing:__pkg__",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/io/none:__pkg__",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/io/sdl:__pkg__",

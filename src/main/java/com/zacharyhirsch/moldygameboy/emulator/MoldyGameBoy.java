@@ -34,6 +34,7 @@ final class MoldyGameBoy {
     }
   }
 
+  private final Memory memory;
   private final Timer timer;
   private final Serial serial;
   private final Apu apu;
@@ -46,12 +47,12 @@ final class MoldyGameBoy {
   public MoldyGameBoy(ByteBuffer boot, ByteBuffer rom, Io io) {
     ByteBuffer vram = ByteBuffer.allocate(0x2000);
     ByteBuffer oam = ByteBuffer.allocate(0x00a0);
-    Memory memory = new Memory(Mapper.create(rom), vram, oam);
+    this.memory = new Memory(Mapper.create(rom), vram, oam);
     VideoMemoryLock videoMemoryLock = new VideoMemoryLock();
     Irqs irqs = new Irqs();
     this.timer = new Timer(irqs.timer());
     this.serial = new Serial(timer::counter, irqs.serial());
-    this.apu = new Apu();
+    this.apu = new Apu(timer::counter, io.audio());
     this.ioregs =
         new IoRegisters(
             serial.sb(),
@@ -112,6 +113,7 @@ final class MoldyGameBoy {
         cpu.tickT1();
         timer.tickT1();
         serial.tick();
+        apu.tick();
       }
       case T2 -> {
         ppu.tick();
@@ -119,6 +121,7 @@ final class MoldyGameBoy {
         cpu.tickT2();
         timer.tickT2();
         serial.tick();
+        apu.tick();
       }
       case T3 -> {
         ppu.tick();
@@ -126,6 +129,7 @@ final class MoldyGameBoy {
         cpu.tickT3();
         timer.tickT3();
         serial.tick();
+        apu.tick();
       }
       case T4 -> {
         ppu.tick();
@@ -133,6 +137,7 @@ final class MoldyGameBoy {
         cpu.tickT4();
         timer.tickT4();
         serial.tick();
+        apu.tick();
       }
     }
     tcycle = tcycle.next();
@@ -140,6 +145,11 @@ final class MoldyGameBoy {
 
   public Cpu cpu() {
     return cpu;
+  }
+
+  /** Reads memory as the cartridge and video buses see it, bypassing the CPU. */
+  byte read(short address) {
+    return memory.read(address);
   }
 
   /** Plugs a device into the link port. */

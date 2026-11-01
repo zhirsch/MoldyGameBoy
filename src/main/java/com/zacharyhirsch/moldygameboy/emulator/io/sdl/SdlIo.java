@@ -12,8 +12,8 @@ import java.lang.foreign.MemorySegment;
 
 public final class SdlIo implements Io {
 
-  private static final double FPS = 60.0988;
-  private static final int CPU_CYCLES_PER_SECOND = (int) (341 * 262 * FPS / 3);
+  // The APU writes one sample per M-cycle.
+  private static final int SAMPLE_RATE = 4_194_304 / 4;
 
   private final SdlAudio audio;
   private final SdlVideo video;
@@ -21,7 +21,7 @@ public final class SdlIo implements Io {
   private final SdlEventLoop eventLoop;
 
   public SdlIo(Arena arena) {
-    this.audio = new SdlAudio(arena, CPU_CYCLES_PER_SECOND);
+    this.audio = new SdlAudio(arena, SAMPLE_RATE);
     this.video = new SdlVideo(arena);
     this.joypads = new SdlJoypads();
     this.eventLoop =

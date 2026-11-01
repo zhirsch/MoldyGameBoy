@@ -1,63 +1,91 @@
 package com.zacharyhirsch.moldygameboy.emulator.apu;
 
 import com.zacharyhirsch.moldygameboy.emulator.arch.IoRegister;
-import java.util.function.IntConsumer;
+import com.zacharyhirsch.moldygameboy.emulator.io.Audio;
+import java.util.function.IntSupplier;
 
 /**
- * The APU, which owns the sound registers ($FF10-$FF26) and wave RAM ($FF30-$FF3F).
+ * The APU: four sound channels, mixed and written to {@link Audio} as one sample per M-cycle.
  *
- * <p>No sound is generated yet, so NR52 only tracks which channels are on: a channel turns on when
- * it's triggered with its DAC on, and off when its DAC is turned off. Length timers aren't
- * modelled.
+ * <p>The frame sequencer steps on each falling edge of bit 12 of the system counter (bit 4 of DIV,
+ * 512 Hz), clocking the length counters on even steps, the sweep on steps 2 and 6, and the
+ * envelopes on step 7. While the APU is off, the sound registers read as 0 and ignore writes,
+ * except that the length counters can still be loaded (on DMG).
  */
 public final class Apu {
 
-  private final IoRegister nr10 = IoRegister.create("nr10", (short) 0xff10);
-  private final IoRegister nr11 = IoRegister.create("nr11", (short) 0xff11);
-  private final IoRegister nr12 = envelope("nr12", (short) 0xff12, 0);
-  private final IoRegister nr13 = IoRegister.create("nr13", (short) 0xff13);
-  private final IoRegister nr14 = control("nr14", (short) 0xff14, 0);
+  private static final int FRAME_SEQUENCER_BIT = 1 << 12;
+  private static final int SAMPLES_PER_PRESENT = 4096;
+  // The high-pass filter's charge factor per sample, 0.999958 per T-cycle (as on DMG).
+  private static final double HIGH_PASS_CHARGE = Math.pow(0.999958, 4);
 
-  private final IoRegister nr21 = IoRegister.create("nr21", (short) 0xff16);
-  private final IoRegister nr22 = envelope("nr22", (short) 0xff17, 1);
-  private final IoRegister nr23 = IoRegister.create("nr23", (short) 0xff18);
-  private final IoRegister nr24 = control("nr24", (short) 0xff19, 1);
+  private final IntSupplier counter;
+  private final Audio audio;
 
-  private final IoRegister nr30 = dacEnable("nr30", (short) 0xff1a, 2);
-  private final IoRegister nr31 = IoRegister.create("nr31", (short) 0xff1b);
-  private final IoRegister nr32 = IoRegister.create("nr32", (short) 0xff1c);
-  private final IoRegister nr33 = IoRegister.create("nr33", (short) 0xff1d);
-  private final IoRegister nr34 = control("nr34", (short) 0xff1e, 2);
+  private final SquareChannel square1 = new SquareChannel(true, this::nextStepClocksLength);
+  private final SquareChannel square2 = new SquareChannel(false, this::nextStepClocksLength);
+  private final WaveChannel wave = new WaveChannel(this::nextStepClocksLength);
+  private final NoiseChannel noise = new NoiseChannel(this::nextStepClocksLength);
 
-  private final IoRegister nr41 = IoRegister.create("nr41", (short) 0xff20);
-  private final IoRegister nr42 = envelope("nr42", (short) 0xff21, 3);
-  private final IoRegister nr43 = IoRegister.create("nr43", (short) 0xff22);
-  private final IoRegister nr44 = control("nr44", (short) 0xff23, 3);
+  private final IoRegister nr10 = register("nr10", 0xff10, square1.nrx0);
+  private final IoRegister nr11 = register("nr11", 0xff11, square1.nrx1);
+  private final IoRegister nr12 = register("nr12", 0xff12, square1.nrx2);
+  private final IoRegister nr13 = register("nr13", 0xff13, square1.nrx3);
+  private final IoRegister nr14 = register("nr14", 0xff14, square1.nrx4);
 
-  private final IoRegister nr50 = IoRegister.create("nr50", (short) 0xff24);
-  private final IoRegister nr51 = IoRegister.create("nr51", (short) 0xff25);
+  private final IoRegister nr21 = register("nr21", 0xff16, square2.nrx1);
+  private final IoRegister nr22 = register("nr22", 0xff17, square2.nrx2);
+  private final IoRegister nr23 = register("nr23", 0xff18, square2.nrx3);
+  private final IoRegister nr24 = register("nr24", 0xff19, square2.nrx4);
+
+  private final IoRegister nr30 = register("nr30", 0xff1a, wave.nrx0);
+  private final IoRegister nr31 = register("nr31", 0xff1b, wave.nrx1);
+  private final IoRegister nr32 = register("nr32", 0xff1c, wave.nrx2);
+  private final IoRegister nr33 = register("nr33", 0xff1d, wave.nrx3);
+  private final IoRegister nr34 = register("nr34", 0xff1e, wave.nrx4);
+
+  private final IoRegister nr41 = register("nr41", 0xff20, noise.nrx1);
+  private final IoRegister nr42 = register("nr42", 0xff21, noise.nrx2);
+  private final IoRegister nr43 = register("nr43", 0xff22, noise.nrx3);
+  private final IoRegister nr44 = register("nr44", 0xff23, noise.nrx4);
+
+  private final IoRegister nr50 = register("nr50", 0xff24, masterVolume());
+  private final IoRegister nr51 = register("nr51", 0xff25, panning());
   private final IoRegister nr52 = soundOnOff();
 
-  private final IoRegister wave0 = IoRegister.create("wave0", (short) 0xff30);
-  private final IoRegister wave1 = IoRegister.create("wave1", (short) 0xff31);
-  private final IoRegister wave2 = IoRegister.create("wave2", (short) 0xff32);
-  private final IoRegister wave3 = IoRegister.create("wave3", (short) 0xff33);
-  private final IoRegister wave4 = IoRegister.create("wave4", (short) 0xff34);
-  private final IoRegister wave5 = IoRegister.create("wave5", (short) 0xff35);
-  private final IoRegister wave6 = IoRegister.create("wave6", (short) 0xff36);
-  private final IoRegister wave7 = IoRegister.create("wave7", (short) 0xff37);
-  private final IoRegister wave8 = IoRegister.create("wave8", (short) 0xff38);
-  private final IoRegister wave9 = IoRegister.create("wave9", (short) 0xff39);
-  private final IoRegister wavea = IoRegister.create("wavea", (short) 0xff3a);
-  private final IoRegister waveb = IoRegister.create("waveb", (short) 0xff3b);
-  private final IoRegister wavec = IoRegister.create("wavec", (short) 0xff3c);
-  private final IoRegister waved = IoRegister.create("waved", (short) 0xff3d);
-  private final IoRegister wavee = IoRegister.create("wavee", (short) 0xff3e);
-  private final IoRegister wavef = IoRegister.create("wavef", (short) 0xff3f);
+  private final IoRegister wave0 = waveRam(0);
+  private final IoRegister wave1 = waveRam(1);
+  private final IoRegister wave2 = waveRam(2);
+  private final IoRegister wave3 = waveRam(3);
+  private final IoRegister wave4 = waveRam(4);
+  private final IoRegister wave5 = waveRam(5);
+  private final IoRegister wave6 = waveRam(6);
+  private final IoRegister wave7 = waveRam(7);
+  private final IoRegister wave8 = waveRam(8);
+  private final IoRegister wave9 = waveRam(9);
+  private final IoRegister wavea = waveRam(10);
+  private final IoRegister waveb = waveRam(11);
+  private final IoRegister wavec = waveRam(12);
+  private final IoRegister waved = waveRam(13);
+  private final IoRegister wavee = waveRam(14);
+  private final IoRegister wavef = waveRam(15);
 
-  // Which channels are on (NR52 bits 0-3), and whether the APU is on (NR52 bit 7).
-  private int channelsOn = 0;
   private boolean powered = false;
+  private int nr50Value = 0;
+  private int nr51Value = 0;
+
+  // The next frame sequencer step, 0-7.
+  private int frameSequencerStep = 0;
+  private boolean frameSequencerBit = false;
+
+  private int tcycle = 0;
+  private int samples = 0;
+  private double highPassCapacitor = 0;
+
+  public Apu(IntSupplier counter, Audio audio) {
+    this.counter = counter;
+    this.audio = audio;
+  }
 
   public IoRegister nr10() {
     return nr10;
@@ -207,9 +235,100 @@ public final class Apu {
     return wavef;
   }
 
-  /** A plain register that also runs {@code onWrite} with each value written to it. */
-  private static IoRegister register(String name, short address, IntConsumer onWrite) {
-    IoRegister register = IoRegister.create(name, address);
+  /** Advances the APU by one T-cycle. */
+  public void tick() {
+    tickFrameSequencer();
+    if (powered) {
+      square1.tick();
+      square2.tick();
+      wave.tick();
+      noise.tick();
+    }
+    if (++tcycle == 4) {
+      tcycle = 0;
+      writeSample();
+    }
+  }
+
+  private void tickFrameSequencer() {
+    boolean bit = (counter.getAsInt() & FRAME_SEQUENCER_BIT) != 0;
+    if (frameSequencerBit && !bit && powered) {
+      if ((frameSequencerStep & 1) == 0) {
+        square1.clockLength();
+        square2.clockLength();
+        wave.clockLength();
+        noise.clockLength();
+      }
+      if (frameSequencerStep == 2 || frameSequencerStep == 6) {
+        square1.clockSweep();
+      }
+      if (frameSequencerStep == 7) {
+        square1.clockEnvelope();
+        square2.clockEnvelope();
+        noise.clockEnvelope();
+      }
+      frameSequencerStep = (frameSequencerStep + 1) & 0x07;
+    }
+    frameSequencerBit = bit;
+  }
+
+  private boolean nextStepClocksLength() {
+    return (frameSequencerStep & 1) == 0;
+  }
+
+  private void writeSample() {
+    double[] dac = {
+      dac(square1.isDacOn(), square1.output()),
+      dac(square2.isDacOn(), square2.output()),
+      dac(wave.isDacOn(), wave.output()),
+      dac(noise.isDacOn(), noise.output()),
+    };
+    double left = 0;
+    double right = 0;
+    for (int i = 0; i < 4; i++) {
+      if ((nr51Value & (0x10 << i)) != 0) {
+        left += dac[i];
+      }
+      if ((nr51Value & (0x01 << i)) != 0) {
+        right += dac[i];
+      }
+    }
+    left *= ((nr50Value >>> 4) & 0x07) + 1;
+    right *= (nr50Value & 0x07) + 1;
+    // Each side is at most 4 channels * 8 volume steps; mix down to mono in [-1, 1].
+    double in = (left + right) / 64;
+    double out = in - highPassCapacitor;
+    highPassCapacitor = in - out * HIGH_PASS_CHARGE;
+    audio.writeAudioSample((float) out);
+    if (++samples == SAMPLES_PER_PRESENT) {
+      samples = 0;
+      audio.present();
+    }
+  }
+
+  /** A channel's DAC turns its 0-15 output into a level from 1 to -1, or 0 when it's off. */
+  private static double dac(boolean on, int output) {
+    return on ? 1 - output / 7.5 : 0;
+  }
+
+  private void powerOff() {
+    square1.powerOff();
+    square2.powerOff();
+    wave.powerOff();
+    noise.powerOff();
+    nr50Value = 0;
+    nr51Value = 0;
+  }
+
+  private void powerOn() {
+    frameSequencerStep = 0;
+    square1.powerOn();
+    square2.powerOn();
+    wave.powerOn();
+  }
+
+  /** A sound register: while the APU is off, it only takes length writes (on DMG). */
+  private IoRegister register(String name, int address, SoundRegister register) {
     return new IoRegister() {
       @Override
       public int get() {
@@ -218,51 +337,69 @@ public final class Apu {
 
       @Override
       public void set(int value) {
-        register.set(value);
-        onWrite.accept(value);
+        int v = Byte.toUnsignedInt((byte) value);
+        if (powered) {
+          register.set(v);
+        } else {
+          register.setLength(v);
+        }
       }
 
       @Override
       public String toString() {
-        return register.toString();
+        return "%s @ %04x = %02x".formatted(name, address, get());
       }
     };
   }
 
-  /** NRx2 for channels 1, 2 and 4: the upper 5 bits being clear turns the channel's DAC off. */
-  private IoRegister envelope(String name, short address, int channel) {
-    return register(
-        name,
-        address,
-        value -> {
-          if ((value & 0xf8) == 0) {
-            channelsOn &= ~(1 << channel);
-          }
-        });
+  /** NR50: the left and right master volume. */
+  private SoundRegister masterVolume() {
+    return new SoundRegister() {
+      @Override
+      public int get() {
+        return nr50Value;
+      }
+
+      @Override
+      public void set(int value) {
+        nr50Value = value;
+      }
+    };
   }
 
-  /** NR30: bit 7 turns channel 3's DAC on or off. */
-  private IoRegister dacEnable(String name, short address, int channel) {
-    return register(
-        name,
-        address,
-        value -> {
-          if ((value & 0x80) == 0) {
-            channelsOn &= ~(1 << channel);
-          }
-        });
+  /** NR51: which channels go to the left and right outputs. */
+  private SoundRegister panning() {
+    return new SoundRegister() {
+      @Override
+      public int get() {
+        return nr51Value;
+      }
+
+      @Override
+      public void set(int value) {
+        nr51Value = value;
+      }
+    };
   }
 
-  /** NRx4: writing bit 7 triggers the channel, which turns it on if its DAC is on. */
-  private IoRegister control(String name, short address, int channel) {
-    return register(
-        name,
-        address,
-        value -> {
-          if ((value & 0x80) != 0 && powered && isDacOn(channel)) {
-            channelsOn |= 1 << channel;
-          }
-        });
+  /** Wave RAM can be accessed whether or not the APU is on. */
+  private IoRegister waveRam(int index) {
+    return new IoRegister() {
+      @Override
+      public int get() {
+        return wave.readWaveRam(index);
+      }
+
+      @Override
+      public void set(int value) {
+        wave.writeWaveRam(index, Byte.toUnsignedInt((byte) value));
+      }
+
+      @Override
+      public String toString() {
+        return "wave%x @ %04x = %02x".formatted(index, 0xff30 + index, get());
+      }
+    };
   }
 
   /** NR52: bit 7 turns the APU on or off; bits 0-3 report which channels are on. */
@@ -270,32 +407,28 @@ public final class Apu {
     return new IoRegister() {
       @Override
       public int get() {
-        return (powered ? 0x80 : 0x00) | channelsOn;
+        return (powered ? 0x80 : 0x00)
+            | (square1.isEnabled() ? 0x01 : 0x00)
+            | (square2.isEnabled() ? 0x02 : 0x00)
+            | (wave.isEnabled() ? 0x04 : 0x00)
+            | (noise.isEnabled() ? 0x08 : 0x00);
       }
 
       @Override
       public void set(int value) {
-        powered = (value & 0x80) != 0;
-        if (!powered) {
-          // Turning the APU off also turns off every channel.
-          channelsOn = 0;
+        boolean on = (value & 0x80) != 0;
+        if (powered && !on) {
+          powerOff();
+        } else if (!powered && on) {
+          powerOn();
         }
+        powered = on;
       }
 
       @Override
       public String toString() {
         return "nr52 @ ff26 = %02x".formatted(get());
       }
-    };
-  }
-
-  private boolean isDacOn(int channel) {
-    return switch (channel) {
-      case 0 -> (nr12.get() & 0xf8) != 0;
-      case 1 -> (nr22.get() & 0xf8) != 0;
-      case 2 -> nr30.bit(7);
-      case 3 -> (nr42.get() & 0xf8) != 0;
-      default -> throw new IllegalArgumentException("channel %d".formatted(channel));
     };
   }
 }
