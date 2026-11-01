@@ -211,11 +211,11 @@ public final class Cpu {
 
     @Override
     public MCycle t4(Registers registers, Bus bus) {
+      bus.rd().set(false);
       if (pendingInterrupts != 0) {
         registers.ime().set(false, 0);
         return new Isr.M2(ioregs, pendingInterrupt);
       }
-      bus.rd().set(false);
       if (Byte.toUnsignedInt(registers.ir().get()) == 0xcb) {
         return new FetchOpcodePrefixed();
       }
