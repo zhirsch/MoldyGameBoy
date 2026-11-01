@@ -1,5 +1,6 @@
 package com.zacharyhirsch.moldygameboy.emulator;
 
+import com.zacharyhirsch.moldygameboy.emulator.apu.Apu;
 import com.zacharyhirsch.moldygameboy.emulator.arch.Irqs;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.Cpu;
 import com.zacharyhirsch.moldygameboy.emulator.io.Io;
@@ -35,6 +36,7 @@ final class MoldyGameBoy {
 
   private final Timer timer;
   private final Serial serial;
+  private final Apu apu;
   private final IoRegisters ioregs;
   private final Cpu cpu;
   private final Ppu ppu;
@@ -49,6 +51,7 @@ final class MoldyGameBoy {
     Irqs irqs = new Irqs();
     this.timer = new Timer(irqs.timer());
     this.serial = new Serial(timer::counter, irqs.serial());
+    this.apu = new Apu();
     this.ioregs =
         new IoRegisters(
             serial.sb(),
@@ -58,6 +61,43 @@ final class MoldyGameBoy {
             timer.tma(),
             timer.tac(),
             irqs.if_(),
+            apu.nr10(),
+            apu.nr11(),
+            apu.nr12(),
+            apu.nr13(),
+            apu.nr14(),
+            apu.nr21(),
+            apu.nr22(),
+            apu.nr23(),
+            apu.nr24(),
+            apu.nr30(),
+            apu.nr31(),
+            apu.nr32(),
+            apu.nr33(),
+            apu.nr34(),
+            apu.nr41(),
+            apu.nr42(),
+            apu.nr43(),
+            apu.nr44(),
+            apu.nr50(),
+            apu.nr51(),
+            apu.nr52(),
+            apu.wave0(),
+            apu.wave1(),
+            apu.wave2(),
+            apu.wave3(),
+            apu.wave4(),
+            apu.wave5(),
+            apu.wave6(),
+            apu.wave7(),
+            apu.wave8(),
+            apu.wave9(),
+            apu.wavea(),
+            apu.waveb(),
+            apu.wavec(),
+            apu.waved(),
+            apu.wavee(),
+            apu.wavef(),
             memory);
     this.cpu = new Cpu(boot, memory, ioregs, videoMemoryLock);
     this.ppu =

@@ -14,48 +14,48 @@ public final class IoRegisters {
   /* ff07 */ public final IoRegister tac;
   /* ff0f */ public final IoRegister if_;
 
-  /* ff10 */ public final IoRegister nr10 = IoRegister.create("nr10", (short) 0xff10);
-  /* ff11 */ public final IoRegister nr11 = IoRegister.create("nr11", (short) 0xff11);
-  /* ff12 */ public final IoRegister nr12 = IoRegister.create("nr12", (short) 0xff12);
-  /* ff13 */ public final IoRegister nr13 = IoRegister.create("nr13", (short) 0xff13);
-  /* ff14 */ public final IoRegister nr14 = IoRegister.create("nr14", (short) 0xff14);
+  /* ff10 */ public final IoRegister nr10;
+  /* ff11 */ public final IoRegister nr11;
+  /* ff12 */ public final IoRegister nr12;
+  /* ff13 */ public final IoRegister nr13;
+  /* ff14 */ public final IoRegister nr14;
 
-  /* ff16 */ public final IoRegister nr21 = IoRegister.create("nr21", (short) 0xff16);
-  /* ff17 */ public final IoRegister nr22 = IoRegister.create("nr22", (short) 0xff17);
-  /* ff18 */ public final IoRegister nr23 = IoRegister.create("nr23", (short) 0xff18);
-  /* ff19 */ public final IoRegister nr24 = IoRegister.create("nr24", (short) 0xff19);
+  /* ff16 */ public final IoRegister nr21;
+  /* ff17 */ public final IoRegister nr22;
+  /* ff18 */ public final IoRegister nr23;
+  /* ff19 */ public final IoRegister nr24;
 
-  /* ff1a */ public final IoRegister nr30 = IoRegister.create("nr30", (short) 0xff1a);
-  /* ff1b */ public final IoRegister nr31 = IoRegister.create("nr31", (short) 0xff1b);
-  /* ff1c */ public final IoRegister nr32 = IoRegister.create("nr32", (short) 0xff1c);
-  /* ff1d */ public final IoRegister nr33 = IoRegister.create("nr33", (short) 0xff1d);
-  /* ff1e */ public final IoRegister nr34 = IoRegister.create("nr34", (short) 0xff1e);
+  /* ff1a */ public final IoRegister nr30;
+  /* ff1b */ public final IoRegister nr31;
+  /* ff1c */ public final IoRegister nr32;
+  /* ff1d */ public final IoRegister nr33;
+  /* ff1e */ public final IoRegister nr34;
 
-  /* ff20 */ public final IoRegister nr41 = IoRegister.create("nr41", (short) 0xff20);
-  /* ff21 */ public final IoRegister nr42 = IoRegister.create("nr42", (short) 0xff21);
-  /* ff22 */ public final IoRegister nr43 = IoRegister.create("nr43", (short) 0xff22);
-  /* ff23 */ public final IoRegister nr44 = IoRegister.create("nr44", (short) 0xff23);
+  /* ff20 */ public final IoRegister nr41;
+  /* ff21 */ public final IoRegister nr42;
+  /* ff22 */ public final IoRegister nr43;
+  /* ff23 */ public final IoRegister nr44;
 
-  /* ff24 */ public final IoRegister nr50 = IoRegister.create("nr50", (short) 0xff24);
-  /* ff25 */ public final IoRegister nr51 = IoRegister.create("nr51", (short) 0xff25);
-  /* ff26 */ public final IoRegister nr52 = IoRegister.create("nr52", (short) 0xff26);
+  /* ff24 */ public final IoRegister nr50;
+  /* ff25 */ public final IoRegister nr51;
+  /* ff26 */ public final IoRegister nr52;
 
-  /* ff30 */ public final IoRegister wave0 = IoRegister.create("wave0", (short) 0xff30);
-  /* ff31 */ public final IoRegister wave1 = IoRegister.create("wave1", (short) 0xff31);
-  /* ff32 */ public final IoRegister wave2 = IoRegister.create("wave2", (short) 0xff32);
-  /* ff33 */ public final IoRegister wave3 = IoRegister.create("wave3", (short) 0xff33);
-  /* ff34 */ public final IoRegister wave4 = IoRegister.create("wave4", (short) 0xff34);
-  /* ff35 */ public final IoRegister wave5 = IoRegister.create("wave5", (short) 0xff35);
-  /* ff36 */ public final IoRegister wave6 = IoRegister.create("wave6", (short) 0xff36);
-  /* ff37 */ public final IoRegister wave7 = IoRegister.create("wave7", (short) 0xff37);
-  /* ff38 */ public final IoRegister wave8 = IoRegister.create("wave8", (short) 0xff38);
-  /* ff39 */ public final IoRegister wave9 = IoRegister.create("wave9", (short) 0xff39);
-  /* ff3a */ public final IoRegister wavea = IoRegister.create("wavea", (short) 0xff3a);
-  /* ff3b */ public final IoRegister waveb = IoRegister.create("waveb", (short) 0xff3b);
-  /* ff3c */ public final IoRegister wavec = IoRegister.create("wavec", (short) 0xff3c);
-  /* ff3d */ public final IoRegister waved = IoRegister.create("waved", (short) 0xff3d);
-  /* ff3e */ public final IoRegister wavee = IoRegister.create("wavee", (short) 0xff3e);
-  /* ff3f */ public final IoRegister wavef = IoRegister.create("wavef", (short) 0xff3f);
+  /* ff30 */ public final IoRegister wave0;
+  /* ff31 */ public final IoRegister wave1;
+  /* ff32 */ public final IoRegister wave2;
+  /* ff33 */ public final IoRegister wave3;
+  /* ff34 */ public final IoRegister wave4;
+  /* ff35 */ public final IoRegister wave5;
+  /* ff36 */ public final IoRegister wave6;
+  /* ff37 */ public final IoRegister wave7;
+  /* ff38 */ public final IoRegister wave8;
+  /* ff39 */ public final IoRegister wave9;
+  /* ff3a */ public final IoRegister wavea;
+  /* ff3b */ public final IoRegister waveb;
+  /* ff3c */ public final IoRegister wavec;
+  /* ff3d */ public final IoRegister waved;
+  /* ff3e */ public final IoRegister wavee;
+  /* ff3f */ public final IoRegister wavef;
 
   /* ff40 */ public final IoRegister lcdc = IoRegister.create("lcdc", (short) 0xff40);
   /* ff41 */ public final IoRegister stat = IoRegister.create("stat", (short) 0xff41);
@@ -80,6 +80,43 @@ public final class IoRegisters {
       IoRegister tma,
       IoRegister tac,
       IoRegister if_,
+      IoRegister nr10,
+      IoRegister nr11,
+      IoRegister nr12,
+      IoRegister nr13,
+      IoRegister nr14,
+      IoRegister nr21,
+      IoRegister nr22,
+      IoRegister nr23,
+      IoRegister nr24,
+      IoRegister nr30,
+      IoRegister nr31,
+      IoRegister nr32,
+      IoRegister nr33,
+      IoRegister nr34,
+      IoRegister nr41,
+      IoRegister nr42,
+      IoRegister nr43,
+      IoRegister nr44,
+      IoRegister nr50,
+      IoRegister nr51,
+      IoRegister nr52,
+      IoRegister wave0,
+      IoRegister wave1,
+      IoRegister wave2,
+      IoRegister wave3,
+      IoRegister wave4,
+      IoRegister wave5,
+      IoRegister wave6,
+      IoRegister wave7,
+      IoRegister wave8,
+      IoRegister wave9,
+      IoRegister wavea,
+      IoRegister waveb,
+      IoRegister wavec,
+      IoRegister waved,
+      IoRegister wavee,
+      IoRegister wavef,
       Memory memory) {
     this.sb = sb;
     this.sc = sc;
@@ -88,6 +125,43 @@ public final class IoRegisters {
     this.tma = tma;
     this.tac = tac;
     this.if_ = if_;
+    this.nr10 = nr10;
+    this.nr11 = nr11;
+    this.nr12 = nr12;
+    this.nr13 = nr13;
+    this.nr14 = nr14;
+    this.nr21 = nr21;
+    this.nr22 = nr22;
+    this.nr23 = nr23;
+    this.nr24 = nr24;
+    this.nr30 = nr30;
+    this.nr31 = nr31;
+    this.nr32 = nr32;
+    this.nr33 = nr33;
+    this.nr34 = nr34;
+    this.nr41 = nr41;
+    this.nr42 = nr42;
+    this.nr43 = nr43;
+    this.nr44 = nr44;
+    this.nr50 = nr50;
+    this.nr51 = nr51;
+    this.nr52 = nr52;
+    this.wave0 = wave0;
+    this.wave1 = wave1;
+    this.wave2 = wave2;
+    this.wave3 = wave3;
+    this.wave4 = wave4;
+    this.wave5 = wave5;
+    this.wave6 = wave6;
+    this.wave7 = wave7;
+    this.wave8 = wave8;
+    this.wave9 = wave9;
+    this.wavea = wavea;
+    this.waveb = waveb;
+    this.wavec = wavec;
+    this.waved = waved;
+    this.wavee = wavee;
+    this.wavef = wavef;
     this.dma = new OamDmaRegister(memory);
   }
 
@@ -167,50 +241,25 @@ public final class IoRegisters {
       case 0xff0f -> if_.set((byte) (value & 0x1f));
       case 0xff10 -> nr10.set((byte) (value & 0x7f));
       case 0xff11 -> nr11.set((byte) (value & 0xff));
-      case 0xff12 -> {
-        nr12.set((byte) (value & 0xff));
-        updateDac(0, isDacOn(value));
-      }
+      case 0xff12 -> nr12.set((byte) (value & 0xff));
       case 0xff13 -> nr13.set((byte) (value & 0xff));
-      case 0xff14 -> {
-        nr14.set((byte) (value & 0x40));
-        trigger(0, value, isDacOn(nr12.get()));
-      }
+      case 0xff14 -> nr14.set((byte) (value & 0xc7));
       case 0xff16 -> nr21.set((byte) (value & 0xff));
-      case 0xff17 -> {
-        nr22.set((byte) (value & 0xff));
-        updateDac(1, isDacOn(value));
-      }
+      case 0xff17 -> nr22.set((byte) (value & 0xff));
       case 0xff18 -> nr23.set((byte) (value & 0xff));
-      case 0xff19 -> {
-        nr24.set((byte) (value & 0x40));
-        trigger(1, value, isDacOn(nr22.get()));
-      }
-      case 0xff1a -> {
-        nr30.set((byte) (value & 0x80));
-        updateDac(2, (value & 0x80) != 0);
-      }
+      case 0xff19 -> nr24.set((byte) (value & 0xc7));
+      case 0xff1a -> nr30.set((byte) (value & 0x80));
       case 0xff1b -> nr31.set((byte) (value & 0xff));
       case 0xff1c -> nr32.set((byte) (value & 0x60));
       case 0xff1d -> nr33.set((byte) (value & 0xff));
-      case 0xff1e -> {
-        nr34.set((byte) (value & 0x40));
-        trigger(2, value, nr30.bit(7));
-      }
+      case 0xff1e -> nr34.set((byte) (value & 0xc7));
       case 0xff20 -> nr41.set((byte) (value & 0x3f));
-      case 0xff21 -> {
-        nr42.set((byte) (value & 0xff));
-        updateDac(3, isDacOn(value));
-      }
+      case 0xff21 -> nr42.set((byte) (value & 0xff));
       case 0xff22 -> nr43.set((byte) (value & 0xff));
-      case 0xff23 -> {
-        nr44.set((byte) (value & 0x40));
-        trigger(3, value, isDacOn(nr42.get()));
-      }
+      case 0xff23 -> nr44.set((byte) (value & 0xc0));
       case 0xff24 -> nr50.set((byte) (value & 0xff));
       case 0xff25 -> nr51.set((byte) (value & 0xff));
-      // Turning the APU off also turns off every channel.
-      case 0xff26 -> nr52.set((value & 0x80) != 0 ? nr52.get() | 0x80 : 0x00);
+      case 0xff26 -> nr52.set((byte) (value & 0x80));
       case 0xff30 -> wave0.set((byte) (value & 0xff));
       case 0xff31 -> wave1.set((byte) (value & 0xff));
       case 0xff32 -> wave2.set((byte) (value & 0xff));
@@ -240,25 +289,6 @@ public final class IoRegisters {
       case 0xff4b -> wx.set((byte) (value & 0xff));
       case 0xff50 -> bank.set((byte) (value & 0x01));
       default -> {}
-    }
-  }
-
-  // There's no APU yet, so NR52 only tracks which channels are on: a channel turns on when it's
-  // triggered with its DAC on, and off when its DAC is turned off. Length timers aren't modelled.
-
-  private static boolean isDacOn(int envelope) {
-    return (envelope & 0xf8) != 0;
-  }
-
-  private void trigger(int channel, int nrx4, boolean dacOn) {
-    if ((nrx4 & 0x80) != 0 && dacOn && nr52.bit(7)) {
-      nr52.set(nr52.get() | (1 << channel));
-    }
-  }
-
-  private void updateDac(int channel, boolean dacOn) {
-    if (!dacOn) {
-      nr52.set(nr52.get() & ~(1 << channel));
     }
   }
 }
