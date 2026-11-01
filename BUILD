@@ -21,3 +21,12 @@ filegroup(
     srcs = glob(["mooneye-test-suite/build/**/*.gb"]),
     visibility = ["//src/test:__subpackages__"],
 )
+
+filegroup(
+    name = "dmg-acid2",
+    srcs = [
+        "roms/dmg-acid2.gb",
+        "roms/dmg-acid2-reference.png",
+    ],
+    visibility = ["//src/test:__subpackages__"],
+)

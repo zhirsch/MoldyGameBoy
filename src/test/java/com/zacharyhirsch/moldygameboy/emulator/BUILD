@@ -13,6 +13,33 @@ java_library(
 )
 
 java_junit5_test(
+    name = "Acid2Test",
+    srcs = ["Acid2Test.java"],
+    jvm_flags =
+        select({
+            "//:macos": ["-XstartOnFirstThread"],
+            "//conditions:default": [],
+        }) + [
+            "--enable-native-access=ALL-UNNAMED",
+        ],
+    resources = [
+        "//:dmg-acid2",
+        "//src/main/resources:dmg.bin",
+        "//src/main/resources:logback.xml",
+    ],
+    deps = [
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator",
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu",
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu/registers",
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/io",
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/io:factory",
+        artifact("com.google.guava:guava"),
+        artifact("com.google.truth:truth"),
+        artifact("org.junit.jupiter:junit-jupiter-api"),
+    ] + JUNIT5_DEPS,
+)
+
+java_junit5_test(
     name = "BlarggTests",
     srcs = ["BlarggTests.java"],
     jvm_flags =
