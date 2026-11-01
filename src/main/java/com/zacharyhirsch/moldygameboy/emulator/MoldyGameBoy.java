@@ -6,6 +6,7 @@ import com.zacharyhirsch.moldygameboy.emulator.io.Io;
 import com.zacharyhirsch.moldygameboy.emulator.memory.IoRegisters;
 import com.zacharyhirsch.moldygameboy.emulator.memory.Mapper;
 import com.zacharyhirsch.moldygameboy.emulator.memory.Memory;
+import com.zacharyhirsch.moldygameboy.emulator.memory.VideoMemoryLock;
 import com.zacharyhirsch.moldygameboy.emulator.ppu.Ppu;
 import com.zacharyhirsch.moldygameboy.emulator.timer.Timer;
 import java.nio.ByteBuffer;
@@ -42,12 +43,14 @@ final class MoldyGameBoy {
     ByteBuffer vram = ByteBuffer.allocate(0x2000);
     ByteBuffer oam = ByteBuffer.allocate(0x00a0);
     Memory memory = new Memory(Mapper.create(rom), vram, oam);
+    VideoMemoryLock videoMemoryLock = new VideoMemoryLock();
     Irqs irqs = new Irqs();
     this.timer = new Timer(irqs.timer());
     this.ioregs =
         new IoRegisters(timer.div(), timer.tima(), timer.tma(), timer.tac(), irqs.if_(), memory);
-    this.cpu = new Cpu(boot, memory, ioregs);
-    this.ppu = new Ppu(ioregs, vram, oam, io.video(), irqs.vblank(), irqs.lcd());
+    this.cpu = new Cpu(boot, memory, ioregs, videoMemoryLock);
+    this.ppu =
+        new Ppu(ioregs, vram, oam, videoMemoryLock, io.video(), irqs.vblank(), irqs.lcd());
   }
 
   public void tick() {

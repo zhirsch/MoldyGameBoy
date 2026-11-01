@@ -7,6 +7,7 @@ import com.zacharyhirsch.moldygameboy.emulator.cpu.instructions.MCycle;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 import com.zacharyhirsch.moldygameboy.emulator.memory.IoRegisters;
 import com.zacharyhirsch.moldygameboy.emulator.memory.Memory;
+import com.zacharyhirsch.moldygameboy.emulator.memory.VideoMemoryLock;
 import java.nio.ByteBuffer;
 
 public final class Cpu {
@@ -26,8 +27,9 @@ public final class Cpu {
 
   private MCycle mcycle;
 
-  public Cpu(ByteBuffer boot, Memory memory, IoRegisters ioregs) {
-    this.memory = new CpuMemoryController(boot, memory, ioregs);
+  public Cpu(
+      ByteBuffer boot, Memory memory, IoRegisters ioregs, VideoMemoryLock videoMemoryLock) {
+    this.memory = new CpuMemoryController(boot, memory, ioregs, videoMemoryLock);
     this.ioregs = ioregs;
     this.registers = new Registers();
     this.bus = new Bus();
@@ -66,8 +68,12 @@ public final class Cpu {
       }
     } else {
       mcycle = mcycle.t4(registers, bus);
-      if (mcycle == null) {
+      // HALT completes by entering the halted state rather than returning null, but it still
+      // counts as the instruction after EI, so IME must be ticked for it too.
+      if (mcycle == null || registers.halted().get()) {
         registers.ime().tick();
+      }
+      if (mcycle == null) {
         mcycle = new FetchOpcode(ioregs, registers.ime().get() ? getPendingInterrupts() : 0);
       }
     }

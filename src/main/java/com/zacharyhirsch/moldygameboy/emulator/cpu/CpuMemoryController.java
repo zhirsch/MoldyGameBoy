@@ -3,6 +3,7 @@ package com.zacharyhirsch.moldygameboy.emulator.cpu;
 import com.zacharyhirsch.moldygameboy.emulator.arch.Bus;
 import com.zacharyhirsch.moldygameboy.emulator.memory.IoRegisters;
 import com.zacharyhirsch.moldygameboy.emulator.memory.Memory;
+import com.zacharyhirsch.moldygameboy.emulator.memory.VideoMemoryLock;
 import java.nio.ByteBuffer;
 
 public final class CpuMemoryController {
@@ -11,14 +12,17 @@ public final class CpuMemoryController {
   private final ByteBuffer hram;
   private final IoRegisters ioregs;
   private final Memory memory;
+  private final VideoMemoryLock videoMemoryLock;
 
   private byte ie = 0;
 
-  public CpuMemoryController(ByteBuffer boot, Memory memory, IoRegisters ioregs) {
+  public CpuMemoryController(
+      ByteBuffer boot, Memory memory, IoRegisters ioregs, VideoMemoryLock videoMemoryLock) {
     this.boot = boot;
     this.hram = ByteBuffer.allocate(0x007f);
     this.ioregs = ioregs;
     this.memory = memory;
+    this.videoMemoryLock = videoMemoryLock;
   }
 
   public int getEnabledInterrupts() {
@@ -48,10 +52,13 @@ public final class CpuMemoryController {
       if (ioregs.dma.isActive() && isVramBus(address) == isVramBus(ioregs.dma.getActiveBase())) {
         return ioregs.dma.getCurrentValue();
       }
+      if (isVramBus(address) && videoMemoryLock.isVramReadLocked()) {
+        return (byte) 0xff;
+      }
       return readExternal(address);
     }
     if (0xfe00 <= addr && addr <= 0xfeff) {
-      if (ioregs.dma.isActive()) {
+      if (ioregs.dma.isActive() || videoMemoryLock.isOamReadLocked()) {
         return (byte) 0xff;
       }
       return readExternal(address);
@@ -77,11 +84,14 @@ public final class CpuMemoryController {
       if (ioregs.dma.isActive() && isVramBus(address) == isVramBus(ioregs.dma.getActiveBase())) {
         return;
       }
+      if (isVramBus(address) && videoMemoryLock.isVramWriteLocked()) {
+        return;
+      }
       writeExternal(address, value);
       return;
     }
     if (0xfe00 <= addr && addr <= 0xfeff) {
-      if (ioregs.dma.isActive()) {
+      if (ioregs.dma.isActive() || videoMemoryLock.isOamWriteLocked()) {
         return;
       }
       writeExternal(address, value);

@@ -4,6 +4,7 @@ import com.zacharyhirsch.moldygameboy.emulator.arch.Irq;
 import com.zacharyhirsch.moldygameboy.emulator.io.Color;
 import com.zacharyhirsch.moldygameboy.emulator.io.Video;
 import com.zacharyhirsch.moldygameboy.emulator.memory.IoRegisters;
+import com.zacharyhirsch.moldygameboy.emulator.memory.VideoMemoryLock;
 import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -33,8 +34,14 @@ public final class Ppu {
     }
   }
 
+  // LY changes and the mode 2 interrupt fires at dot 0, but STAT reports mode 0 (with the LY=LYC
+  // flag clear) until OAM_SCAN_START. Mode 3 starts at DRAWING_START (see mooneye
+  // ppu/lcdon_timing-GS and ppu/intr_2_mode3_timing).
+  private static final int OAM_SCAN_START = 4;
+  private static final int DRAWING_START = 84;
+
   private final IoRegisters ioregs;
-  private final ByteBuffer oam;
+  private final VideoMemoryLock videoMemoryLock;
   private final OamScanner oamScanner;
   private final Video video;
   private final Irq vblank;
@@ -56,10 +63,20 @@ public final class Ppu {
   private boolean windowActive = false;
   private int windowLine = 0;
 
+  // The first line after the LCD is enabled has no real OAM scan: STAT reports mode 0, OAM stays
+  // accessible and no mode 2 interrupt fires (see mooneye ppu/lcdon_timing-GS).
+  private boolean firstLineAfterLcdOn = false;
+
   public Ppu(
-      IoRegisters ioregs, ByteBuffer vram, ByteBuffer oam, Video video, Irq vblank, Irq lcd) {
+      IoRegisters ioregs,
+      ByteBuffer vram,
+      ByteBuffer oam,
+      VideoMemoryLock videoMemoryLock,
+      Video video,
+      Irq vblank,
+      Irq lcd) {
     this.ioregs = ioregs;
-    this.oam = oam;
+    this.videoMemoryLock = videoMemoryLock;
     this.oamScanner = new OamScanner(ioregs, oam);
     this.video = video;
     this.vblank = vblank;
@@ -76,6 +93,7 @@ public final class Ppu {
       // LCD off: the PPU is held in reset. LY reads 0, STAT reports mode 0. Line 0 after
       // enabling is 4 dots short (see mooneye ppu/lcdon_timing-GS), so start it at dot 4.
       startLine(0, 4);
+      firstLineAfterLcdOn = true;
       updateStatAndIrqs();
       return;
     }
@@ -87,12 +105,13 @@ public final class Ppu {
     }
     dot++;
     if (dot == 456) {
+      firstLineAfterLcdOn = false;
       int nextLy = (ioregs.ly.get() == 153) ? 0 : (ioregs.ly.get() + 1);
       startLine(nextLy, 0);
       if (nextLy == 0) {
         video.present();
       }
-    } else if (dot == 80) {
+    } else if (dot == DRAWING_START) {
       if (mode == Mode.OAM_SCAN) {
         mode = Mode.DRAWING;
       }
@@ -127,36 +146,58 @@ public final class Ppu {
 
   private void updateStatAndIrqs() {
     if (!ioregs.lcdc.bit(7)) {
-      ioregs.stat.set(ioregs.stat.get() & 0b1111_1000);
+      // While the LCD is off, STAT reports mode 0 but the LY=LYC flag keeps its last value, and
+      // the STAT interrupt line stays where it was, so turning the LCD back on only interrupts if
+      // the line goes from low to high (see mooneye ppu/stat_lyc_onoff).
+      ioregs.stat.set(ioregs.stat.get() & 0b1111_1100);
       vblank.set(false);
-      lcd.set(false);
-    } else {
-      ioregs.stat.set(
-          (ioregs.stat.get() & 0b1111_1000)
-              | (ioregs.ly.get() == ioregs.lyc.get() ? 0b0000_0100 : 0b0000_0000)
-              | mode.bits);
-      vblank.set(mode == Mode.VBLANK);
-      lcd.set(
-          (ioregs.stat.bit(5) && mode == Mode.OAM_SCAN)
-              || (ioregs.stat.bit(4) && mode == Mode.VBLANK)
-              || (ioregs.stat.bit(3) && mode == Mode.HBLANK)
-              || (ioregs.stat.bit(6) && ioregs.stat.bit(2)));
+      videoMemoryLock.set(false, false, false, false);
+      return;
     }
+    boolean oamScan = mode == Mode.OAM_SCAN && !firstLineAfterLcdOn;
+    boolean lineStart = mode != Mode.VBLANK && dot < OAM_SCAN_START;
+    boolean lyc = !lineStart && ioregs.ly.get() == ioregs.lyc.get();
+    boolean drawing = mode == Mode.DRAWING;
+    boolean lastOamScanCycle = oamScan && dot >= DRAWING_START - 4;
+    videoMemoryLock.set(
+        drawing || oamScan,
+        drawing || (oamScan && !lineStart && !lastOamScanCycle),
+        drawing || lastOamScanCycle,
+        drawing);
+    ioregs.stat.set(
+        (ioregs.stat.get() & 0b1111_1000)
+            | (lyc ? 0b0000_0100 : 0b0000_0000)
+            | (mode == Mode.OAM_SCAN && (firstLineAfterLcdOn || lineStart) ? 0 : mode.bits));
+    vblank.set(mode == Mode.VBLANK);
+    // The mode 2 STAT condition is also raised for the first M-cycle of line 144, at the same
+    // time as the VBlank interrupt (see mooneye ppu/vblank_stat_intr-GS).
+    boolean oamCondition = oamScan || (ioregs.ly.get() == 144 && dot < 4);
+    // The mode 0 interrupt fires 3 dots before STAT reports mode 0, which puts it in the M-cycle
+    // before (see mooneye ppu/intr_2_0_timing, ppu/intr_2_mode0_timing and
+    // ppu/hblank_ly_scx_timing-GS).
+    boolean hblankCondition = mode == Mode.HBLANK || (drawing && screenX >= 160 - 3);
+    lcd.set(
+        (ioregs.stat.bit(5) && oamCondition)
+            || (ioregs.stat.bit(4) && mode == Mode.VBLANK)
+            || (ioregs.stat.bit(3) && hblankCondition)
+            || (ioregs.stat.bit(6) && ioregs.stat.bit(2)));
   }
 
   private void tickOamScan() {
     if (ioregs.ly.get() == ioregs.wy.get()) {
       wyTriggered = true;
     }
-    oamScanner.tick();
+    if (dot >= OAM_SCAN_START) {
+      oamScanner.tick();
+    }
   }
 
   private void tickDrawing() {
-    if (dot == 80) {
+    if (dot == DRAWING_START) {
       pixelsToDiscard = ioregs.scx.get() & 0b0000_0111;
       bgFetcher.latchScroll();
     }
-    if (dot < 84) {
+    if (dot < DRAWING_START + 4) {
       return;
     }
 
