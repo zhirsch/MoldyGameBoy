@@ -18,9 +18,21 @@ final class MooneyeTest {
     return ByteBuffer.wrap(Resources.toByteArray(Resources.getResource(path)));
   }
 
-  /** Tests for the CGB (named -C or -cgb...) run with the CGB boot ROM; the rest with the DMG's. */
+  /**
+   * Tests for the AGB (named -A) and CGB revision 0 (named -cgb0) run with their boot ROMs, other
+   * CGB tests (named -C or -cgb...) with the CGB boot ROM, and the rest with the DMG's.
+   */
   private static void doTest(String path) throws Exception {
-    String boot = path.matches(".*-(C|cgb\\w*)\\.gb") ? "cgb.bin" : "dmg.bin";
+    String boot;
+    if (path.endsWith("-A.gb")) {
+      boot = "agb.bin";
+    } else if (path.endsWith("-cgb0.gb")) {
+      boot = "cgb0.bin";
+    } else if (path.matches(".*-(C|cgb\\w*)\\.gb")) {
+      boot = "cgb.bin";
+    } else {
+      boot = "dmg.bin";
+    }
     try (Io io = Boolean.getBoolean("moldy.gui") ? IoFactory.sdl() : IoFactory.none()) {
       MoldyGameBoy gb = new MoldyGameBoy(readRom(boot), readRom(path), io);
       io.eventLoop().run(new BreakpointTicker(gb));

@@ -86,7 +86,9 @@ java_junit5_test(
         ],
     resources = [
         "//:mooneye-test-suite",
+        "//src/main/resources:agb.bin",
         "//src/main/resources:cgb.bin",
+        "//src/main/resources:cgb0.bin",
         "//src/main/resources:dmg.bin",
         "//src/main/resources:logback.xml",
     ],
