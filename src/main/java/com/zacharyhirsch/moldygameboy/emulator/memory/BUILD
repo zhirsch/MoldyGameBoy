@@ -13,6 +13,7 @@ java_library(
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/ppu/registers:__pkg__",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/timer:__pkg__",
         "//src/test/java/com/zacharyhirsch/moldygameboy/emulator:__pkg__",
+        "//src/test/java/com/zacharyhirsch/moldygameboy/emulator/memory:__pkg__",
     ],
     deps = [
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/arch",

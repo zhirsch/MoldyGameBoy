@@ -6,6 +6,7 @@ import com.zacharyhirsch.moldygameboy.emulator.arch.Model;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.Cpu;
 import com.zacharyhirsch.moldygameboy.emulator.io.Io;
 import com.zacharyhirsch.moldygameboy.emulator.joypad.Joypad;
+import com.zacharyhirsch.moldygameboy.emulator.memory.Hdma;
 import com.zacharyhirsch.moldygameboy.emulator.memory.IoRegisters;
 import com.zacharyhirsch.moldygameboy.emulator.memory.Mapper;
 import com.zacharyhirsch.moldygameboy.emulator.memory.Memory;
@@ -38,6 +39,7 @@ final class MoldyGameBoy {
   }
 
   private final Memory memory;
+  private final Hdma hdma;
   private final Timer timer;
   private final Serial serial;
   private final Joypad joypad;
@@ -47,13 +49,15 @@ final class MoldyGameBoy {
   private final Ppu ppu;
 
   private TCycle tcycle = TCycle.T1;
+  private boolean cpuStalled = false;
 
   /** The model is chosen by the boot ROM: the CGB's is 2304 bytes, the DMG's 256. */
   public MoldyGameBoy(ByteBuffer boot, ByteBuffer rom, Io io) {
     Model model = boot.limit() == 0x900 ? Model.CGB : Model.DMG;
-    ByteBuffer vram = ByteBuffer.allocate(0x2000);
+    ByteBuffer vram = ByteBuffer.allocate(Memory.VRAM_SIZE);
     ByteBuffer oam = ByteBuffer.allocate(0x00a0);
     this.memory = new Memory(Mapper.create(rom), vram, oam);
+    this.hdma = new Hdma(memory, this::isLcdOn);
     VideoMemoryLock videoMemoryLock = new VideoMemoryLock();
     Irqs irqs = new Irqs();
     this.timer = new Timer(irqs.timer());
@@ -110,24 +114,43 @@ final class MoldyGameBoy {
             apu.waved(),
             apu.wavee(),
             apu.wavef(),
+            memory.vbk(),
+            hdma.hdma1(),
+            hdma.hdma2(),
+            hdma.hdma3(),
+            hdma.hdma4(),
+            hdma.hdma5(),
             bgPalettes.spec(),
             bgPalettes.data(),
             objPalettes.spec(),
             objPalettes.data(),
+            memory.svbk(),
             apu.pcm12(),
             apu.pcm34(),
             memory);
     this.cpu = new Cpu(boot, memory, ioregs, videoMemoryLock);
     this.ppu =
-        new Ppu(ioregs, vram, oam, videoMemoryLock, io.video(), irqs.vblank(), irqs.lcd());
+        new Ppu(
+            ioregs,
+            vram,
+            oam,
+            videoMemoryLock,
+            io.video(),
+            irqs.vblank(),
+            irqs.lcd(),
+            hdma::onHBlank);
   }
 
   public void tick() {
     switch (tcycle) {
       case T1 -> {
+        // HDMA stops the CPU for whole M-cycles.
+        cpuStalled = hdma.isTransferring();
         ppu.tick();
         ioregs.dma.tickT1();
-        cpu.tickT1();
+        if (!cpuStalled) {
+          cpu.tickT1();
+        }
         timer.tickT1();
         serial.tick();
         apu.tick();
@@ -135,7 +158,9 @@ final class MoldyGameBoy {
       case T2 -> {
         ppu.tick();
         ioregs.dma.tickT2();
-        cpu.tickT2();
+        if (!cpuStalled) {
+          cpu.tickT2();
+        }
         timer.tickT2();
         serial.tick();
         apu.tick();
@@ -143,7 +168,9 @@ final class MoldyGameBoy {
       case T3 -> {
         ppu.tick();
         ioregs.dma.tickT3();
-        cpu.tickT3();
+        if (!cpuStalled) {
+          cpu.tickT3();
+        }
         timer.tickT3();
         serial.tick();
         apu.tick();
@@ -151,14 +178,21 @@ final class MoldyGameBoy {
       case T4 -> {
         ppu.tick();
         ioregs.dma.tickT4();
-        cpu.tickT4();
+        if (!cpuStalled) {
+          cpu.tickT4();
+        }
         timer.tickT4();
         serial.tick();
         apu.tick();
         joypad.tick();
+        hdma.tick();
       }
     }
     tcycle = tcycle.next();
+  }
+
+  private boolean isLcdOn() {
+    return ioregs.lcdc.bit(7);
   }
 
   public Cpu cpu() {

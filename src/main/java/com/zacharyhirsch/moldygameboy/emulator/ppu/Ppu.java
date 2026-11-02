@@ -46,6 +46,7 @@ public final class Ppu {
   private final Video video;
   private final Irq vblank;
   private final Irq lcd;
+  private final Runnable onHBlank;
   private final Queue<Integer> bgFifo;
   private final List<ObjPixel> objFifo;
   private final BgPixelFetcher bgFetcher;
@@ -75,13 +76,15 @@ public final class Ppu {
       VideoMemoryLock videoMemoryLock,
       Video video,
       Irq vblank,
-      Irq lcd) {
+      Irq lcd,
+      Runnable onHBlank) {
     this.ioregs = ioregs;
     this.videoMemoryLock = videoMemoryLock;
     this.oamScanner = new OamScanner(ioregs, oam);
     this.video = video;
     this.vblank = vblank;
     this.lcd = lcd;
+    this.onHBlank = onHBlank;
     this.bgFifo = new ArrayDeque<>();
     this.objFifo = new ArrayList<>();
     this.bgFetcher = new BgPixelFetcher(ioregs, vram, bgFifo);
@@ -119,6 +122,7 @@ public final class Ppu {
     } else if (screenX == 160) {
       if (mode == Mode.DRAWING) {
         mode = Mode.HBLANK;
+        onHBlank.run();
       }
     }
     updateStatAndIrqs();

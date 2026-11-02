@@ -76,18 +76,23 @@ public final class IoRegisters {
   // CGB only.
   /* ff4c */ public final IoRegister key0 = IoRegister.create("key0", (short) 0xff4c);
   /* ff4d */ public final IoRegister key1 = IoRegister.create("key1", (short) 0xff4d);
-  /* ff4f */ public final IoRegister vbk = IoRegister.create("vbk", (short) 0xff4f);
+  /* ff4f */ public final IoRegister vbk;
 
   /* ff50 */ public final IoRegister bank = IoRegister.create("bank", (short) 0xff50);
 
   // CGB only.
+  /* ff51 */ public final IoRegister hdma1;
+  /* ff52 */ public final IoRegister hdma2;
+  /* ff53 */ public final IoRegister hdma3;
+  /* ff54 */ public final IoRegister hdma4;
+  /* ff55 */ public final IoRegister hdma5;
   /* ff56 */ public final IoRegister rp = IoRegister.create("rp", (short) 0xff56);
   /* ff68 */ public final IoRegister bcps;
   /* ff69 */ public final IoRegister bcpd;
   /* ff6a */ public final IoRegister ocps;
   /* ff6b */ public final IoRegister ocpd;
   /* ff6c */ public final IoRegister opri = IoRegister.create("opri", (short) 0xff6c);
-  /* ff70 */ public final IoRegister svbk = IoRegister.create("svbk", (short) 0xff70);
+  /* ff70 */ public final IoRegister svbk;
   /* ff72 */ public final IoRegister ff72 = IoRegister.create("ff72", (short) 0xff72);
   /* ff73 */ public final IoRegister ff73 = IoRegister.create("ff73", (short) 0xff73);
   /* ff74 */ public final IoRegister ff74 = IoRegister.create("ff74", (short) 0xff74);
@@ -142,10 +147,17 @@ public final class IoRegisters {
       IoRegister waved,
       IoRegister wavee,
       IoRegister wavef,
+      IoRegister vbk,
+      IoRegister hdma1,
+      IoRegister hdma2,
+      IoRegister hdma3,
+      IoRegister hdma4,
+      IoRegister hdma5,
       IoRegister bcps,
       IoRegister bcpd,
       IoRegister ocps,
       IoRegister ocpd,
+      IoRegister svbk,
       IoRegister pcm12,
       IoRegister pcm34,
       Memory memory) {
@@ -195,10 +207,17 @@ public final class IoRegisters {
     this.waved = waved;
     this.wavee = wavee;
     this.wavef = wavef;
+    this.vbk = vbk;
+    this.hdma1 = hdma1;
+    this.hdma2 = hdma2;
+    this.hdma3 = hdma3;
+    this.hdma4 = hdma4;
+    this.hdma5 = hdma5;
     this.bcps = bcps;
     this.bcpd = bcpd;
     this.ocps = ocps;
     this.ocpd = ocpd;
+    this.svbk = svbk;
     this.pcm12 = pcm12;
     this.pcm34 = pcm34;
     this.dma = new OamDmaRegister(memory);
@@ -291,6 +310,7 @@ public final class IoRegisters {
       case 0xff4d -> isCgbModeOrBooting() ? (byte) (key1.get() | 0x7e) : (byte) 0xff;
       case 0xff4f -> isCgb() ? (byte) (vbk.get() | 0xfe) : (byte) 0xff;
       case 0xff50 -> (byte) (bank.get() | 0xff);
+      case 0xff55 -> isCgbModeOrBooting() ? (byte) hdma5.get() : (byte) 0xff;
       case 0xff56 -> isCgbModeOrBooting() ? (byte) (rp.get() | 0x3e) : (byte) 0xff;
       case 0xff68 -> isCgb() ? (byte) (bcps.get() | 0x40) : (byte) 0xff;
       case 0xff69 -> isCgbModeOrBooting() ? (byte) bcpd.get() : (byte) 0xff;
@@ -383,6 +403,31 @@ public final class IoRegisters {
         }
       }
       case 0xff50 -> bank.set((byte) (value & 0x01));
+      case 0xff51 -> {
+        if (isCgbModeOrBooting()) {
+          hdma1.set((byte) (value & 0xff));
+        }
+      }
+      case 0xff52 -> {
+        if (isCgbModeOrBooting()) {
+          hdma2.set((byte) (value & 0xff));
+        }
+      }
+      case 0xff53 -> {
+        if (isCgbModeOrBooting()) {
+          hdma3.set((byte) (value & 0xff));
+        }
+      }
+      case 0xff54 -> {
+        if (isCgbModeOrBooting()) {
+          hdma4.set((byte) (value & 0xff));
+        }
+      }
+      case 0xff55 -> {
+        if (isCgbModeOrBooting()) {
+          hdma5.set((byte) (value & 0xff));
+        }
+      }
       case 0xff56 -> {
         if (isCgbModeOrBooting()) {
           rp.set((byte) (value & 0xc1));
