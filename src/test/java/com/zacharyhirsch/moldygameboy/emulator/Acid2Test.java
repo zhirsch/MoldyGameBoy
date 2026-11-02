@@ -31,15 +31,31 @@ final class Acid2Test {
     }
   }
 
+  @Test
+  void testCgbAcid2() throws Exception {
+    BufferedImage ref = ImageIO.read(Resources.getResource("roms/cgb-acid2-reference.png"));
+    try (CapturingIo io = new CapturingIo(IoFactory.none())) {
+      MoldyGameBoy gb = new MoldyGameBoy(readRom("cgb.bin"), readRom("roms/cgb-acid2.gbc"), io);
+      io.eventLoop().run(new Acid2Ticker(gb, io));
+      List<String> mismatches = io.video().diffColors(ref);
+      if (!mismatches.isEmpty()) {
+        writeUndeclaredOutput(io.video().frame(), "cgb-acid2-actual.png");
+      }
+      assertThat(mismatches).isEmpty();
+    }
+  }
+
   /**
-   * Runs until dmg-acid2 executes its LD B,B breakpoint (it has finished setting up), then two
-   * more frames, so the last presented frame was drawn entirely after setup.
+   * Runs until the test executes its LD B,B breakpoint (it has finished setting up), then two more
+   * frames, so the last presented frame was drawn entirely after setup. LD B,B in the boot ROM
+   * (the CGB's has one) doesn't count, so breakpoints only count once execution reaches $0100.
    */
   private static final class Acid2Ticker implements Ticker {
 
     private final MoldyGameBoy gb;
     private final CapturingIo io;
 
+    private boolean booted = false;
     private int breakpointFrame = -1;
 
     Acid2Ticker(MoldyGameBoy gb, CapturingIo io) {
@@ -50,7 +66,8 @@ final class Acid2Test {
     @Override
     public void tick() {
       gb.tick();
-      if (breakpointFrame < 0 && gb.cpu().registers().ir().get() == (byte) 0x40) {
+      booted |= gb.cpu().registers().pc().get() == 0x0100;
+      if (booted && breakpointFrame < 0 && gb.cpu().registers().ir().get() == (byte) 0x40) {
         breakpointFrame = io.video().count();
       }
     }

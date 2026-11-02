@@ -63,6 +63,9 @@ public final class CpuMemoryController {
       }
       return readExternal(address);
     }
+    if (isPaletteData(addr) && videoMemoryLock.isVramWriteLocked()) {
+      return (byte) 0xff;
+    }
     if (0x0ff00 <= addr && addr <= 0xff7f) {
       return ioregs.read(address);
     }
@@ -97,6 +100,9 @@ public final class CpuMemoryController {
       writeExternal(address, value);
       return;
     }
+    if (isPaletteData(addr) && videoMemoryLock.isVramWriteLocked()) {
+      return;
+    }
     if (0x0ff00 <= addr && addr <= 0xff7f) {
       ioregs.write(address, value);
       return;
@@ -126,6 +132,11 @@ public final class CpuMemoryController {
    */
   private boolean isBootRom(int addr) {
     return ioregs.bank.get() == 0 && (addr <= 0x00ff || (0x0200 <= addr && addr < boot.limit()));
+  }
+
+  /** BCPD and OCPD, which (like VRAM) the CPU can't access while the PPU is drawing. */
+  private static boolean isPaletteData(int addr) {
+    return addr == 0xff69 || addr == 0xff6b;
   }
 
   private static boolean isVramBus(short address) {

@@ -23,7 +23,9 @@ java_junit5_test(
             "--enable-native-access=ALL-UNNAMED",
         ],
     resources = [
+        "//:cgb-acid2",
         "//:dmg-acid2",
+        "//src/main/resources:cgb.bin",
         "//src/main/resources:dmg.bin",
         "//src/main/resources:logback.xml",
     ],

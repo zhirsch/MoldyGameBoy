@@ -231,7 +231,7 @@ public final class IoRegisters {
     return model == Model.CGB && (key0.get() & 0x04) == 0;
   }
 
-  private boolean isCgb() {
+  public boolean isCgb() {
     return model == Model.CGB;
   }
 

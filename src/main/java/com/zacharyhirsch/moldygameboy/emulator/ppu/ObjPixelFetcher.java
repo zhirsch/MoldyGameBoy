@@ -104,7 +104,8 @@ final class ObjPixelFetcher {
       row = height - 1 - row;
     }
     int t = height == 16 ? (tile & 0xfe) : tile;
-    return t * 16 + row * 2;
+    int bank = ioregs.isCgbMode() && bit(attr, 3) != 0 ? 0x2000 : 0x0000;
+    return bank + t * 16 + row * 2;
   }
 
   private static int bit(int value, int index) {

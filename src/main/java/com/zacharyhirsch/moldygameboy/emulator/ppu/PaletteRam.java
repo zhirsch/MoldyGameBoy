@@ -1,6 +1,7 @@
 package com.zacharyhirsch.moldygameboy.emulator.ppu;
 
 import com.zacharyhirsch.moldygameboy.emulator.arch.IoRegister;
+import com.zacharyhirsch.moldygameboy.emulator.io.Color;
 
 /**
  * One of the CGB's two palette RAMs (background or object): 8 palettes of 4 colors, each color 2
@@ -19,6 +20,22 @@ public final class PaletteRam {
   public PaletteRam(String name, int address) {
     this.name = name;
     this.address = address;
+  }
+
+  /**
+   * The color for a pixel, converting each 5-bit component to 8 bits with {@code (c << 3) | (c >>
+   * 2)}.
+   */
+  Color color(int palette, int color) {
+    int i = palette * 8 + color * 2;
+    int rgb555 = Byte.toUnsignedInt(ram[i]) | (Byte.toUnsignedInt(ram[i + 1]) << 8);
+    return new Color(
+        component(rgb555), component(rgb555 >>> 5), component(rgb555 >>> 10));
+  }
+
+  private static byte component(int value) {
+    int c = value & 0x1f;
+    return (byte) ((c << 3) | (c >>> 2));
   }
 
   /** BCPS/OCPS: the index into palette RAM, and the auto-increment flag. */

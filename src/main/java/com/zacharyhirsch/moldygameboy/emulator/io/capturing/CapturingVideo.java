@@ -66,6 +66,21 @@ public final class CapturingVideo implements Video {
     return mismatches;
   }
 
+  /** Compares the frame's exact colors with a reference image. */
+  public List<String> diffColors(BufferedImage ref) {
+    List<String> mismatches = new ArrayList<>();
+    for (int y = 0; y < HEIGHT; y++) {
+      for (int x = 0; x < WIDTH; x++) {
+        int expected = ref.getRGB(x, y) & 0xffffff;
+        int actual = frame.getRGB(x, y) & 0xffffff;
+        if (expected != actual) {
+          mismatches.add("(%d,%d): expected %06x, got %06x".formatted(x, y, expected, actual));
+        }
+      }
+    }
+    return mismatches;
+  }
+
   /** Maps a gray level (0x00, 0x55, 0xaa, 0xff) to a DMG shade index (3 = black ... 0 = white). */
   private static int shade(int gray) {
     return 3 - (gray >> 6);

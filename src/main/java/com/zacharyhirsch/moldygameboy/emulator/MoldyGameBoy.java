@@ -138,7 +138,9 @@ final class MoldyGameBoy {
             io.video(),
             irqs.vblank(),
             irqs.lcd(),
-            hdma::onHBlank);
+            hdma::onHBlank,
+            bgPalettes,
+            objPalettes);
   }
 
   public void tick() {

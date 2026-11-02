@@ -23,6 +23,15 @@ filegroup(
 )
 
 filegroup(
+    name = "cgb-acid2",
+    srcs = [
+        "roms/cgb-acid2.gbc",
+        "roms/cgb-acid2-reference.png",
+    ],
+    visibility = ["//src/test:__subpackages__"],
+)
+
+filegroup(
     name = "dmg-acid2",
     srcs = [
         "roms/dmg-acid2.gb",

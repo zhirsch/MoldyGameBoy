@@ -15,7 +15,7 @@ final class BgPixelFetcher {
 
   private final IoRegisters ioregs;
   private final ByteBuffer vram;
-  private final Queue<Integer> fifo;
+  private final Queue<BgPixel> fifo;
 
   private State state = State.GET_TILE_ID;
   // Each fetcher step takes two dots; the step's work happens on the second dot.
@@ -26,10 +26,12 @@ final class BgPixelFetcher {
   private boolean window = false;
   private int windowLine = 0;
   private byte tileId;
+  // CGB mode: the tile's attributes from VRAM bank 1 (palette, bank, flips, priority).
+  private int attributes;
   private byte tileDataLo;
   private byte tileDataHi;
 
-  BgPixelFetcher(IoRegisters ioregs, ByteBuffer vram, Queue<Integer> fifo) {
+  BgPixelFetcher(IoRegisters ioregs, ByteBuffer vram, Queue<BgPixel> fifo) {
     this.ioregs = ioregs;
     this.vram = vram;
     this.fifo = fifo;
@@ -82,6 +84,7 @@ final class BgPixelFetcher {
     int tileX = (window ? fetcherX : fetcherX + coarseScx) & 0x1f;
     int address = base + (tileY * 32) + tileX;
     tileId = vram.get(address - 0x8000);
+    attributes = ioregs.isCgbMode() ? Byte.toUnsignedInt(vram.get(0x2000 + address - 0x8000)) : 0;
     state = State.GET_TILE_DATA_LO;
   }
 
@@ -99,10 +102,14 @@ final class BgPixelFetcher {
     if (!fifo.isEmpty()) {
       return;
     }
-    for (int bit = 7; bit >= 0; bit--) {
+    boolean xFlip = (attributes & 0x20) != 0;
+    int palette = attributes & 0x07;
+    boolean priority = (attributes & 0x80) != 0;
+    for (int i = 0; i < 8; i++) {
+      int bit = xFlip ? i : 7 - i;
       int loBit = (tileDataLo >> bit) & 0x01;
       int hiBit = (tileDataHi >> bit) & 0x01;
-      fifo.add((hiBit << 1) | loBit);
+      fifo.add(new BgPixel((hiBit << 1) | loBit, palette, priority));
     }
     fetcherX++;
     state = State.GET_TILE_ID;
@@ -113,8 +120,9 @@ final class BgPixelFetcher {
     // $8800-$8FFF, i.e. only tiles 0-127 move.
     int base = !ioregs.lcdc.bit(4) && Byte.toUnsignedInt(tileId) <= 127 ? 0x1000 : 0x0000;
     int tileOffset = Byte.toUnsignedInt(tileId) * 16;
-    int tileLine = mapY() % 8;
-    return base + tileOffset + (tileLine * 2);
+    int tileLine = (attributes & 0x40) != 0 ? 7 - mapY() % 8 : mapY() % 8;
+    int bank = (attributes & 0x08) != 0 ? 0x2000 : 0x0000;
+    return bank + base + tileOffset + (tileLine * 2);
   }
 
   private int mapY() {

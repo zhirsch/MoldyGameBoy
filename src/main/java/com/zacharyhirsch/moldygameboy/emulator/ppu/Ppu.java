@@ -47,7 +47,9 @@ public final class Ppu {
   private final Irq vblank;
   private final Irq lcd;
   private final Runnable onHBlank;
-  private final Queue<Integer> bgFifo;
+  private final PaletteRam bgPalettes;
+  private final PaletteRam objPalettes;
+  private final Queue<BgPixel> bgFifo;
   private final List<ObjPixel> objFifo;
   private final BgPixelFetcher bgFetcher;
   private final ObjPixelFetcher objFetcher;
@@ -77,7 +79,9 @@ public final class Ppu {
       Video video,
       Irq vblank,
       Irq lcd,
-      Runnable onHBlank) {
+      Runnable onHBlank,
+      PaletteRam bgPalettes,
+      PaletteRam objPalettes) {
     this.ioregs = ioregs;
     this.videoMemoryLock = videoMemoryLock;
     this.oamScanner = new OamScanner(ioregs, oam);
@@ -85,6 +89,8 @@ public final class Ppu {
     this.vblank = vblank;
     this.lcd = lcd;
     this.onHBlank = onHBlank;
+    this.bgPalettes = bgPalettes;
+    this.objPalettes = objPalettes;
     this.bgFifo = new ArrayDeque<>();
     this.objFifo = new ArrayList<>();
     this.bgFetcher = new BgPixelFetcher(ioregs, vram, bgFifo);
@@ -204,7 +210,7 @@ public final class Ppu {
       // without SCX or sprites (see mooneye ppu/intr_2_mode0_timing_sprites,
       // ppu/intr_2_0_timing and ppu/hblank_ly_scx_timing-GS).
       for (int i = 0; i < 8; i++) {
-        bgFifo.add(0);
+        bgFifo.add(new BgPixel(0, 0, false));
       }
       junkPixels = 8;
       return;
@@ -237,7 +243,7 @@ public final class Ppu {
     }
 
     if (!bgFifo.isEmpty()) {
-      int bgPixel = bgFifo.remove();
+      BgPixel bgPixel = bgFifo.remove();
       if (junkPixels > 0) {
         junkPixels--;
       } else if (pixelsToDiscard > 0) {
@@ -274,41 +280,64 @@ public final class Ppu {
     return -1;
   }
 
+  /**
+   * Merges a fetched object's pixels into the object FIFO. Where objects overlap, the one already
+   * there wins (sprites are fetched left to right, so the leftmost wins), except in CGB mode with
+   * OPRI clear, where the one earlier in OAM wins.
+   */
   private void mergeIntoObjFifo(Sprite sprite, int attr, int lo, int hi) {
+    boolean cgb = ioregs.isCgbMode();
+    boolean oamPriority = cgb && !ioregs.opri.bit(0);
     boolean xflip = bit(attr, 5) != 0;
-    boolean obp1 = bit(attr, 4) != 0;
+    int palette = cgb ? attr & 0x07 : bit(attr, 4);
     boolean behindBg = bit(attr, 7) != 0;
     int dropLeft = Math.max(0, screenX + 8 - sprite.x()); // clips sprites with OAM X < 8
     for (int i = dropLeft; i < 8; i++) {
       int slot = i - dropLeft;
       while (objFifo.size() <= slot) {
-        objFifo.add(new ObjPixel(0, false, false)); // pad with color 0
+        objFifo.add(new ObjPixel(0, 0, false, 0)); // pad with color 0
       }
-      if (objFifo.get(slot).color() == 0) { // earlier sprite's opaque pixel wins
-        int b = xflip ? i : 7 - i;
-        int color = (bit(hi, b) << 1) | bit(lo, b);
-        objFifo.set(slot, new ObjPixel(color, obp1, behindBg));
+      int b = xflip ? i : 7 - i;
+      int color = (bit(hi, b) << 1) | bit(lo, b);
+      ObjPixel existing = objFifo.get(slot);
+      boolean wins =
+          existing.color() == 0
+              || (oamPriority && color != 0 && sprite.oamIndex() < existing.oamIndex());
+      if (wins) {
+        objFifo.set(slot, new ObjPixel(color, palette, behindBg, sprite.oamIndex()));
       }
     }
   }
 
-  private Color mix(int bg, ObjPixel obj) {
-    if (!ioregs.lcdc.bit(0)) {
-      bg = 0;
+  private Color mix(BgPixel bg, ObjPixel obj) {
+    boolean objVisible = obj != null && ioregs.lcdc.bit(1) && obj.color() != 0;
+    if (ioregs.isCgbMode()) {
+      // LCDC bit 0 clear puts objects above the background whatever the priority bits say.
+      boolean bgWins =
+          objVisible
+              && ioregs.lcdc.bit(0)
+              && bg.color() != 0
+              && (bg.priority() || obj.behindBg());
+      return objVisible && !bgWins
+          ? objPalettes.color(obj.palette(), obj.color())
+          : bgPalettes.color(bg.palette(), bg.color());
     }
-    return obj == null || !ioregs.lcdc.bit(1) || obj.color() == 0 || (obj.behindBg() && bg != 0)
-        ? applyPalette(ioregs.bgp.get(), bg)
-        : applyPalette(obj.obp1() ? ioregs.obp1.get() : ioregs.obp0.get(), obj.color());
+    int bgColor = ioregs.lcdc.bit(0) ? bg.color() : 0;
+    if (objVisible && !(obj.behindBg() && bgColor != 0)) {
+      int obp = obj.palette() == 1 ? ioregs.obp1.get() : ioregs.obp0.get();
+      return dmgColor(obp, obj.color(), objPalettes, obj.palette());
+    }
+    return dmgColor(ioregs.bgp.get(), bgColor, bgPalettes, 0);
   }
 
-  private Color applyPalette(int palette, int color) {
-    return switch (color) {
-      case 0 -> COLORS[(palette & 0b0000_0011) >>> 0];
-      case 1 -> COLORS[(palette & 0b0000_1100) >>> 2];
-      case 2 -> COLORS[(palette & 0b0011_0000) >>> 4];
-      case 3 -> COLORS[(palette & 0b1100_0000) >>> 6];
-      default -> throw new IllegalStateException("%d".formatted(color));
-    };
+  /**
+   * Maps a color through a DMG palette register to one of 4 shades. A DMG shows the shade as gray;
+   * a CGB in DMG compatibility mode looks it up in CGB palette 0 (or 1 for OBP1), which the boot
+   * ROM sets up.
+   */
+  private Color dmgColor(int palette, int color, PaletteRam cgbPalettes, int cgbPalette) {
+    int shade = (palette >>> (color * 2)) & 0b11;
+    return ioregs.isCgb() ? cgbPalettes.color(cgbPalette, shade) : COLORS[shade];
   }
 
   private boolean shouldStartWindow() {
