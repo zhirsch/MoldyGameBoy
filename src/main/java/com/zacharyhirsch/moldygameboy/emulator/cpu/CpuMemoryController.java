@@ -45,8 +45,8 @@ public final class CpuMemoryController {
 
   public byte read(short address) {
     int addr = Short.toUnsignedInt(address);
-    if (0x0000 <= addr && addr <= 0x00ff && ioregs.bank.get() == 0) {
-      return boot.get(address);
+    if (isBootRom(addr)) {
+      return boot.get(addr);
     }
     if (0x0000 <= addr && addr <= 0xfdff) {
       if (ioregs.dma.isActive() && isVramBus(address) == isVramBus(ioregs.dma.getActiveBase())) {
@@ -77,7 +77,7 @@ public final class CpuMemoryController {
 
   public void write(short address, byte value) {
     int addr = Short.toUnsignedInt(address);
-    if (0x0000 <= addr && addr <= 0x00ff && ioregs.bank.get() == 0) {
+    if (isBootRom(addr)) {
       throw new UnsupportedOperationException();
     }
     if (0x0000 <= addr && addr <= 0xfdff) {
@@ -118,6 +118,14 @@ public final class CpuMemoryController {
 
   public void writeExternal(short address, byte value) {
     memory.write(address, value);
+  }
+
+  /**
+   * The DMG boot ROM covers $0000-$00FF. The CGB's also covers $0200-$08FF, leaving the cartridge
+   * header visible in between.
+   */
+  private boolean isBootRom(int addr) {
+    return ioregs.bank.get() == 0 && (addr <= 0x00ff || (0x0200 <= addr && addr < boot.limit()));
   }
 
   private static boolean isVramBus(short address) {

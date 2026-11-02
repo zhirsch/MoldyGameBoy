@@ -167,6 +167,16 @@ public final class Apu {
     return nr51;
   }
 
+  /** PCM12 (CGB only): the current output levels of channels 1 (low nibble) and 2 (high). */
+  public IoRegister pcm12() {
+    return pcm("pcm12", 0xff76, square1::output, square2::output);
+  }
+
+  /** PCM34 (CGB only): the current output levels of channels 3 (low nibble) and 4 (high). */
+  public IoRegister pcm34() {
+    return pcm("pcm34", 0xff77, wave::output, noise::output);
+  }
+
   public IoRegister nr52() {
     return nr52;
   }
@@ -378,6 +388,23 @@ public final class Apu {
       @Override
       public void set(int value) {
         nr51Value = value;
+      }
+    };
+  }
+
+  private static IoRegister pcm(String name, int address, IntSupplier low, IntSupplier high) {
+    return new IoRegister() {
+      @Override
+      public int get() {
+        return (high.getAsInt() << 4) | low.getAsInt();
+      }
+
+      @Override
+      public void set(int value) {}
+
+      @Override
+      public String toString() {
+        return "%s @ %04x = %02x".formatted(name, address, get());
       }
     };
   }

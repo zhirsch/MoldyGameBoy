@@ -2,6 +2,7 @@ package com.zacharyhirsch.moldygameboy.emulator;
 
 import com.zacharyhirsch.moldygameboy.emulator.apu.Apu;
 import com.zacharyhirsch.moldygameboy.emulator.arch.Irqs;
+import com.zacharyhirsch.moldygameboy.emulator.arch.Model;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.Cpu;
 import com.zacharyhirsch.moldygameboy.emulator.io.Io;
 import com.zacharyhirsch.moldygameboy.emulator.joypad.Joypad;
@@ -9,6 +10,7 @@ import com.zacharyhirsch.moldygameboy.emulator.memory.IoRegisters;
 import com.zacharyhirsch.moldygameboy.emulator.memory.Mapper;
 import com.zacharyhirsch.moldygameboy.emulator.memory.Memory;
 import com.zacharyhirsch.moldygameboy.emulator.memory.VideoMemoryLock;
+import com.zacharyhirsch.moldygameboy.emulator.ppu.PaletteRam;
 import com.zacharyhirsch.moldygameboy.emulator.ppu.Ppu;
 import com.zacharyhirsch.moldygameboy.emulator.serial.Serial;
 import com.zacharyhirsch.moldygameboy.emulator.serial.SerialDevice;
@@ -46,7 +48,9 @@ final class MoldyGameBoy {
 
   private TCycle tcycle = TCycle.T1;
 
+  /** The model is chosen by the boot ROM: the CGB's is 2304 bytes, the DMG's 256. */
   public MoldyGameBoy(ByteBuffer boot, ByteBuffer rom, Io io) {
+    Model model = boot.limit() == 0x900 ? Model.CGB : Model.DMG;
     ByteBuffer vram = ByteBuffer.allocate(0x2000);
     ByteBuffer oam = ByteBuffer.allocate(0x00a0);
     this.memory = new Memory(Mapper.create(rom), vram, oam);
@@ -56,8 +60,11 @@ final class MoldyGameBoy {
     this.serial = new Serial(timer::counter, irqs.serial());
     this.joypad = new Joypad(io.joypads(), irqs.joypad());
     this.apu = new Apu(timer::counter, io.audio());
+    PaletteRam bgPalettes = new PaletteRam("bc", 0xff68);
+    PaletteRam objPalettes = new PaletteRam("oc", 0xff6a);
     this.ioregs =
         new IoRegisters(
+            model,
             joypad.joyp(),
             serial.sb(),
             serial.sc(),
@@ -103,6 +110,12 @@ final class MoldyGameBoy {
             apu.waved(),
             apu.wavee(),
             apu.wavef(),
+            bgPalettes.spec(),
+            bgPalettes.data(),
+            objPalettes.spec(),
+            objPalettes.data(),
+            apu.pcm12(),
+            apu.pcm34(),
             memory);
     this.cpu = new Cpu(boot, memory, ioregs, videoMemoryLock);
     this.ppu =

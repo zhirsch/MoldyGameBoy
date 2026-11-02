@@ -1,8 +1,11 @@
 package com.zacharyhirsch.moldygameboy.emulator.memory;
 
 import com.zacharyhirsch.moldygameboy.emulator.arch.IoRegister;
+import com.zacharyhirsch.moldygameboy.emulator.arch.Model;
 
 public final class IoRegisters {
+
+  private final Model model;
 
   /* ff00 */ public final IoRegister joyp;
 
@@ -70,9 +73,30 @@ public final class IoRegisters {
   /* ff4a */ public final IoRegister wy = IoRegister.create("wy", (short) 0xff4a);
   /* ff4b */ public final IoRegister wx = IoRegister.create("wx", (short) 0xff4b);
 
+  // CGB only.
+  /* ff4c */ public final IoRegister key0 = IoRegister.create("key0", (short) 0xff4c);
+  /* ff4d */ public final IoRegister key1 = IoRegister.create("key1", (short) 0xff4d);
+  /* ff4f */ public final IoRegister vbk = IoRegister.create("vbk", (short) 0xff4f);
+
   /* ff50 */ public final IoRegister bank = IoRegister.create("bank", (short) 0xff50);
 
+  // CGB only.
+  /* ff56 */ public final IoRegister rp = IoRegister.create("rp", (short) 0xff56);
+  /* ff68 */ public final IoRegister bcps;
+  /* ff69 */ public final IoRegister bcpd;
+  /* ff6a */ public final IoRegister ocps;
+  /* ff6b */ public final IoRegister ocpd;
+  /* ff6c */ public final IoRegister opri = IoRegister.create("opri", (short) 0xff6c);
+  /* ff70 */ public final IoRegister svbk = IoRegister.create("svbk", (short) 0xff70);
+  /* ff72 */ public final IoRegister ff72 = IoRegister.create("ff72", (short) 0xff72);
+  /* ff73 */ public final IoRegister ff73 = IoRegister.create("ff73", (short) 0xff73);
+  /* ff74 */ public final IoRegister ff74 = IoRegister.create("ff74", (short) 0xff74);
+  /* ff75 */ public final IoRegister ff75 = IoRegister.create("ff75", (short) 0xff75);
+  /* ff76 */ public final IoRegister pcm12;
+  /* ff77 */ public final IoRegister pcm34;
+
   public IoRegisters(
+      Model model,
       IoRegister joyp,
       IoRegister sb,
       IoRegister sc,
@@ -118,7 +142,14 @@ public final class IoRegisters {
       IoRegister waved,
       IoRegister wavee,
       IoRegister wavef,
+      IoRegister bcps,
+      IoRegister bcpd,
+      IoRegister ocps,
+      IoRegister ocpd,
+      IoRegister pcm12,
+      IoRegister pcm34,
       Memory memory) {
+    this.model = model;
     this.joyp = joyp;
     this.sb = sb;
     this.sc = sc;
@@ -164,7 +195,37 @@ public final class IoRegisters {
     this.waved = waved;
     this.wavee = wavee;
     this.wavef = wavef;
+    this.bcps = bcps;
+    this.bcpd = bcpd;
+    this.ocps = ocps;
+    this.ocpd = ocpd;
+    this.pcm12 = pcm12;
+    this.pcm34 = pcm34;
     this.dma = new OamDmaRegister(memory);
+  }
+
+  /**
+   * Whether this is a CGB running in CGB mode, rather than a DMG or a CGB in DMG compatibility mode
+   * (which the CGB boot ROM selects for DMG games by writing bit 2 of KEY0).
+   */
+  public boolean isCgbMode() {
+    return model == Model.CGB && (key0.get() & 0x04) == 0;
+  }
+
+  private boolean isCgb() {
+    return model == Model.CGB;
+  }
+
+  private boolean isBootRomMapped() {
+    return bank.get() == 0;
+  }
+
+  /**
+   * Whether the CGB-mode registers can be accessed: in CGB mode, or while the boot ROM is still
+   * running (it sets some of them up before selecting compatibility mode).
+   */
+  private boolean isCgbModeOrBooting() {
+    return isCgbMode() || (isCgb() && isBootRomMapped());
   }
 
   public byte read(short address) {
@@ -226,7 +287,23 @@ public final class IoRegisters {
       case 0xff49 -> (byte) obp1.get();
       case 0xff4a -> (byte) wy.get();
       case 0xff4b -> (byte) wx.get();
+      case 0xff4c -> isCgb() && isBootRomMapped() ? (byte) key0.get() : (byte) 0xff;
+      case 0xff4d -> isCgbModeOrBooting() ? (byte) (key1.get() | 0x7e) : (byte) 0xff;
+      case 0xff4f -> isCgb() ? (byte) (vbk.get() | 0xfe) : (byte) 0xff;
       case 0xff50 -> (byte) (bank.get() | 0xff);
+      case 0xff56 -> isCgbModeOrBooting() ? (byte) (rp.get() | 0x3e) : (byte) 0xff;
+      case 0xff68 -> isCgb() ? (byte) (bcps.get() | 0x40) : (byte) 0xff;
+      case 0xff69 -> isCgbModeOrBooting() ? (byte) bcpd.get() : (byte) 0xff;
+      case 0xff6a -> isCgb() ? (byte) (ocps.get() | 0x40) : (byte) 0xff;
+      case 0xff6b -> isCgbModeOrBooting() ? (byte) ocpd.get() : (byte) 0xff;
+      case 0xff6c -> isCgbModeOrBooting() ? (byte) (opri.get() | 0xfe) : (byte) 0xff;
+      case 0xff70 -> isCgbModeOrBooting() ? (byte) (svbk.get() | 0xf8) : (byte) 0xff;
+      case 0xff72 -> isCgb() ? (byte) ff72.get() : (byte) 0xff;
+      case 0xff73 -> isCgb() ? (byte) ff73.get() : (byte) 0xff;
+      case 0xff74 -> isCgbModeOrBooting() ? (byte) ff74.get() : (byte) 0xff;
+      case 0xff75 -> isCgb() ? (byte) (ff75.get() | 0x8f) : (byte) 0xff;
+      case 0xff76 -> isCgb() ? (byte) pcm12.get() : (byte) 0xff;
+      case 0xff77 -> isCgb() ? (byte) pcm34.get() : (byte) 0xff;
       default -> (byte) 0xff;
     };
   }
@@ -289,7 +366,78 @@ public final class IoRegisters {
       case 0xff49 -> obp1.set((byte) (value & 0xff));
       case 0xff4a -> wy.set((byte) (value & 0xff));
       case 0xff4b -> wx.set((byte) (value & 0xff));
+      case 0xff4c -> {
+        // KEY0 can only be written by the boot ROM.
+        if (isCgb() && isBootRomMapped()) {
+          key0.set((byte) (value & 0xff));
+        }
+      }
+      case 0xff4d -> {
+        if (isCgbModeOrBooting()) {
+          key1.set((byte) (value & 0x01));
+        }
+      }
+      case 0xff4f -> {
+        if (isCgbModeOrBooting()) {
+          vbk.set((byte) (value & 0x01));
+        }
+      }
       case 0xff50 -> bank.set((byte) (value & 0x01));
+      case 0xff56 -> {
+        if (isCgbModeOrBooting()) {
+          rp.set((byte) (value & 0xc1));
+        }
+      }
+      case 0xff68 -> {
+        if (isCgb()) {
+          bcps.set((byte) (value & 0xbf));
+        }
+      }
+      case 0xff69 -> {
+        if (isCgbModeOrBooting()) {
+          bcpd.set((byte) (value & 0xff));
+        }
+      }
+      case 0xff6a -> {
+        if (isCgb()) {
+          ocps.set((byte) (value & 0xbf));
+        }
+      }
+      case 0xff6b -> {
+        if (isCgbModeOrBooting()) {
+          ocpd.set((byte) (value & 0xff));
+        }
+      }
+      case 0xff6c -> {
+        if (isCgbModeOrBooting()) {
+          opri.set((byte) (value & 0x01));
+        }
+      }
+      case 0xff70 -> {
+        if (isCgbModeOrBooting()) {
+          svbk.set((byte) (value & 0x07));
+        }
+      }
+      case 0xff72 -> {
+        if (isCgb()) {
+          ff72.set((byte) (value & 0xff));
+        }
+      }
+      case 0xff73 -> {
+        if (isCgb()) {
+          ff73.set((byte) (value & 0xff));
+        }
+      }
+      case 0xff74 -> {
+        if (isCgbModeOrBooting()) {
+          ff74.set((byte) (value & 0xff));
+        }
+      }
+      case 0xff75 -> {
+        if (isCgb()) {
+          ff75.set((byte) (value & 0x70));
+        }
+      }
       default -> {}
     }
   }
