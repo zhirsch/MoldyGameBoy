@@ -13,6 +13,8 @@ maven.install(
         "com.google.guava:guava:33.5.0-jre",
         "com.google.truth:truth:1.4.5",
         "net.java.dev.jna:jna:5.18.1",
+        "org.bytedeco:ffmpeg:jar:macosx-arm64:8.1.2-1.5.14",
+        "org.bytedeco:javacpp:jar:macosx-arm64:1.5.14",
         "org.junit.jupiter:junit-jupiter-api:6.0.2",
         "org.junit.jupiter:junit-jupiter-engine:6.0.2",
         "org.junit.jupiter:junit-jupiter-params:6.0.2",
@@ -26,5 +28,27 @@ maven.install(
     repositories = [
         "https://repo1.maven.org/maven2",
     ],
+)
+
+# Only FFmpegFrameRecorder is used, so leave out JavaCV's other native libraries.
+maven.artifact(
+    artifact = "javacv",
+    exclusions = [
+        "org.bytedeco:artoolkitplus",
+        "org.bytedeco:flandmark",
+        "org.bytedeco:flycapture",
+        "org.bytedeco:leptonica",
+        "org.bytedeco:libdc1394",
+        "org.bytedeco:libfreenect",
+        "org.bytedeco:libfreenect2",
+        "org.bytedeco:librealsense",
+        "org.bytedeco:librealsense2",
+        "org.bytedeco:openblas",
+        "org.bytedeco:opencv",
+        "org.bytedeco:tesseract",
+        "org.bytedeco:videoinput",
+    ],
+    group = "org.bytedeco",
+    version = "1.5.14",
 )
 use_repo(maven, "maven")

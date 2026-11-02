@@ -10,8 +10,11 @@ import java.nio.file.Path;
 
 final class MoldyGameBoyMain {
 
+  /** Set the {@code moldy.record} system property to a path to also record an MP4 there. */
   static void main(String[] args) throws Exception {
-    try (Io io = IoFactory.sdl()) {
+    String record = System.getProperty("moldy.record");
+    Io sdl = IoFactory.sdl();
+    try (Io io = record == null ? sdl : IoFactory.recording(sdl, Path.of(record))) {
       MoldyGameBoy gb =
           new MoldyGameBoy(
               ByteBuffer.wrap(Resources.toByteArray(Resources.getResource(args[0]))),
