@@ -182,8 +182,12 @@ public final class Ppu {
             | (mode == Mode.OAM_SCAN && (firstLineAfterLcdOn || lineStart) ? 0 : mode.bits));
     vblank.set(mode == Mode.VBLANK);
     // The mode 2 STAT condition is also raised for the first M-cycle of line 144, at the same
-    // time as the VBlank interrupt (see mooneye ppu/vblank_stat_intr-GS).
-    boolean oamCondition = oamScan || (ioregs.ly.get() == 144 && dot < 4);
+    // time as the VBlank interrupt (see mooneye ppu/vblank_stat_intr-GS). On a CGB it's raised
+    // one M-cycle earlier, at the end of line 143 (see mooneye misc/ppu/vblank_stat_intr-C).
+    boolean line144OamCondition =
+        (ioregs.ly.get() == 144 && dot < 4)
+            || (ioregs.isCgb() && ioregs.ly.get() == 143 && dot >= 456 - 4);
+    boolean oamCondition = oamScan || line144OamCondition;
     lcd.set(
         (ioregs.stat.bit(5) && oamCondition)
             || (ioregs.stat.bit(4) && mode == Mode.VBLANK)
