@@ -7,16 +7,18 @@ import com.zacharyhirsch.moldygameboy.emulator.cpu.Cpu;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.SpeedSwitch;
 import com.zacharyhirsch.moldygameboy.emulator.io.Io;
 import com.zacharyhirsch.moldygameboy.emulator.joypad.Joypad;
+import com.zacharyhirsch.moldygameboy.emulator.memory.Cartridge;
 import com.zacharyhirsch.moldygameboy.emulator.memory.Hdma;
 import com.zacharyhirsch.moldygameboy.emulator.memory.IoRegisters;
-import com.zacharyhirsch.moldygameboy.emulator.memory.Mapper;
 import com.zacharyhirsch.moldygameboy.emulator.memory.Memory;
+import com.zacharyhirsch.moldygameboy.emulator.memory.SaveSink;
 import com.zacharyhirsch.moldygameboy.emulator.memory.VideoMemoryLock;
 import com.zacharyhirsch.moldygameboy.emulator.ppu.PaletteRam;
 import com.zacharyhirsch.moldygameboy.emulator.ppu.Ppu;
 import com.zacharyhirsch.moldygameboy.emulator.serial.Serial;
 import com.zacharyhirsch.moldygameboy.emulator.serial.SerialDevice;
 import com.zacharyhirsch.moldygameboy.emulator.timer.Timer;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 final class MoldyGameBoy {
@@ -59,7 +61,7 @@ final class MoldyGameBoy {
     Model model = boot.limit() == 0x900 ? Model.CGB : Model.DMG;
     ByteBuffer vram = ByteBuffer.allocate(Memory.VRAM_SIZE);
     ByteBuffer oam = ByteBuffer.allocate(0x00a0);
-    this.memory = new Memory(Mapper.create(rom), vram, oam);
+    this.memory = new Memory(Cartridge.create(rom), vram, oam);
     this.hdma = new Hdma(memory, this::isLcdOn);
     VideoMemoryLock videoMemoryLock = new VideoMemoryLock();
     Irqs irqs = new Irqs();
@@ -213,6 +215,19 @@ final class MoldyGameBoy {
 
   public Cpu cpu() {
     return cpu;
+  }
+
+  /**
+   * Writes the cartridge's battery-backed state (RAM, and MBC3's clock) to {@code sink}, if it has
+   * a battery and the state has changed since it was last saved; otherwise does nothing.
+   */
+  void save(SaveSink sink) throws IOException {
+    memory.save(sink);
+  }
+
+  /** Restores the battery-backed state from a save file; does nothing without a battery. */
+  void load(byte[] save) {
+    memory.load(save);
   }
 
   /** Reads memory as the cartridge and video buses see it, bypassing the CPU. */

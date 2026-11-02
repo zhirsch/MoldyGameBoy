@@ -10,7 +10,7 @@ final class HdmaTest {
 
   private final Memory memory =
       new Memory(
-          Mapper.create(ByteBuffer.allocate(0x8000)),
+          Cartridge.create(ByteBuffer.allocate(0x8000)),
           ByteBuffer.allocate(Memory.VRAM_SIZE),
           ByteBuffer.allocate(0xa0));
 

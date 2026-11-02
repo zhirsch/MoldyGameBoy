@@ -10,13 +10,16 @@ import java.nio.ByteBuffer;
 final class Mbc2Mapper implements Mapper {
 
   private final ByteBuffer rom;
-  private final ByteBuffer ram = ByteBuffer.allocate(0x200);
+  private final Ram ram;
   private final int romBankCount;
 
   private boolean ramEnabled = false;
   private int romBankNumber = 1;
 
-  Mbc2Mapper(ByteBuffer rom) {
+  static final int RAM_SIZE = 0x200;
+
+  Mbc2Mapper(ByteBuffer rom, Ram ram) {
+    this.ram = ram;
     this.rom = rom;
     this.romBankCount = rom.limit() / 0x4000;
   }
@@ -59,12 +62,12 @@ final class Mbc2Mapper implements Mapper {
     return new MemoryRegion() {
       @Override
       public byte read(short address) {
-        return (byte) (0xf0 | ram.get(Short.toUnsignedInt(address) & 0x1ff));
+        return (byte) (0xf0 | ram.read(Short.toUnsignedInt(address) & 0x1ff));
       }
 
       @Override
       public void write(short address, byte value) {
-        ram.put(Short.toUnsignedInt(address) & 0x1ff, (byte) (value & 0x0f));
+        ram.write(Short.toUnsignedInt(address) & 0x1ff, (byte) (value & 0x0f));
       }
     };
   }

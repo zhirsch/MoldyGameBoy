@@ -9,7 +9,7 @@ final class MemoryTest {
 
   private final ByteBuffer vram = ByteBuffer.allocate(Memory.VRAM_SIZE);
   private final Memory memory =
-      new Memory(Mapper.create(ByteBuffer.allocate(0x8000)), vram, ByteBuffer.allocate(0xa0));
+      new Memory(Cartridge.create(ByteBuffer.allocate(0x8000)), vram, ByteBuffer.allocate(0xa0));
 
   @Test
   void vbkSelectsTheVramBank() {

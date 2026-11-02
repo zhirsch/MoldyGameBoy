@@ -5,11 +5,11 @@ import java.nio.ByteBuffer;
 final class NullMapper implements Mapper {
 
   private final ByteBuffer rom;
-  private final ByteBuffer ram;
+  private final Ram ram;
 
-  NullMapper(ByteBuffer rom) {
+  NullMapper(ByteBuffer rom, Ram ram) {
     this.rom = rom;
-    this.ram = ByteBuffer.allocate(0x2000);
+    this.ram = ram;
   }
 
   @Override
@@ -40,14 +40,14 @@ final class NullMapper implements Mapper {
       public byte read(short address) {
         int addr = Short.toUnsignedInt(address);
         assert 0xa000 <= addr && addr <= 0xbfff;
-        return ram.get((short) (addr - 0xa000));
+        return ram.read(addr - 0xa000);
       }
 
       @Override
       public void write(short address, byte value) {
         int addr = Short.toUnsignedInt(address);
         assert 0xa000 <= addr && addr <= 0xbfff;
-        ram.put((short) (addr - 0xa000), value);
+        ram.write(addr - 0xa000, value);
       }
     };
   }

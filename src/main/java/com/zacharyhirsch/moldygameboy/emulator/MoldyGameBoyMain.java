@@ -4,31 +4,65 @@ import com.google.common.io.Resources;
 import com.zacharyhirsch.moldygameboy.emulator.io.Io;
 import com.zacharyhirsch.moldygameboy.emulator.io.IoFactory;
 import com.zacharyhirsch.moldygameboy.emulator.io.Ticker;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 final class MoldyGameBoyMain {
 
-  /** Set the {@code moldy.record} system property to a path to also record an MP4 there. */
+  /**
+   * Runs a ROM: {@code MoldyGameBoyMain <boot ROM resource> <ROM path>}. A cartridge with a battery
+   * is saved next to the ROM as {@code <rom>.sav}. Set the {@code moldy.record} system property to
+   * a path to also record an MP4 there.
+   */
   static void main(String[] args) throws Exception {
     String record = System.getProperty("moldy.record");
+    Path romPath = Path.of(args[1]);
+    SaveFile saveFile = SaveFile.forRom(romPath);
     Io sdl = IoFactory.sdl();
     try (Io io = record == null ? sdl : IoFactory.recording(sdl, Path.of(record))) {
       MoldyGameBoy gb =
           new MoldyGameBoy(
               ByteBuffer.wrap(Resources.toByteArray(Resources.getResource(args[0]))),
-              ByteBuffer.wrap(Files.readAllBytes(Path.of(args[1]))),
+              ByteBuffer.wrap(Files.readAllBytes(romPath)),
               io);
-      io.eventLoop().run(new MoldyGameBoyTicker(gb));
+      saveFile.read().ifPresent(gb::load);
+      try {
+        io.eventLoop().run(new MoldyGameBoyTicker(gb, saveFile));
+      } finally {
+        gb.save(saveFile::write);
+      }
     }
   }
 
-  private record MoldyGameBoyTicker(MoldyGameBoy gb) implements Ticker {
+  /** Runs the emulator, saving about once a second while there are unsaved changes. */
+  private static final class MoldyGameBoyTicker implements Ticker {
+
+    private static final int SAVE_INTERVAL_DOTS = 1 << 22;
+
+    private final MoldyGameBoy gb;
+    private final SaveFile saveFile;
+
+    private int dots = 0;
+
+    MoldyGameBoyTicker(MoldyGameBoy gb, SaveFile saveFile) {
+      this.gb = gb;
+      this.saveFile = saveFile;
+    }
 
     @Override
     public void tick() {
       gb.tick();
+      if (++dots == SAVE_INTERVAL_DOTS) {
+        dots = 0;
+        try {
+          gb.save(saveFile::write);
+        } catch (IOException e) {
+          throw new UncheckedIOException("Unable to write " + saveFile.path(), e);
+        }
+      }
     }
 
     @Override

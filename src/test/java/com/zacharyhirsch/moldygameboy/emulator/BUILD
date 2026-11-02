@@ -126,3 +126,13 @@ java_junit5_test(
         artifact("org.junit.jupiter:junit-jupiter-api"),
     ] + JUNIT5_DEPS,
 )
+
+java_junit5_test(
+    name = "SaveFileTest",
+    srcs = ["SaveFileTest.java"],
+    deps = [
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator",
+        artifact("com.google.truth:truth"),
+        artifact("org.junit.jupiter:junit-jupiter-api"),
+    ] + JUNIT5_DEPS,
+)

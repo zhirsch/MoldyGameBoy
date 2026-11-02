@@ -5,7 +5,7 @@ import java.nio.ByteBuffer;
 final class Mbc5Mapper implements Mapper {
 
   private final ByteBuffer rom;
-  private final ByteBuffer ram;
+  private final Ram ram;
   private final boolean rumblePresent;
   private final int romBankCount;
   private final int ramBankCount;
@@ -14,12 +14,12 @@ final class Mbc5Mapper implements Mapper {
   private int romBankNumber = 1;
   private int ramBankNumber = 0;
 
-  Mbc5Mapper(ByteBuffer rom, ByteBuffer ram, boolean rumblePresent) {
-    this.rom = rom;
+  Mbc5Mapper(ByteBuffer rom, Ram ram, boolean rumblePresent) {
     this.ram = ram;
+    this.rom = rom;
     this.rumblePresent = rumblePresent;
     this.romBankCount = rom.limit() / 0x4000;
-    this.ramBankCount = ram.limit() / 0x2000;
+    this.ramBankCount = ram.size() / 0x2000;
   }
 
   @Override
@@ -71,7 +71,7 @@ final class Mbc5Mapper implements Mapper {
 
   @Override
   public MemoryRegion mapRam() {
-    if (ram.limit() == 0 || ramEnable == 0) {
+    if (ram.size() == 0 || ramEnable == 0) {
       return new OpenBus();
     }
     return new MemoryRegion() {
@@ -81,7 +81,7 @@ final class Mbc5Mapper implements Mapper {
         assert 0xa000 <= addr && addr <= 0xbfff;
         assert 0 <= ramBankNumber && ramBankNumber <= 0x0f;
         int bank = ramBankNumber & (ramBankCount - 1);
-        return ram.get((bank << 13) | (addr - 0xa000));
+        return ram.read((bank << 13) | (addr - 0xa000));
       }
 
       @Override
@@ -90,7 +90,7 @@ final class Mbc5Mapper implements Mapper {
         assert 0xa000 <= addr && addr <= 0xbfff;
         assert 0 <= ramBankNumber && ramBankNumber <= 0x0f;
         int bank = ramBankNumber & (ramBankCount - 1);
-        ram.put((bank << 13) | (addr - 0xa000), value);
+        ram.write((bank << 13) | (addr - 0xa000), value);
       }
     };
   }

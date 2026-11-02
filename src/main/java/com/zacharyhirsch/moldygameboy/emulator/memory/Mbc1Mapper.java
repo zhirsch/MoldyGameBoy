@@ -5,7 +5,7 @@ import java.nio.ByteBuffer;
 final class Mbc1Mapper implements Mapper {
 
   private final ByteBuffer rom;
-  private final ByteBuffer ram;
+  private final Ram ram;
   private final int romBankCount;
   private final int ramBankCount;
   private final boolean multicart;
@@ -15,11 +15,11 @@ final class Mbc1Mapper implements Mapper {
   private byte bank2 = 0;
   private byte mode = 0;
 
-  Mbc1Mapper(ByteBuffer rom, ByteBuffer ram, boolean multicart) {
-    this.rom = rom;
+  Mbc1Mapper(ByteBuffer rom, Ram ram, boolean multicart) {
     this.ram = ram;
+    this.rom = rom;
     this.romBankCount = rom.limit() / 0x4000;
-    this.ramBankCount = ram.limit() / 0x2000;
+    this.ramBankCount = ram.size() / 0x2000;
     this.multicart = multicart;
   }
 
@@ -67,7 +67,7 @@ final class Mbc1Mapper implements Mapper {
 
   @Override
   public MemoryRegion mapRam() {
-    if (ram.limit() == 0 || ramEnable == 0) {
+    if (ram.size() == 0 || ramEnable == 0) {
       return new OpenBus();
     }
     return new MemoryRegion() {
@@ -75,14 +75,14 @@ final class Mbc1Mapper implements Mapper {
       public byte read(short address) {
         int addr = Short.toUnsignedInt(address);
         assert 0xa000 <= addr && addr <= 0xbfff;
-        return ram.get((getRamBank() << 13) | (addr - 0xa000));
+        return ram.read((getRamBank() << 13) | (addr - 0xa000));
       }
 
       @Override
       public void write(short address, byte value) {
         int addr = Short.toUnsignedInt(address);
         assert 0xa000 <= addr && addr <= 0xbfff;
-        ram.put((getRamBank() << 13) | (addr - 0xa000), value);
+        ram.write((getRamBank() << 13) | (addr - 0xa000), value);
       }
     };
   }

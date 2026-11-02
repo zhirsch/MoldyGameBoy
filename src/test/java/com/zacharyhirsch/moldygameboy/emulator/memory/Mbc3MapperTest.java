@@ -2,6 +2,7 @@ package com.zacharyhirsch.moldygameboy.emulator.memory;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import org.junit.jupiter.api.Test;
 
@@ -9,8 +10,10 @@ final class Mbc3MapperTest {
 
   private static final int DOTS_PER_SECOND = 1 << 22;
 
-  private final Mbc3Mapper mapper =
-      new Mbc3Mapper(rom(), ByteBuffer.allocate(4 * 0x2000), new RealTimeClock());
+  private long now = 1_000_000;
+
+  private final Cartridge cartridge = mbc3();
+  private final Mapper mapper = cartridge.mapper();
 
   @Test
   void romBankIsSevenBitsWithZeroMeaningOne() {
@@ -98,6 +101,71 @@ final class Mbc3MapperTest {
     latch();
     assertThat(readClock(RealTimeClock.SECONDS)).isEqualTo(0);
     assertThat(readClock(RealTimeClock.MINUTES)).isEqualTo(0);
+  }
+
+  @Test
+  void writingTheClockSavesTheRamAndClock() throws IOException {
+    write(0x0000, 0x0a);
+    writeClock(RealTimeClock.MINUTES, 5);
+
+    assertThat(save(cartridge)).hasLength(4 * 0x2000 + RealTimeClock.SAVE_SIZE);
+    assertThat(save(cartridge)).isNull();
+  }
+
+  @Test
+  void clockCatchesUpOnTheTimeSinceItWasSaved() throws IOException {
+    write(0x0000, 0x0a);
+    writeClock(RealTimeClock.SECONDS, 10);
+    byte[] save = save(cartridge);
+
+    now += 86400 + 3600 + 60 + 1; // 1 day, 1 hour, 1 minute and 1 second later
+    Cartridge loadedCartridge = mbc3();
+    loadedCartridge.load(save);
+
+    Mapper loaded = loadedCartridge.mapper();
+    loaded.mapRom().write((short) 0x0000, (byte) 0x0a);
+    loaded.mapRom().write((short) 0x6000, (byte) 0x00);
+    loaded.mapRom().write((short) 0x6000, (byte) 0x01);
+    assertThat(readClock(loaded, RealTimeClock.SECONDS)).isEqualTo(11);
+    assertThat(readClock(loaded, RealTimeClock.MINUTES)).isEqualTo(1);
+    assertThat(readClock(loaded, RealTimeClock.HOURS)).isEqualTo(1);
+    assertThat(readClock(loaded, RealTimeClock.DAYS_LOW)).isEqualTo(1);
+  }
+
+  @Test
+  void haltedClockDoesNotCatchUp() throws IOException {
+    write(0x0000, 0x0a);
+    writeClock(RealTimeClock.DAYS_HIGH, 0x40);
+    byte[] save = save(cartridge);
+
+    now += 3600;
+    Cartridge loadedCartridge = mbc3();
+    loadedCartridge.load(save);
+
+    Mapper loaded = loadedCartridge.mapper();
+    loaded.mapRom().write((short) 0x0000, (byte) 0x0a);
+    loaded.mapRom().write((short) 0x6000, (byte) 0x00);
+    loaded.mapRom().write((short) 0x6000, (byte) 0x01);
+    assertThat(readClock(loaded, RealTimeClock.HOURS)).isEqualTo(0);
+  }
+
+  /** An MBC3 cartridge with 4 RAM banks and a clock, kept by a battery. */
+  private Cartridge mbc3() {
+    RealTimeClock clock = new RealTimeClock(() -> now);
+    Ram ram = new BatteryBackedRam(4 * 0x2000, clock);
+    return new Cartridge(new Mbc3Mapper(rom(), ram, clock), ram);
+  }
+
+  /** What saving writes, or null if it writes nothing. */
+  private static byte[] save(Cartridge cartridge) throws IOException {
+    byte[][] saved = {null};
+    cartridge.save(save -> saved[0] = save);
+    return saved[0];
+  }
+
+  private static int readClock(Mapper mapper, int register) {
+    mapper.mapRom().write((short) 0x4000, (byte) register);
+    return Byte.toUnsignedInt(mapper.mapRam().read((short) 0xa000));
   }
 
   private void tick(int dots) {

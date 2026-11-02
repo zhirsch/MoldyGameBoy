@@ -10,7 +10,7 @@ import java.nio.ByteBuffer;
 final class Mbc3Mapper implements Mapper {
 
   private final ByteBuffer rom;
-  private final ByteBuffer ram;
+  private final Ram ram;
   private final RealTimeClock clock;
   private final int romBankCount;
   private final int ramBankCount;
@@ -21,12 +21,12 @@ final class Mbc3Mapper implements Mapper {
   private int lastLatchWrite = 0xff;
 
   /** {@code clock} is null for cartridges without one. */
-  Mbc3Mapper(ByteBuffer rom, ByteBuffer ram, RealTimeClock clock) {
-    this.rom = rom;
+  Mbc3Mapper(ByteBuffer rom, Ram ram, RealTimeClock clock) {
     this.ram = ram;
+    this.rom = rom;
     this.clock = clock;
     this.romBankCount = rom.limit() / 0x4000;
-    this.ramBankCount = Math.max(1, ram.limit() / 0x2000);
+    this.ramBankCount = Math.max(1, ram.size() / 0x2000);
   }
 
   @Override
@@ -92,18 +92,18 @@ final class Mbc3Mapper implements Mapper {
         }
       };
     }
-    if (ram.limit() == 0) {
+    if (ram.size() == 0) {
       return new OpenBus();
     }
     return new MemoryRegion() {
       @Override
       public byte read(short address) {
-        return ram.get(offset(address));
+        return ram.read(offset(address));
       }
 
       @Override
       public void write(short address, byte value) {
-        ram.put(offset(address), value);
+        ram.write(offset(address), value);
       }
     };
   }

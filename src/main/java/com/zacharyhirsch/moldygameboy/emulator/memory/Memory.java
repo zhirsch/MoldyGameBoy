@@ -1,6 +1,7 @@
 package com.zacharyhirsch.moldygameboy.emulator.memory;
 
 import com.zacharyhirsch.moldygameboy.emulator.arch.IoRegister;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 /**
@@ -12,6 +13,7 @@ public class Memory {
 
   public static final int VRAM_SIZE = 0x4000;
 
+  private final Cartridge cartridge;
   private final Mapper mapper;
   private final ByteBuffer oam;
   private final ByteBuffer vram;
@@ -20,8 +22,9 @@ public class Memory {
   private int vramBank = 0;
   private int wramBank = 0;
 
-  public Memory(Mapper mapper, ByteBuffer vram, ByteBuffer oam) {
-    this.mapper = mapper;
+  public Memory(Cartridge cartridge, ByteBuffer vram, ByteBuffer oam) {
+    this.cartridge = cartridge;
+    this.mapper = cartridge.mapper();
     this.oam = oam;
     this.vram = vram;
     this.wram = ByteBuffer.allocate(0x8000);
@@ -29,7 +32,20 @@ public class Memory {
 
   /** Advances the cartridge by one dot. */
   public void tick() {
-    mapper.tick();
+    cartridge.tick();
+  }
+
+  /**
+   * Writes the cartridge's battery-backed state to {@code sink}, if it has a battery and the state
+   * has changed since it was last saved; otherwise does nothing.
+   */
+  public void save(SaveSink sink) throws IOException {
+    cartridge.save(sink);
+  }
+
+  /** Restores the cartridge's battery-backed state from a save file. */
+  public void load(byte[] save) {
+    cartridge.load(save);
   }
 
   /** VBK: which VRAM bank the CPU sees at $8000-$9FFF. */
