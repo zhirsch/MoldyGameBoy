@@ -9,7 +9,9 @@ import com.zacharyhirsch.jna.sdl3.SDL_GamepadDeviceEvent;
 import com.zacharyhirsch.jna.sdl3.SDL_KeyboardEvent;
 import com.zacharyhirsch.moldygameboy.emulator.io.Joypads;
 import java.lang.foreign.MemorySegment;
+import java.util.EnumSet;
 import java.util.Map;
+import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,40 +19,23 @@ final class SdlJoypads implements Joypads {
 
   private static final Logger log = LoggerFactory.getLogger(SdlJoypads.class);
 
-  private static final Map<Integer, Joypads.Button> JOYPAD1_KEYS =
-      ImmutableMap.<Integer, Joypads.Button>builder()
-          .put(SDLK_S(), Joypads.Button.DOWN)
-          .put(SDLK_W(), Joypads.Button.UP)
-          .put(SDLK_D(), Joypads.Button.RIGHT)
-          .put(SDLK_A(), Joypads.Button.LEFT)
-          .put(SDLK_Z(), Joypads.Button.SELECT)
-          .put(SDLK_X(), Joypads.Button.START)
-          .put(SDLK_M(), Joypads.Button.BUTTON_A)
-          .put((int) ',', Joypads.Button.BUTTON_B)
+  private static final Map<Integer, Button> KEYS =
+      ImmutableMap.<Integer, Button>builder()
+          .put(SDLK_W(), Button.UP)
+          .put(SDLK_A(), Button.LEFT)
+          .put(SDLK_S(), Button.DOWN)
+          .put(SDLK_D(), Button.RIGHT)
+          .put(SDLK_Z(), Button.START)
+          .put(SDLK_X(), Button.SELECT)
+          .put(SDLK_PERIOD(), Button.BUTTON_B)
+          .put(SDLK_SLASH(), Button.BUTTON_A)
           .build();
 
-  private static final Map<Integer, Joypads.Button> JOYPAD2_KEYS =
-      ImmutableMap.<Integer, Joypads.Button>builder()
-          .put(SDLK_DOWN(), Joypads.Button.DOWN)
-          .put(SDLK_UP(), Joypads.Button.UP)
-          .put(SDLK_RIGHT(), Joypads.Button.RIGHT)
-          .put(SDLK_LEFT(), Joypads.Button.LEFT)
-          .put(SDLK_SPACE(), Joypads.Button.SELECT)
-          .put(SDLK_RETURN(), Joypads.Button.START)
-          .put(SDLK_PERIOD(), Joypads.Button.BUTTON_A)
-          .put(SDLK_SLASH(), Joypads.Button.BUTTON_B)
-          .build();
-
-  private final boolean[] strobe;
-  private final int[] index;
-  private final byte[] status;
+  private final Set<Button> pressed = EnumSet.noneOf(Button.class);
 
   private MemorySegment gamepad;
 
   SdlJoypads() {
-    this.strobe = new boolean[] {false, false};
-    this.index = new int[] {0, 0};
-    this.status = new byte[] {0, 0};
     this.gamepad = null;
 
     if (!SDL_Init(SDL_INIT_GAMEPAD())) {
@@ -59,28 +44,8 @@ final class SdlJoypads implements Joypads {
   }
 
   @Override
-  public byte readJoypad(int index) {
-    if (this.index[index] > 7) {
-      return 1;
-    }
-    byte value = (byte) bit(status[index], this.index[index]);
-    if (!strobe[index]) {
-      this.index[index]++;
-    }
-    return value;
-  }
-
-  @Override
-  public void writeJoypads(byte value) {
-    writeJoypad(0, value);
-    writeJoypad(1, value);
-  }
-
-  private void writeJoypad(int index, byte value) {
-    strobe[index] = bit(value, 0) == 1;
-    if (strobe[index]) {
-      this.index[index] = 0;
-    }
+  public boolean isPressed(Button button) {
+    return pressed.contains(button);
   }
 
   @Override
@@ -121,21 +86,21 @@ final class SdlJoypads implements Joypads {
     short value = SDL_GamepadAxisEvent.value(gamepadAxisEvent);
     if (axis == SDL_GAMEPAD_AXIS_LEFTX()) {
       if (value <= SDL_JOYSTICK_AXIS_MIN() / 2) {
-        setButtonDown(0, Button.LEFT);
+        setButtonDown(Button.LEFT);
       } else if (value >= SDL_JOYSTICK_AXIS_MAX() / 2) {
-        setButtonDown(0, Button.RIGHT);
+        setButtonDown(Button.RIGHT);
       } else {
-        setButtonUp(0, Button.LEFT);
-        setButtonUp(0, Button.RIGHT);
+        setButtonUp(Button.LEFT);
+        setButtonUp(Button.RIGHT);
       }
     } else if (axis == SDL_GAMEPAD_AXIS_LEFTY()) {
       if (value <= SDL_JOYSTICK_AXIS_MIN() / 2) {
-        setButtonDown(0, Button.UP);
+        setButtonDown(Button.UP);
       } else if (value >= SDL_JOYSTICK_AXIS_MAX() / 2) {
-        setButtonDown(0, Button.DOWN);
+        setButtonDown(Button.DOWN);
       } else {
-        setButtonUp(0, Button.UP);
-        setButtonUp(0, Button.DOWN);
+        setButtonUp(Button.UP);
+        setButtonUp(Button.DOWN);
       }
     }
   }
@@ -144,7 +109,7 @@ final class SdlJoypads implements Joypads {
     // int joystickId = SDL_GamepadDeviceEvent.which(gamepadEvent);
     Button button = mapGamepadButton(SDL_GamepadButtonEvent.button(gamepadButtonEvent));
     if (button != null) {
-      setButtonDown(0, button);
+      setButtonDown(button);
     }
   }
 
@@ -152,7 +117,7 @@ final class SdlJoypads implements Joypads {
     // int joystickId = SDL_GamepadDeviceEvent.which(gamepadEvent);
     Button button = mapGamepadButton(SDL_GamepadButtonEvent.button(gamepadButtonEvent));
     if (button != null) {
-      setButtonUp(0, button);
+      setButtonUp(button);
     }
   }
 
@@ -165,9 +130,9 @@ final class SdlJoypads implements Joypads {
       return Button.UP;
     } else if (buttonCode == SDL_GAMEPAD_BUTTON_DPAD_DOWN()) {
       return Button.DOWN;
-    } else if (buttonCode == SDL_GAMEPAD_BUTTON_LABEL_UNKNOWN()) {
+    } else if (buttonCode == SDL_GAMEPAD_BUTTON_EAST()) {
       return Button.BUTTON_A;
-    } else if (buttonCode == SDL_GAMEPAD_BUTTON_LABEL_B()) {
+    } else if (buttonCode == SDL_GAMEPAD_BUTTON_SOUTH()) {
       return Button.BUTTON_B;
     } else if (buttonCode == SDL_GAMEPAD_BUTTON_START()) {
       return Button.START;
@@ -180,42 +145,24 @@ final class SdlJoypads implements Joypads {
   }
 
   public void onKeyDown(MemorySegment keyboardEvent) {
-    int keyCode = SDL_KeyboardEvent.key(keyboardEvent);
-    onKeyDown(0, keyCode);
-    onKeyDown(1, keyCode);
-  }
-
-  private void onKeyDown(int index, int keyCode) {
-    Map<Integer, Button> mapping = index == 0 ? JOYPAD1_KEYS : JOYPAD2_KEYS;
-    Button button = mapping.get(keyCode);
+    Button button = KEYS.get(SDL_KeyboardEvent.key(keyboardEvent));
     if (button != null) {
-      setButtonDown(index, button);
+      setButtonDown(button);
     }
   }
 
   public void onKeyUp(MemorySegment keyboardEvent) {
-    int keyCode = SDL_KeyboardEvent.key(keyboardEvent);
-    onKeyUp(0, keyCode);
-    onKeyUp(1, keyCode);
-  }
-
-  private void onKeyUp(int index, int keyCode) {
-    Map<Integer, Button> mapping = index == 0 ? JOYPAD1_KEYS : JOYPAD2_KEYS;
-    Button button = mapping.get(keyCode);
-    setButtonUp(index, button);
-  }
-
-  private void setButtonDown(int index, Button button) {
-    status[index] |= button.getValue();
-  }
-
-  private void setButtonUp(int index, Button button) {
+    Button button = KEYS.get(SDL_KeyboardEvent.key(keyboardEvent));
     if (button != null) {
-      status[index] &= (byte) ~button.getValue();
+      setButtonUp(button);
     }
   }
 
-  private static int bit(byte value, int i) {
-    return (Byte.toUnsignedInt(value) >>> i) & 1;
+  private void setButtonDown(Button button) {
+    pressed.add(button);
+  }
+
+  private void setButtonUp(Button button) {
+    pressed.remove(button);
   }
 }

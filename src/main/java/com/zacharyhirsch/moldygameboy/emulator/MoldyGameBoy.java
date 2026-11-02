@@ -4,6 +4,7 @@ import com.zacharyhirsch.moldygameboy.emulator.apu.Apu;
 import com.zacharyhirsch.moldygameboy.emulator.arch.Irqs;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.Cpu;
 import com.zacharyhirsch.moldygameboy.emulator.io.Io;
+import com.zacharyhirsch.moldygameboy.emulator.joypad.Joypad;
 import com.zacharyhirsch.moldygameboy.emulator.memory.IoRegisters;
 import com.zacharyhirsch.moldygameboy.emulator.memory.Mapper;
 import com.zacharyhirsch.moldygameboy.emulator.memory.Memory;
@@ -37,6 +38,7 @@ final class MoldyGameBoy {
   private final Memory memory;
   private final Timer timer;
   private final Serial serial;
+  private final Joypad joypad;
   private final Apu apu;
   private final IoRegisters ioregs;
   private final Cpu cpu;
@@ -52,9 +54,11 @@ final class MoldyGameBoy {
     Irqs irqs = new Irqs();
     this.timer = new Timer(irqs.timer());
     this.serial = new Serial(timer::counter, irqs.serial());
+    this.joypad = new Joypad(io.joypads(), irqs.joypad());
     this.apu = new Apu(timer::counter, io.audio());
     this.ioregs =
         new IoRegisters(
+            joypad.joyp(),
             serial.sb(),
             serial.sc(),
             timer.div(),
@@ -138,6 +142,7 @@ final class MoldyGameBoy {
         timer.tickT4();
         serial.tick();
         apu.tick();
+        joypad.tick();
       }
     }
     tcycle = tcycle.next();

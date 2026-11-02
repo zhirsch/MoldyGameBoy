@@ -14,6 +14,7 @@ java_library(
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/io/none:__pkg__",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/io/recording:__pkg__",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/io/sdl:__pkg__",
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/joypad:__pkg__",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/ppu:__pkg__",
         "//src/test/java/com/zacharyhirsch/moldygameboy/emulator:__pkg__",
     ],

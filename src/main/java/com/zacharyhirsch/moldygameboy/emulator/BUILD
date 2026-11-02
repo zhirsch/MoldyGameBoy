@@ -15,6 +15,7 @@ java_library(
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu/registers",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/io",
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/joypad",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/memory",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/ppu",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/serial",

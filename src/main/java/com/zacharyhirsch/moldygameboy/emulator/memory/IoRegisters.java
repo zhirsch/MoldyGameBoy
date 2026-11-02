@@ -4,7 +4,7 @@ import com.zacharyhirsch.moldygameboy.emulator.arch.IoRegister;
 
 public final class IoRegisters {
 
-  /* ff00 */ public final IoRegister joyp = IoRegister.create("joyp", (short) 0xff00);
+  /* ff00 */ public final IoRegister joyp;
 
   /* ff01 */ public final IoRegister sb;
   /* ff02 */ public final IoRegister sc;
@@ -73,6 +73,7 @@ public final class IoRegisters {
   /* ff50 */ public final IoRegister bank = IoRegister.create("bank", (short) 0xff50);
 
   public IoRegisters(
+      IoRegister joyp,
       IoRegister sb,
       IoRegister sc,
       IoRegister div,
@@ -118,6 +119,7 @@ public final class IoRegisters {
       IoRegister wavee,
       IoRegister wavef,
       Memory memory) {
+    this.joyp = joyp;
     this.sb = sb;
     this.sc = sc;
     this.div = div;
@@ -167,7 +169,7 @@ public final class IoRegisters {
 
   public byte read(short address) {
     return switch (Short.toUnsignedInt(address)) {
-      case 0xff00 -> (byte) (joyp.get() | 0xcf);
+      case 0xff00 -> (byte) (joyp.get() | 0xc0);
       case 0xff01 -> (byte) sb.get();
       case 0xff02 -> (byte) (sc.get() | 0x7e);
       case 0xff04 -> (byte) div.get();
