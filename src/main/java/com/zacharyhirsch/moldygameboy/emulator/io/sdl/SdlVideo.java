@@ -25,7 +25,7 @@ final class SdlVideo implements Video {
   private final MemorySegment pitch;
   private final byte[] frame;
 
-  private Instant lastFrameTime = null;
+  private Instant nextFrameTime = null;
 
   SdlVideo(Arena arena) {
     if (!SDL_InitSubSystem(SDL_INIT_VIDEO())) {
@@ -106,14 +106,19 @@ final class SdlVideo implements Video {
     SDL_DestroyWindow(window);
   }
 
+  /**
+   * Waits until it's time for the next frame. Frames are scheduled on a fixed timeline, so time lost
+   * oversleeping is made up on the next frame rather than slowing emulation down (which would starve
+   * the audio). After falling well behind, e.g. while the window was being dragged, the timeline
+   * restarts instead of racing to catch up.
+   */
   private void delay() {
-    if (lastFrameTime != null) {
-      Duration elapsed = Duration.between(lastFrameTime, Instant.now());
-      Duration delay = FRAME_DURATION.minus(elapsed);
-      if (delay.isPositive()) {
-        SDL_DelayNS(delay.toNanos());
-      }
+    Instant now = Instant.now();
+    if (nextFrameTime == null || now.isAfter(nextFrameTime.plus(FRAME_DURATION.multipliedBy(4)))) {
+      nextFrameTime = now;
+    } else if (now.isBefore(nextFrameTime)) {
+      SDL_DelayNS(Duration.between(now, nextFrameTime).toNanos());
     }
-    lastFrameTime = Instant.now();
+    nextFrameTime = nextFrameTime.plus(FRAME_DURATION);
   }
 }
