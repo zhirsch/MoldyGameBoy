@@ -3,7 +3,6 @@ package com.zacharyhirsch.moldygameboy.emulator.io.capturing;
 import com.zacharyhirsch.moldygameboy.emulator.io.Color;
 import com.zacharyhirsch.moldygameboy.emulator.io.Video;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,7 +51,7 @@ public final class CapturingVideo implements Video {
     return frame;
   }
 
-  public List<String> diff(BufferedImage ref) throws IOException {
+  public List<String> diff(BufferedImage ref) {
     List<String> mismatches = new ArrayList<>();
     for (int y = 0; y < HEIGHT; y++) {
       for (int x = 0; x < WIDTH; x++) {

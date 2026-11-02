@@ -107,11 +107,11 @@ public final class Ppu {
       updateStatAndIrqs();
       return;
     }
+    // Nothing happens per dot in HBlank or VBlank.
     switch (mode) {
       case OAM_SCAN -> tickOamScan();
       case DRAWING -> tickDrawing();
-      case HBLANK -> tickHBlank();
-      case VBLANK -> tickVBlank();
+      case HBLANK, VBLANK -> {}
     }
     dot++;
     if (dot == 456) {
@@ -269,10 +269,6 @@ public final class Ppu {
       objFetcher.reset();
     }
   }
-
-  private static void tickHBlank() {}
-
-  private static void tickVBlank() {}
 
   private int nextSpriteSlot() {
     List<Sprite> sprites = oamScanner.selected();

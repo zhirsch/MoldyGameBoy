@@ -8,9 +8,18 @@ import com.zacharyhirsch.moldygameboy.emulator.io.Ticker;
 import com.zacharyhirsch.moldygameboy.emulator.io.Video;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
+import java.time.Duration;
 import java.util.function.Consumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 final class SdlEventLoop implements EventLoop {
+
+  private static final Logger log = LoggerFactory.getLogger(SdlEventLoop.class);
+
+  // A frame's worth of dots.
+  private static final int TICKS_PER_PUMP = 70224;
+  private static final Duration ERROR_PUMP_INTERVAL = Duration.ofMillis(16);
 
   private final MemorySegment event;
   private final Video video;
@@ -45,24 +54,27 @@ final class SdlEventLoop implements EventLoop {
     this.onKeyUp = onKeyUp;
   }
 
+  /**
+   * Ticks until the ticker is done or the window is closed, handling events about once per frame.
+   * If ticking fails, the error is shown until the window is closed, then rethrown.
+   */
   @Override
   public void run(Ticker ticker) {
     try {
-      loop(ticker::tick);
-    } catch (Exception e) {
-      video.setError(e);
-      loop(() -> {});
-      throw e;
-    }
-  }
-
-  private void loop(Runnable runner) {
-    int i = 0;
-    while (!quit) {
-      runner.run();
-      if ((i++ % 100) == 0) {
+      while (!quit && !ticker.isDone()) {
+        for (int i = 0; i < TICKS_PER_PUMP; i++) {
+          ticker.tick();
+        }
         pump();
       }
+    } catch (Exception e) {
+      log.error("Emulation failed", e);
+      video.setError(e);
+      while (!quit) {
+        pump();
+        SDL_DelayNS(ERROR_PUMP_INTERVAL.toNanos());
+      }
+      throw e;
     }
   }
 

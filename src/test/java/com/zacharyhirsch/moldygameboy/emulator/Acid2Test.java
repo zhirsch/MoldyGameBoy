@@ -3,7 +3,6 @@ package com.zacharyhirsch.moldygameboy.emulator;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.io.Resources;
-import com.zacharyhirsch.moldygameboy.emulator.io.Io;
 import com.zacharyhirsch.moldygameboy.emulator.io.IoFactory;
 import com.zacharyhirsch.moldygameboy.emulator.io.Ticker;
 import com.zacharyhirsch.moldygameboy.emulator.io.capturing.CapturingIo;
