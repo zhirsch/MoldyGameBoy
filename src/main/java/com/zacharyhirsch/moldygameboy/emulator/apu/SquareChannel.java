@@ -170,14 +170,14 @@ final class SquareChannel {
     }
   }
 
-  void powerOff() {
+  void powerOff(boolean dmg) {
     enabled = false;
     duty = 0;
     frequency = 0;
     sweep = 0;
     sweepEnabled = false;
     negateUsed = false;
-    length.powerOff();
+    length.powerOff(dmg);
     envelope.powerOff();
   }
 

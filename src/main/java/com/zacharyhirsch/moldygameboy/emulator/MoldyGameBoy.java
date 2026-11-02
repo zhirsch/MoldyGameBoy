@@ -67,7 +67,7 @@ final class MoldyGameBoy {
     this.serial = new Serial(timer::counter, irqs.serial());
     this.joypad = new Joypad(io.joypads(), irqs.joypad());
     this.speedSwitch = new SpeedSwitch();
-    this.apu = new Apu(timer::counter, speedSwitch::isDoubleSpeed, io.audio());
+    this.apu = new Apu(model, timer::counter, speedSwitch::isDoubleSpeed, io.audio());
     PaletteRam bgPalettes = new PaletteRam("bc", 0xff68);
     PaletteRam objPalettes = new PaletteRam("oc", 0xff6a);
     this.ioregs =

@@ -129,10 +129,10 @@ final class NoiseChannel {
     envelope.clock();
   }
 
-  void powerOff() {
+  void powerOff(boolean dmg) {
     enabled = false;
     polynomial = 0;
-    length.powerOff();
+    length.powerOff(dmg);
     envelope.powerOff();
   }
 

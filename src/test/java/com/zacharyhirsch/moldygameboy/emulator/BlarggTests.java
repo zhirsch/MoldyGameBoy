@@ -38,7 +38,12 @@ final class BlarggTests {
 
   @Test
   void testDmgSound() throws Exception {
-    doMemoryTest("blargg-test-suite/dmg_sound/dmg_sound.gb");
+    doMemoryTest("dmg.bin", "blargg-test-suite/dmg_sound/dmg_sound.gb");
+  }
+
+  @Test
+  void testCgbSound() throws Exception {
+    doMemoryTest("cgb.bin", "blargg-test-suite/cgb_sound/cgb_sound.gb");
   }
 
   private static void doTest(String path) throws Exception {
@@ -54,9 +59,9 @@ final class BlarggTests {
   }
 
   /** Runs a test that reports through cartridge RAM rather than the serial port. */
-  private static void doMemoryTest(String path) throws Exception {
+  private static void doMemoryTest(String boot, String path) throws Exception {
     try (Io io = Boolean.getBoolean("moldy.gui") ? IoFactory.sdl() : IoFactory.none()) {
-      MoldyGameBoy gb = new MoldyGameBoy(readRom("dmg.bin"), readRom(path), io);
+      MoldyGameBoy gb = new MoldyGameBoy(readRom(boot), readRom(path), io);
       MemoryTicker ticker = new MemoryTicker(gb);
       io.eventLoop().run(ticker);
 

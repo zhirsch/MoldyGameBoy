@@ -50,8 +50,11 @@ final class LengthCounter {
     return ranOut;
   }
 
-  /** On DMG, powering the APU off leaves the counter alone. */
-  void powerOff() {
+  /** Powering the APU off clears the counter on CGB, but leaves it alone on DMG. */
+  void powerOff(boolean dmg) {
     enabled = false;
+    if (!dmg) {
+      counter = 0;
+    }
   }
 }

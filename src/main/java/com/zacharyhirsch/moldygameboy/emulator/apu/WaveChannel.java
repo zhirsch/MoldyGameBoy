@@ -5,11 +5,11 @@ import java.util.function.BooleanSupplier;
 /**
  * Channel 3: plays the 32 4-bit samples in wave RAM.
  *
- * <p>While the channel is on, the CPU can only reach wave RAM (on DMG) just after the channel has
- * read a sample from it, and then it gets the byte being played rather than the one addressed;
- * otherwise reads return $FF and writes are ignored. Retriggering the channel just before it reads
- * a sample corrupts the start of wave RAM. The timings are fitted to blargg dmg_sound 09-wave read
- * while on, 10-wave trigger while on and 12-wave write while on.
+ * <p>While the channel is on, CPU accesses to wave RAM go to the byte being played rather than the
+ * one addressed. On DMG, they only get through just after the channel has read a sample;
+ * otherwise reads return $FF and writes are ignored. Also on DMG, retriggering the channel just
+ * before it reads a sample corrupts the start of wave RAM. The timings are fitted to blargg
+ * dmg_sound 09-wave read while on, 10-wave trigger while on and 12-wave write while on.
  */
 final class WaveChannel {
 
@@ -22,6 +22,7 @@ final class WaveChannel {
   private static final int CORRUPT_WINDOW = 2;
 
   private final BooleanSupplier nextStepClocksLength;
+  private final BooleanSupplier dmg;
   private final LengthCounter length = new LengthCounter(256);
   private final int[] waveRam = new int[16];
 
@@ -34,8 +35,9 @@ final class WaveChannel {
   private int sampleBuffer = 0;
   private int ticksSinceRead = 1000;
 
-  WaveChannel(BooleanSupplier nextStepClocksLength) {
+  WaveChannel(BooleanSupplier nextStepClocksLength, BooleanSupplier dmg) {
     this.nextStepClocksLength = nextStepClocksLength;
+    this.dmg = dmg;
   }
 
   /** NR30: the DAC. */
@@ -117,7 +119,7 @@ final class WaveChannel {
             enabled = false;
           }
           if ((value & 0x80) != 0) {
-            if (enabled && frequencyTimer <= CORRUPT_WINDOW) {
+            if (dmg.getAsBoolean() && enabled && frequencyTimer <= CORRUPT_WINDOW) {
               corruptWaveRam();
             }
             enabled = dacOn;
@@ -129,19 +131,23 @@ final class WaveChannel {
 
   int readWaveRam(int index) {
     if (enabled) {
-      return ticksSinceRead < ACCESS_WINDOW ? waveRam[position >>> 1] : 0xff;
+      return canAccessCurrentByte() ? waveRam[position >>> 1] : 0xff;
     }
     return waveRam[index];
   }
 
   void writeWaveRam(int index, int value) {
     if (enabled) {
-      if (ticksSinceRead < ACCESS_WINDOW) {
+      if (canAccessCurrentByte()) {
         waveRam[position >>> 1] = value;
       }
       return;
     }
     waveRam[index] = value;
+  }
+
+  private boolean canAccessCurrentByte() {
+    return !dmg.getAsBoolean() || ticksSinceRead < ACCESS_WINDOW;
   }
 
   /**
@@ -188,12 +194,12 @@ final class WaveChannel {
     }
   }
 
-  void powerOff() {
+  void powerOff(boolean dmg) {
     enabled = false;
     dacOn = false;
     volume = 0;
     frequency = 0;
-    length.powerOff();
+    length.powerOff(dmg);
   }
 
   void powerOn() {

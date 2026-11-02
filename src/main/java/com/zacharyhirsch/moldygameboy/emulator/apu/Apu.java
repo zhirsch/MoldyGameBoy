@@ -1,6 +1,7 @@
 package com.zacharyhirsch.moldygameboy.emulator.apu;
 
 import com.zacharyhirsch.moldygameboy.emulator.arch.IoRegister;
+import com.zacharyhirsch.moldygameboy.emulator.arch.Model;
 import com.zacharyhirsch.moldygameboy.emulator.io.Audio;
 import java.util.function.BooleanSupplier;
 import java.util.function.IntSupplier;
@@ -12,7 +13,7 @@ import java.util.function.IntSupplier;
  * 512 Hz; bit 13 in double speed, where the counter runs twice as fast), clocking the length
  * counters on even steps, the sweep on steps 2 and 6, and the envelopes on step 7. While the APU is
  * off, the sound registers read as 0 and ignore writes, except that the length counters can still
- * be loaded (on DMG).
+ * be loaded on DMG (on CGB, they're cleared instead).
  */
 public final class Apu {
 
@@ -20,13 +21,14 @@ public final class Apu {
   // The high-pass filter's charge factor per sample, 0.999958 per T-cycle (as on DMG).
   private static final double HIGH_PASS_CHARGE = Math.pow(0.999958, 4);
 
+  private final Model model;
   private final IntSupplier counter;
   private final BooleanSupplier doubleSpeed;
   private final Audio audio;
 
   private final SquareChannel square1 = new SquareChannel(true, this::nextStepClocksLength);
   private final SquareChannel square2 = new SquareChannel(false, this::nextStepClocksLength);
-  private final WaveChannel wave = new WaveChannel(this::nextStepClocksLength);
+  private final WaveChannel wave = new WaveChannel(this::nextStepClocksLength, this::isDmg);
   private final NoiseChannel noise = new NoiseChannel(this::nextStepClocksLength);
 
   private final IoRegister nr10 = register("nr10", 0xff10, square1.nrx0);
@@ -84,7 +86,8 @@ public final class Apu {
   private int samples = 0;
   private double highPassCapacitor = 0;
 
-  public Apu(IntSupplier counter, BooleanSupplier doubleSpeed, Audio audio) {
+  public Apu(Model model, IntSupplier counter, BooleanSupplier doubleSpeed, Audio audio) {
+    this.model = model;
     this.counter = counter;
     this.doubleSpeed = doubleSpeed;
     this.audio = audio;
@@ -286,6 +289,10 @@ public final class Apu {
     frameSequencerBit = bit;
   }
 
+  private boolean isDmg() {
+    return model == Model.DMG;
+  }
+
   private boolean nextStepClocksLength() {
     return (frameSequencerStep & 1) == 0;
   }
@@ -326,10 +333,10 @@ public final class Apu {
   }
 
   private void powerOff() {
-    square1.powerOff();
-    square2.powerOff();
-    wave.powerOff();
-    noise.powerOff();
+    square1.powerOff(isDmg());
+    square2.powerOff(isDmg());
+    wave.powerOff(isDmg());
+    noise.powerOff(isDmg());
     nr50Value = 0;
     nr51Value = 0;
   }
@@ -355,7 +362,9 @@ public final class Apu {
         if (powered) {
           register.set(v);
         } else {
-          register.setLength(v);
+          if (isDmg()) {
+            register.setLength(v);
+          }
         }
       }
 
