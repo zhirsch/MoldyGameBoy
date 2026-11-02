@@ -104,3 +104,22 @@ java_junit5_test(
         artifact("org.junit.jupiter:junit-jupiter-params"),
     ] + JUNIT5_DEPS,
 )
+
+java_junit5_test(
+    name = "SpeedSwitchTest",
+    srcs = ["SpeedSwitchTest.java"],
+    resources = [
+        "//:cgb-acid2",
+        "//src/main/resources:cgb.bin",
+    ],
+    deps = [
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator",
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu",
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu/registers",
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/io",
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/io:factory",
+        artifact("com.google.guava:guava"),
+        artifact("com.google.truth:truth"),
+        artifact("org.junit.jupiter:junit-jupiter-api"),
+    ] + JUNIT5_DEPS,
+)

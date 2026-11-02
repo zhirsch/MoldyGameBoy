@@ -75,7 +75,7 @@ public final class IoRegisters {
 
   // CGB only.
   /* ff4c */ public final IoRegister key0 = IoRegister.create("key0", (short) 0xff4c);
-  /* ff4d */ public final IoRegister key1 = IoRegister.create("key1", (short) 0xff4d);
+  /* ff4d */ public final IoRegister key1;
   /* ff4f */ public final IoRegister vbk;
 
   /* ff50 */ public final IoRegister bank = IoRegister.create("bank", (short) 0xff50);
@@ -147,6 +147,7 @@ public final class IoRegisters {
       IoRegister waved,
       IoRegister wavee,
       IoRegister wavef,
+      IoRegister key1,
       IoRegister vbk,
       IoRegister hdma1,
       IoRegister hdma2,
@@ -207,6 +208,7 @@ public final class IoRegisters {
     this.waved = waved;
     this.wavee = wavee;
     this.wavef = wavef;
+    this.key1 = key1;
     this.vbk = vbk;
     this.hdma1 = hdma1;
     this.hdma2 = hdma2;

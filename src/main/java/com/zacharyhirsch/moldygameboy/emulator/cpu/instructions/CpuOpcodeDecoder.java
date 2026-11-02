@@ -33,7 +33,7 @@ public final class CpuOpcodeDecoder {
       case 0x0d -> create(Alu::dec, registers.c());
       case 0x0e -> new Ld.RegisterImmediate8(registers.c());
       case 0x0f -> create(Alu::rrca);
-      //      case 0x10 -> new Stop(registers);
+      case 0x10 -> new Stop();
       case 0x11 -> new Ld.RegisterImmediate16(registers.de());
       case 0x12 -> new Ld.IndirectRegister(registers.a(), registers.de());
       case 0x13 -> new Inc.R16(registers.de());

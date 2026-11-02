@@ -4,6 +4,7 @@ import com.zacharyhirsch.moldygameboy.emulator.apu.Apu;
 import com.zacharyhirsch.moldygameboy.emulator.arch.Irqs;
 import com.zacharyhirsch.moldygameboy.emulator.arch.Model;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.Cpu;
+import com.zacharyhirsch.moldygameboy.emulator.cpu.SpeedSwitch;
 import com.zacharyhirsch.moldygameboy.emulator.io.Io;
 import com.zacharyhirsch.moldygameboy.emulator.joypad.Joypad;
 import com.zacharyhirsch.moldygameboy.emulator.memory.Hdma;
@@ -40,6 +41,7 @@ final class MoldyGameBoy {
 
   private final Memory memory;
   private final Hdma hdma;
+  private final SpeedSwitch speedSwitch;
   private final Timer timer;
   private final Serial serial;
   private final Joypad joypad;
@@ -50,6 +52,7 @@ final class MoldyGameBoy {
 
   private TCycle tcycle = TCycle.T1;
   private boolean cpuStalled = false;
+  private int dot = 0;
 
   /** The model is chosen by the boot ROM: the CGB's is 2304 bytes, the DMG's 256. */
   public MoldyGameBoy(ByteBuffer boot, ByteBuffer rom, Io io) {
@@ -63,7 +66,8 @@ final class MoldyGameBoy {
     this.timer = new Timer(irqs.timer());
     this.serial = new Serial(timer::counter, irqs.serial());
     this.joypad = new Joypad(io.joypads(), irqs.joypad());
-    this.apu = new Apu(timer::counter, io.audio());
+    this.speedSwitch = new SpeedSwitch();
+    this.apu = new Apu(timer::counter, speedSwitch::isDoubleSpeed, io.audio());
     PaletteRam bgPalettes = new PaletteRam("bc", 0xff68);
     PaletteRam objPalettes = new PaletteRam("oc", 0xff6a);
     this.ioregs =
@@ -114,6 +118,7 @@ final class MoldyGameBoy {
             apu.waved(),
             apu.wavee(),
             apu.wavef(),
+            speedSwitch.key1(),
             memory.vbk(),
             hdma.hdma1(),
             hdma.hdma2(),
@@ -128,7 +133,7 @@ final class MoldyGameBoy {
             apu.pcm12(),
             apu.pcm34(),
             memory);
-    this.cpu = new Cpu(boot, memory, ioregs, videoMemoryLock);
+    this.cpu = new Cpu(boot, memory, ioregs, videoMemoryLock, speedSwitch);
     this.ppu =
         new Ppu(
             ioregs,
@@ -143,51 +148,59 @@ final class MoldyGameBoy {
             objPalettes);
   }
 
+  /**
+   * Advances by one dot (4194304 Hz), the rate the PPU, APU and HDMA always run at. The CPU side
+   * (CPU, OAM DMA, timer, serial port and joypad) runs one T-cycle per dot, or two in double speed.
+   */
   public void tick() {
+    ppu.tick();
+    tickCpuSide();
+    if (speedSwitch.isDoubleSpeed()) {
+      tickCpuSide();
+    }
+    apu.tick();
+    if (++dot == 4) {
+      dot = 0;
+      hdma.tick();
+    }
+  }
+
+  private void tickCpuSide() {
     switch (tcycle) {
       case T1 -> {
         // HDMA stops the CPU for whole M-cycles.
         cpuStalled = hdma.isTransferring();
-        ppu.tick();
         ioregs.dma.tickT1();
         if (!cpuStalled) {
           cpu.tickT1();
         }
         timer.tickT1();
         serial.tick();
-        apu.tick();
       }
       case T2 -> {
-        ppu.tick();
         ioregs.dma.tickT2();
         if (!cpuStalled) {
           cpu.tickT2();
         }
         timer.tickT2();
         serial.tick();
-        apu.tick();
       }
       case T3 -> {
-        ppu.tick();
         ioregs.dma.tickT3();
         if (!cpuStalled) {
           cpu.tickT3();
         }
         timer.tickT3();
         serial.tick();
-        apu.tick();
       }
       case T4 -> {
-        ppu.tick();
         ioregs.dma.tickT4();
         if (!cpuStalled) {
           cpu.tickT4();
         }
         timer.tickT4();
         serial.tick();
-        apu.tick();
         joypad.tick();
-        hdma.tick();
       }
     }
     tcycle = tcycle.next();

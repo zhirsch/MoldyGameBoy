@@ -26,12 +26,23 @@ public final class Cpu {
   private final Registers registers;
   private final Bus bus;
 
+  // A speed switch stops the CPU for this many M-cycles.
+  private static final int SPEED_SWITCH_MCYCLES = 2050;
+
+  private final SpeedSwitch speedSwitch;
+
   private MCycle mcycle;
+  private int speedSwitchMcyclesLeft = 0;
 
   public Cpu(
-      ByteBuffer boot, Memory memory, IoRegisters ioregs, VideoMemoryLock videoMemoryLock) {
+      ByteBuffer boot,
+      Memory memory,
+      IoRegisters ioregs,
+      VideoMemoryLock videoMemoryLock,
+      SpeedSwitch speedSwitch) {
     this.memory = new CpuMemoryController(boot, memory, ioregs, videoMemoryLock);
     this.ioregs = ioregs;
+    this.speedSwitch = speedSwitch;
     this.registers = new Registers();
     this.bus = new Bus();
 
@@ -43,26 +54,33 @@ public final class Cpu {
   }
 
   public void tickT1() {
-    if (!registers.halted().get()) {
+    if (isRunning()) {
       mcycle.t1(registers, bus);
     }
   }
 
   public void tickT2() {
-    if (!registers.halted().get()) {
+    if (isRunning()) {
       mcycle.t2(registers, bus);
     }
   }
 
   public void tickT3() {
-    if (!registers.halted().get()) {
+    if (isRunning()) {
       memory.tick(bus);
       mcycle.t3(registers, bus);
     }
   }
 
   public void tickT4() {
-    if (registers.halted().get()) {
+    if (registers.stopped().get()) {
+      boolean done =
+          speedSwitchMcyclesLeft > 0 ? --speedSwitchMcyclesLeft == 0 : isButtonPressed();
+      if (done) {
+        registers.stopped().set(false);
+        mcycle = newFetchOpcode();
+      }
+    } else if (registers.halted().get()) {
       if (getPendingInterrupts() != 0) {
         registers.halted().set(false);
         mcycle = newFetchOpcode();
@@ -74,10 +92,32 @@ public final class Cpu {
       if (mcycle == null || registers.halted().get()) {
         registers.ime().tick();
       }
-      if (mcycle == null) {
+      if (registers.stopped().get()) {
+        stop();
+      } else if (mcycle == null) {
         mcycle = newFetchOpcode();
       }
     }
+  }
+
+  private boolean isRunning() {
+    return !registers.halted().get() && !registers.stopped().get();
+  }
+
+  /**
+   * STOP resets DIV. On a CGB with a speed switch armed in KEY1, it switches speed and the CPU
+   * carries on once the switch is done; otherwise the CPU stops until a button is pressed.
+   */
+  private void stop() {
+    ioregs.div.set(0);
+    if (ioregs.isCgb() && speedSwitch.isArmed()) {
+      speedSwitch.toggle();
+      speedSwitchMcyclesLeft = SPEED_SWITCH_MCYCLES;
+    }
+  }
+
+  private boolean isButtonPressed() {
+    return (ioregs.joyp.get() & 0x0f) != 0x0f;
   }
 
   private FetchOpcode newFetchOpcode() {

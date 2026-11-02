@@ -1,7 +1,17 @@
 package com.zacharyhirsch.moldygameboy.emulator.cpu.registers;
 
 public record Registers(
-    Ir ir, AF af, BC bc, DE de, HL hl, WZ wz, Pc pc, Sp sp, Ime ime, Halted halted) {
+    Ir ir,
+    AF af,
+    BC bc,
+    DE de,
+    HL hl,
+    WZ wz,
+    Pc pc,
+    Sp sp,
+    Ime ime,
+    Halted halted,
+    Stopped stopped) {
 
   public Registers() {
     this(
@@ -14,7 +24,8 @@ public record Registers(
         new Pc(),
         new Sp(),
         new Ime(),
-        new Halted());
+        new Halted(),
+        new Stopped());
   }
 
   public A a() {

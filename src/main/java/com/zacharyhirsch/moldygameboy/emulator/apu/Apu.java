@@ -2,24 +2,26 @@ package com.zacharyhirsch.moldygameboy.emulator.apu;
 
 import com.zacharyhirsch.moldygameboy.emulator.arch.IoRegister;
 import com.zacharyhirsch.moldygameboy.emulator.io.Audio;
+import java.util.function.BooleanSupplier;
 import java.util.function.IntSupplier;
 
 /**
  * The APU: four sound channels, mixed and written to {@link Audio} as one sample per M-cycle.
  *
  * <p>The frame sequencer steps on each falling edge of bit 12 of the system counter (bit 4 of DIV,
- * 512 Hz), clocking the length counters on even steps, the sweep on steps 2 and 6, and the
- * envelopes on step 7. While the APU is off, the sound registers read as 0 and ignore writes,
- * except that the length counters can still be loaded (on DMG).
+ * 512 Hz; bit 13 in double speed, where the counter runs twice as fast), clocking the length
+ * counters on even steps, the sweep on steps 2 and 6, and the envelopes on step 7. While the APU is
+ * off, the sound registers read as 0 and ignore writes, except that the length counters can still
+ * be loaded (on DMG).
  */
 public final class Apu {
 
-  private static final int FRAME_SEQUENCER_BIT = 1 << 12;
   private static final int SAMPLES_PER_PRESENT = 4096;
   // The high-pass filter's charge factor per sample, 0.999958 per T-cycle (as on DMG).
   private static final double HIGH_PASS_CHARGE = Math.pow(0.999958, 4);
 
   private final IntSupplier counter;
+  private final BooleanSupplier doubleSpeed;
   private final Audio audio;
 
   private final SquareChannel square1 = new SquareChannel(true, this::nextStepClocksLength);
@@ -82,8 +84,9 @@ public final class Apu {
   private int samples = 0;
   private double highPassCapacitor = 0;
 
-  public Apu(IntSupplier counter, Audio audio) {
+  public Apu(IntSupplier counter, BooleanSupplier doubleSpeed, Audio audio) {
     this.counter = counter;
+    this.doubleSpeed = doubleSpeed;
     this.audio = audio;
   }
 
@@ -261,7 +264,8 @@ public final class Apu {
   }
 
   private void tickFrameSequencer() {
-    boolean bit = (counter.getAsInt() & FRAME_SEQUENCER_BIT) != 0;
+    int mask = doubleSpeed.getAsBoolean() ? 1 << 13 : 1 << 12;
+    boolean bit = (counter.getAsInt() & mask) != 0;
     if (frameSequencerBit && !bit && powered) {
       if ((frameSequencerStep & 1) == 0) {
         square1.clockLength();
