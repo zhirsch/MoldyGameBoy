@@ -27,6 +27,11 @@ public class Memory {
     this.wram = ByteBuffer.allocate(0x8000);
   }
 
+  /** Advances the cartridge by one dot. */
+  public void tick() {
+    mapper.tick();
+  }
+
   /** VBK: which VRAM bank the CPU sees at $8000-$9FFF. */
   public IoRegister vbk() {
     return new IoRegister() {

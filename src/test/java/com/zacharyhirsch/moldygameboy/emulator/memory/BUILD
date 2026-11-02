@@ -20,3 +20,13 @@ java_junit5_test(
         artifact("org.junit.jupiter:junit-jupiter-api"),
     ] + JUNIT5_DEPS,
 )
+
+java_junit5_test(
+    name = "Mbc3MapperTest",
+    srcs = ["Mbc3MapperTest.java"],
+    deps = [
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/memory",
+        artifact("com.google.truth:truth"),
+        artifact("org.junit.jupiter:junit-jupiter-api"),
+    ] + JUNIT5_DEPS,
+)

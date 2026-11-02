@@ -159,6 +159,7 @@ final class MoldyGameBoy {
       tickCpuSide();
     }
     apu.tick();
+    memory.tick();
     if (++dot == 4) {
       dot = 0;
       hdma.tick();

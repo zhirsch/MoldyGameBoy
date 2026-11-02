@@ -14,6 +14,12 @@ public interface Mapper {
       case 0x01 -> new Mbc1Mapper(rom, ByteBuffer.allocate(0), isMbc1M(rom));
       case 0x02 -> new Mbc1Mapper(rom, newRamBuffer(rom), isMbc1M(rom));
       case 0x03 -> new Mbc1Mapper(rom, loadRamBuffer(rom), isMbc1M(rom));
+      case 0x05, 0x06 -> new Mbc2Mapper(rom);
+      case 0x0f -> new Mbc3Mapper(rom, ByteBuffer.allocate(0), new RealTimeClock());
+      case 0x10 -> new Mbc3Mapper(rom, loadRamBuffer(rom), new RealTimeClock());
+      case 0x11 -> new Mbc3Mapper(rom, ByteBuffer.allocate(0), null);
+      case 0x12 -> new Mbc3Mapper(rom, newRamBuffer(rom), null);
+      case 0x13 -> new Mbc3Mapper(rom, loadRamBuffer(rom), null);
       case 0x19 -> new Mbc5Mapper(rom, ByteBuffer.allocate(0), false);
       case 0x1a -> new Mbc5Mapper(rom, newRamBuffer(rom), false);
       case 0x1b -> new Mbc5Mapper(rom, loadRamBuffer(rom), false);
@@ -65,6 +71,9 @@ public interface Mapper {
       default -> throw new IllegalArgumentException();
     };
   }
+
+  /** Advances by one dot, for cartridges with a clock. */
+  default void tick() {}
 
   MemoryRegion mapRom();
 
