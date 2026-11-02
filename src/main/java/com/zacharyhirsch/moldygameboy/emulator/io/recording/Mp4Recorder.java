@@ -41,10 +41,12 @@ final class Mp4Recorder implements AutoCloseable {
   private final ExecutorService encoder = Executors.newSingleThreadExecutor();
   private final byte[] frame = new byte[WIDTH * HEIGHT * 3];
 
-  // Downsampling: each output sample is the average of the input samples it covers.
-  private final float[] output = new float[4096];
+  // Downsampling: each output sample is the average of the input samples it covers. The output is
+  // stereo, with left and right samples interleaved.
+  private final float[] output = new float[2 * 4096];
   private int outputLength = 0;
-  private double sum = 0;
+  private double leftSum = 0;
+  private double rightSum = 0;
   private int summed = 0;
   private double nextOutputSample = SAMPLES_PER_OUTPUT_SAMPLE;
 
@@ -54,7 +56,7 @@ final class Mp4Recorder implements AutoCloseable {
   private volatile Exception error = null;
 
   Mp4Recorder(Path path) {
-    recorder = new FFmpegFrameRecorder(path.toFile(), WIDTH * SCALE, HEIGHT * SCALE, 1);
+    recorder = new FFmpegFrameRecorder(path.toFile(), WIDTH * SCALE, HEIGHT * SCALE, 2);
     recorder.setFormat("mp4");
     recorder.setVideoCodec(AV_CODEC_ID_H264);
     recorder.setPixelFormat(AV_PIX_FMT_YUV420P);
@@ -86,13 +88,16 @@ final class Mp4Recorder implements AutoCloseable {
     }
   }
 
-  void writeAudioSample(float sample) {
+  void writeAudioSample(float left, float right) {
     inputSamples++;
-    sum += sample;
+    leftSum += left;
+    rightSum += right;
     summed++;
     if (inputSamples >= nextOutputSample) {
-      output[outputLength++] = (float) (sum / summed);
-      sum = 0;
+      output[outputLength++] = (float) (leftSum / summed);
+      output[outputLength++] = (float) (rightSum / summed);
+      leftSum = 0;
+      rightSum = 0;
       summed = 0;
       nextOutputSample += SAMPLES_PER_OUTPUT_SAMPLE;
       if (outputLength == output.length) {
@@ -107,7 +112,7 @@ final class Mp4Recorder implements AutoCloseable {
     }
     float[] samples = Arrays.copyOf(output, outputLength);
     outputLength = 0;
-    submit(() -> recorder.recordSamples(OUTPUT_SAMPLE_RATE, 1, FloatBuffer.wrap(samples)));
+    submit(() -> recorder.recordSamples(OUTPUT_SAMPLE_RATE, 2, FloatBuffer.wrap(samples)));
   }
 
   @Override

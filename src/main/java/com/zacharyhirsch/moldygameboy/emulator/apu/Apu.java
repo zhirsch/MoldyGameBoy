@@ -7,7 +7,9 @@ import java.util.function.BooleanSupplier;
 import java.util.function.IntSupplier;
 
 /**
- * The APU: four sound channels, mixed and written to {@link Audio} as one sample per M-cycle.
+ * The APU: four sound channels, mixed to left and right outputs (NR51 routes each channel to
+ * either or both, and NR50 sets each output's volume) and written to {@link Audio} as one stereo
+ * sample per M-cycle.
  *
  * <p>The frame sequencer steps on each falling edge of bit 12 of the system counter (bit 4 of DIV,
  * 512 Hz; bit 13 in double speed, where the counter runs twice as fast), clocking the length
@@ -84,7 +86,9 @@ public final class Apu {
 
   private int tcycle = 0;
   private int samples = 0;
-  private double highPassCapacitor = 0;
+  // The high-pass filters' capacitors, one per output.
+  private double leftCapacitor = 0;
+  private double rightCapacitor = 0;
 
   public Apu(Model model, IntSupplier counter, BooleanSupplier doubleSpeed, Audio audio) {
     this.model = model;
@@ -314,13 +318,14 @@ public final class Apu {
         right += dac[i];
       }
     }
-    left *= ((nr50Value >>> 4) & 0x07) + 1;
-    right *= (nr50Value & 0x07) + 1;
-    // Each side is at most 4 channels * 8 volume steps; mix down to mono in [-1, 1].
-    double in = (left + right) / 64;
-    double out = in - highPassCapacitor;
-    highPassCapacitor = in - out * HIGH_PASS_CHARGE;
-    audio.writeAudioSample((float) out);
+    // Each side is at most 4 channels * 8 volume steps; scale to [-1, 1].
+    left *= (((nr50Value >>> 4) & 0x07) + 1) / 32.0;
+    right *= ((nr50Value & 0x07) + 1) / 32.0;
+    double leftOut = left - leftCapacitor;
+    leftCapacitor = left - leftOut * HIGH_PASS_CHARGE;
+    double rightOut = right - rightCapacitor;
+    rightCapacitor = right - rightOut * HIGH_PASS_CHARGE;
+    audio.writeAudioSample((float) leftOut, (float) rightOut);
     if (++samples == SAMPLES_PER_PRESENT) {
       samples = 0;
       audio.present();

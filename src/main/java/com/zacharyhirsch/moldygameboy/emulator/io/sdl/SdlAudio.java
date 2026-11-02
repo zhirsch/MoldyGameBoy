@@ -16,6 +16,8 @@ final class SdlAudio implements Audio {
   // stops while the LCD is off, so this keeps emulation in step with playback then too.
   private static final int MAX_QUEUED_LATENCIES = 3;
 
+  private static final int CHANNELS = 2;
+
   private final long latencyBytes;
   private final MemorySegment audioBuffer;
   private int audioBufferLen;
@@ -29,14 +31,14 @@ final class SdlAudio implements Audio {
       throw new SdlException("Unable to initialize SDL audio library");
     }
 
-    latencyBytes = (long) (sampleRate * LATENCY_SECONDS) * Float.BYTES;
+    latencyBytes = (long) (sampleRate * LATENCY_SECONDS) * CHANNELS * Float.BYTES;
     audioBuffer = arena.allocate(1 << 20);
     audioBufferLen = 0;
 
     MemorySegment output = SDL_AudioSpec.allocate(arena);
     SDL_AudioSpec.freq(output, 44100);
     SDL_AudioSpec.format(output, SDL_AUDIO_F32());
-    SDL_AudioSpec.channels(output, 1);
+    SDL_AudioSpec.channels(output, CHANNELS);
     audioDeviceId = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK(), output);
     if (audioDeviceId == 0) {
       throw new SdlException("Unable to open audio device");
@@ -45,7 +47,7 @@ final class SdlAudio implements Audio {
     MemorySegment input = SDL_AudioSpec.allocate(arena);
     SDL_AudioSpec.freq(input, sampleRate);
     SDL_AudioSpec.format(input, SDL_AUDIO_F32());
-    SDL_AudioSpec.channels(input, 1);
+    SDL_AudioSpec.channels(input, CHANNELS);
     audioStream = SDL_CreateAudioStream(input, output);
     if (audioStream == null) {
       throw new SdlException("Unable to open audio stream");
@@ -60,9 +62,10 @@ final class SdlAudio implements Audio {
   }
 
   @Override
-  public void writeAudioSample(float sample) {
-    audioBuffer.set(ValueLayout.JAVA_FLOAT, audioBufferLen, sample);
-    audioBufferLen += Float.BYTES;
+  public void writeAudioSample(float left, float right) {
+    audioBuffer.set(ValueLayout.JAVA_FLOAT, audioBufferLen, left);
+    audioBuffer.set(ValueLayout.JAVA_FLOAT, audioBufferLen + Float.BYTES, right);
+    audioBufferLen += CHANNELS * Float.BYTES;
   }
 
   @Override

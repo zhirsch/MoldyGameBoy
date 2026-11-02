@@ -5,7 +5,7 @@ import com.zacharyhirsch.moldygameboy.emulator.io.Audio;
 final class NoneAudio implements Audio {
 
   @Override
-  public void writeAudioSample(float sample) {}
+  public void writeAudioSample(float left, float right) {}
 
   @Override
   public void present() {}

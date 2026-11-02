@@ -80,9 +80,9 @@ public final class RecordingIo implements Io {
   private final class RecordingAudio implements Audio {
 
     @Override
-    public void writeAudioSample(float sample) {
-      delegate.audio().writeAudioSample(sample);
-      recorder.writeAudioSample(sample);
+    public void writeAudioSample(float left, float right) {
+      delegate.audio().writeAudioSample(left, right);
+      recorder.writeAudioSample(left, right);
     }
 
     @Override
