@@ -14,6 +14,7 @@ java_library(
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu/instructions",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/cpu/registers",
         "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/memory",
+        "//src/main/java/com/zacharyhirsch/moldygameboy/emulator/ppu",
         artifact("org.jspecify:jspecify"),
         artifact("com.google.guava:guava"),
     ],

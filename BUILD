@@ -18,7 +18,11 @@ filegroup(
 
 filegroup(
     name = "mooneye-test-suite",
-    srcs = glob(["mooneye-test-suite/build/**/*.gb"]),
+    srcs = glob([
+        "mooneye-test-suite/build/**/*.gb",
+        "mooneye-test-suite/**/*-expected.png",
+        "mooneye-test-suite/**/*_expected.png",
+    ]),
     visibility = ["//src/test:__subpackages__"],
 )
 

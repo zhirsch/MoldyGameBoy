@@ -13,6 +13,7 @@ import com.zacharyhirsch.moldygameboy.emulator.memory.IoRegisters;
 import com.zacharyhirsch.moldygameboy.emulator.memory.Memory;
 import com.zacharyhirsch.moldygameboy.emulator.memory.SaveSink;
 import com.zacharyhirsch.moldygameboy.emulator.memory.VideoMemoryLock;
+import com.zacharyhirsch.moldygameboy.emulator.ppu.OamBug;
 import com.zacharyhirsch.moldygameboy.emulator.ppu.PaletteRam;
 import com.zacharyhirsch.moldygameboy.emulator.ppu.Ppu;
 import com.zacharyhirsch.moldygameboy.emulator.serial.Serial;
@@ -135,7 +136,8 @@ final class MoldyGameBoy {
             apu.pcm12(),
             apu.pcm34(),
             memory);
-    this.cpu = new Cpu(boot, memory, ioregs, videoMemoryLock, speedSwitch);
+    OamBug oamBug = new OamBug(model, oam, this::oamScanRow);
+    this.cpu = new Cpu(boot, memory, ioregs, videoMemoryLock, oamBug, speedSwitch);
     this.ppu =
         new Ppu(
             ioregs,
@@ -207,6 +209,10 @@ final class MoldyGameBoy {
       }
     }
     tcycle = tcycle.next();
+  }
+
+  private int oamScanRow() {
+    return ppu.oamScanRow();
   }
 
   private boolean isLcdOn() {

@@ -3,5 +3,9 @@ exports_files([
     "cgb.bin",
     "cgb0.bin",
     "dmg.bin",
+    "dmg0.bin",
     "logback.xml",
+    "mgb.bin",
+    "sgb.bin",
+    "sgb2.bin",
 ])

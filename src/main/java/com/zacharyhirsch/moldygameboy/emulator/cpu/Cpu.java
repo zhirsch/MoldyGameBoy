@@ -8,6 +8,7 @@ import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 import com.zacharyhirsch.moldygameboy.emulator.memory.IoRegisters;
 import com.zacharyhirsch.moldygameboy.emulator.memory.Memory;
 import com.zacharyhirsch.moldygameboy.emulator.memory.VideoMemoryLock;
+import com.zacharyhirsch.moldygameboy.emulator.ppu.OamBug;
 import java.nio.ByteBuffer;
 import java.util.function.IntSupplier;
 
@@ -39,14 +40,15 @@ public final class Cpu {
       Memory memory,
       IoRegisters ioregs,
       VideoMemoryLock videoMemoryLock,
+      OamBug oamBug,
       SpeedSwitch speedSwitch) {
-    this.memory = new CpuMemoryController(boot, memory, ioregs, videoMemoryLock);
+    this.memory = new CpuMemoryController(boot, memory, ioregs, videoMemoryLock, oamBug);
     this.ioregs = ioregs;
     this.speedSwitch = speedSwitch;
     this.registers = new Registers();
     this.bus = new Bus();
 
-    this.mcycle = new FetchOpcode(ioregs, this::getPendingInterrupts, false);
+    this.mcycle = new FetchOpcode(ioregs, this::getPendingInterrupts, false, false);
   }
 
   public Registers registers() {
@@ -94,10 +96,20 @@ public final class Cpu {
       }
       if (registers.stopped().get()) {
         stop();
+      } else if (registers.halted().get() && isHaltBugTriggered()) {
+        // The HALT bug: with IME clear and an interrupt already pending, HALT doesn't halt, and
+        // the next opcode fetch doesn't advance PC, so the byte after HALT is read twice (see
+        // blargg halt_bug).
+        registers.halted().set(false);
+        mcycle = new FetchOpcode(ioregs, this::getPendingInterrupts, false, true);
       } else if (mcycle == null) {
         mcycle = newFetchOpcode();
       }
     }
+  }
+
+  private boolean isHaltBugTriggered() {
+    return !registers.ime().get() && getPendingInterrupts() != 0;
   }
 
   private boolean isRunning() {
@@ -122,7 +134,7 @@ public final class Cpu {
 
   private FetchOpcode newFetchOpcode() {
     boolean dispatch = registers.ime().get() && getPendingInterrupts() != 0;
-    return new FetchOpcode(ioregs, this::getPendingInterrupts, dispatch);
+    return new FetchOpcode(ioregs, this::getPendingInterrupts, dispatch, false);
   }
 
   private int getPendingInterrupts() {
@@ -248,11 +260,14 @@ public final class Cpu {
     private final IoRegisters ioregs;
     private final IntSupplier pendingInterrupts;
     private final boolean dispatch;
+    private final boolean haltBug;
 
-    FetchOpcode(IoRegisters ioregs, IntSupplier pendingInterrupts, boolean dispatch) {
+    FetchOpcode(
+        IoRegisters ioregs, IntSupplier pendingInterrupts, boolean dispatch, boolean haltBug) {
       this.ioregs = ioregs;
       this.pendingInterrupts = pendingInterrupts;
       this.dispatch = dispatch;
+      this.haltBug = haltBug;
     }
 
     @Override
@@ -269,7 +284,9 @@ public final class Cpu {
         return;
       }
       bus.rd().set(true);
-      registers.pc().increment();
+      if (!haltBug) {
+        registers.pc().increment();
+      }
     }
 
     @Override

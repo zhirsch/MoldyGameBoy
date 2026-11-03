@@ -134,6 +134,18 @@ public final class Ppu {
     updateStatAndIrqs();
   }
 
+  /**
+   * The OAM row (0-19) the PPU is reading, one per M-cycle while it scans OAM in mode 2, or -1
+   * when it isn't scanning OAM (see {@link OamBug}).
+   */
+  public int oamScanRow() {
+    if (!ioregs.lcdc.bit(7) || mode != Mode.OAM_SCAN || firstLineAfterLcdOn) {
+      return -1;
+    }
+    int row = dot / 4;
+    return row < 20 ? row : -1;
+  }
+
   private void startLine(int line, int firstDot) {
     mode = line <= 143 ? Mode.OAM_SCAN : Mode.VBLANK;
     dot = firstDot;

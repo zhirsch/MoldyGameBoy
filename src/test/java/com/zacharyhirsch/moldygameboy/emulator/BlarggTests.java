@@ -12,28 +12,72 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 final class BlarggTests {
 
   @Test
   void testCpuInstrs() throws Exception {
-    doTest("blargg-test-suite/cpu_instrs/cpu_instrs.gb");
+    doTest("dmg.bin", "blargg-test-suite/cpu_instrs/cpu_instrs.gb");
   }
 
   @Test
   void testInstrTiming() throws Exception {
-    doTest("blargg-test-suite/instr_timing/instr_timing.gb");
+    doTest("dmg.bin", "blargg-test-suite/instr_timing/instr_timing.gb");
   }
 
   @Test
   void testMemTiming() throws Exception {
-    doTest("blargg-test-suite/mem_timing/mem_timing.gb");
+    doTest("dmg.bin", "blargg-test-suite/mem_timing/mem_timing.gb");
   }
 
   @Test
-  @Disabled("Doesn't pass on DMG")
+  void testMemTiming2() throws Exception {
+    doMemoryTest("dmg.bin", "blargg-test-suite/mem_timing-2/mem_timing.gb");
+  }
+
+  /** interrupt_time measures CGB double speed, so it only passes on a CGB. */
+  @Test
   void testInterruptTime() throws Exception {
-    doTest("blargg-test-suite/interrupt_time/interrupt_time.gb");
+    doScreenTest("cgb.bin", "blargg-test-suite/interrupt_time/interrupt_time.gb");
+  }
+
+  @Test
+  void testHaltBug() throws Exception {
+    doScreenTest("dmg.bin", "blargg-test-suite/halt_bug.gb");
+  }
+
+  /**
+   * The oam_bug tests run one at a time rather than through oam_bug.gb, which also runs
+   * 7-timing_effect (see {@link #testOamBugTimingEffect}).
+   */
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "1-lcd_sync",
+        "2-causes",
+        "3-non_causes",
+        "4-scanline_timing",
+        "5-timing_bug",
+        "6-timing_no_bug",
+        "8-instr_effect",
+      })
+  void testOamBug(String name) throws Exception {
+    doMemoryTest("dmg.bin", "blargg-test-suite/oam_bug/rom_singles/" + name + ".gb");
+  }
+
+  /**
+   * 7-timing_effect moves an INC DE one cycle later each time round, and prints all of OAM
+   * whenever it's corrupted. We show more corrupted OAM than real hardware does, so the printing
+   * outgrows the 8 KiB of cartridge RAM the test also writes its text to, runs on into WRAM (where
+   * the test's code is) and crashes it. The patterns and timing that the other tests check are
+   * right, so the difference is in something this test alone exercises.
+   */
+  @Test
+  @Disabled("prints more corrupted OAM than hardware, overflowing its text buffer")
+  void testOamBugTimingEffect() throws Exception {
+    doMemoryTest("dmg.bin", "blargg-test-suite/oam_bug/rom_singles/7-timing_effect.gb");
   }
 
   @Test
@@ -46,9 +90,9 @@ final class BlarggTests {
     doMemoryTest("cgb.bin", "blargg-test-suite/cgb_sound/cgb_sound.gb");
   }
 
-  private static void doTest(String path) throws Exception {
+  private static void doTest(String boot, String path) throws Exception {
     try (Io io = Boolean.getBoolean("moldy.gui") ? IoFactory.sdl() : IoFactory.none()) {
-      MoldyGameBoy gb = new MoldyGameBoy(readRom("dmg.bin"), readRom(path), io);
+      MoldyGameBoy gb = new MoldyGameBoy(readRom(boot), readRom(path), io);
       BlarggTicker ticker = new BlarggTicker(gb);
       io.eventLoop().run(ticker);
 
@@ -66,6 +110,18 @@ final class BlarggTests {
       io.eventLoop().run(ticker);
 
       assertWithMessage(ticker.output()).that(ticker.status()).isEqualTo(0);
+    }
+  }
+
+  /** Runs a test that only reports on screen, rather than over serial or in cartridge RAM. */
+  private static void doScreenTest(String boot, String path) throws Exception {
+    try (Io io = Boolean.getBoolean("moldy.gui") ? IoFactory.sdl() : IoFactory.none()) {
+      MoldyGameBoy gb = new MoldyGameBoy(readRom(boot), readRom(path), io);
+      ScreenTicker ticker = new ScreenTicker(gb);
+      io.eventLoop().run(ticker);
+
+      String screen = ticker.screen();
+      assertWithMessage(screen).that(screen).contains("Passed");
     }
   }
 
@@ -139,6 +195,51 @@ final class BlarggTests {
 
     private int read(int address) {
       return Byte.toUnsignedInt(gb.read((short) address));
+    }
+  }
+
+  /**
+   * Waits for "Passed" or "Failed" on screen. Blargg's console loads its font so that each tile's
+   * number is its ASCII code, so the background tile map at $9800 holds the screen's text.
+   */
+  private static final class ScreenTicker implements Ticker {
+
+    private static final int CHECK_INTERVAL = 1 << 22;
+
+    private final MoldyGameBoy gb;
+
+    private int ticks = 0;
+    private boolean done = false;
+
+    ScreenTicker(MoldyGameBoy gb) {
+      this.gb = gb;
+    }
+
+    /** The tile map's 32 rows of 32 characters, one row per line. */
+    String screen() {
+      StringBuilder screen = new StringBuilder();
+      for (int row = 0; row < 32; row++) {
+        for (int column = 0; column < 32; column++) {
+          int tile = Byte.toUnsignedInt(gb.read((short) (0x9800 + row * 32 + column)));
+          screen.append(0x20 <= tile && tile < 0x80 ? (char) tile : ' ');
+        }
+        screen.append('\n');
+      }
+      return screen.toString();
+    }
+
+    @Override
+    public void tick() {
+      gb.tick();
+      if (++ticks % CHECK_INTERVAL == 0) {
+        String screen = screen();
+        done = screen.contains("Passed") || screen.contains("Failed");
+      }
+    }
+
+    @Override
+    public boolean isDone() {
+      return done;
     }
   }
 

@@ -3,12 +3,16 @@ package com.zacharyhirsch.moldygameboy.emulator;
 import static com.zacharyhirsch.moldygameboy.emulator.RegistersSubject.assertThat;
 
 import com.google.common.io.Resources;
+import com.google.common.truth.Truth;
 import com.zacharyhirsch.moldygameboy.emulator.cpu.registers.Registers;
 import com.zacharyhirsch.moldygameboy.emulator.io.Io;
 import com.zacharyhirsch.moldygameboy.emulator.io.IoFactory;
 import com.zacharyhirsch.moldygameboy.emulator.io.Ticker;
+import com.zacharyhirsch.moldygameboy.emulator.io.capturing.CapturingIo;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import javax.imageio.ImageIO;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -19,24 +23,68 @@ final class MooneyeTest {
   }
 
   /**
-   * Tests for the AGB (named -A) and CGB revision 0 (named -cgb0) run with their boot ROMs, other
-   * CGB tests (named -C or -cgb...) with the CGB boot ROM, and the rest with the DMG's.
+   * Picks the boot ROM for the model a test is for, from the suffix of its name: for example
+   * boot_regs-mgb runs on an MGB and boot_hwio-S on an SGB. Tests without a model, or for more than
+   * one DMG-like model (such as -dmgABCmgb or -GS), run on a DMG.
    */
-  private static void doTest(String path) throws Exception {
-    String boot;
-    if (path.endsWith("-A.gb")) {
-      boot = "agb.bin";
-    } else if (path.endsWith("-cgb0.gb")) {
-      boot = "cgb0.bin";
-    } else if (path.matches(".*-(C|cgb\\w*)\\.gb")) {
-      boot = "cgb.bin";
-    } else {
-      boot = "dmg.bin";
+  private static String bootRom(String path) {
+    String name = path.substring(path.lastIndexOf('/') + 1, path.length() - ".gb".length());
+    String model = name.substring(name.lastIndexOf('-') + 1);
+    return switch (model) {
+      case "dmg0" -> "dmg0.bin";
+      case "mgb" -> "mgb.bin";
+      case "S", "sgb" -> "sgb.bin";
+      case "sgb2" -> "sgb2.bin";
+      case "cgb0" -> "cgb0.bin";
+      case "A" -> "agb.bin";
+      default -> model.equals("C") || model.startsWith("cgb") ? "cgb.bin" : "dmg.bin";
+    };
+  }
+
+  /**
+   * Runs a test that's judged by comparing the screen with an expected image. These tests draw
+   * the screen once and then halt, so this compares the last frame after a few seconds.
+   */
+  private static void doImageTest(String path, String expected) throws Exception {
+    BufferedImage ref = ImageIO.read(Resources.getResource(expected));
+    try (CapturingIo io = new CapturingIo(IoFactory.none())) {
+      MoldyGameBoy gb = new MoldyGameBoy(readRom(bootRom(path)), readRom(path), io);
+      io.eventLoop().run(new DotTicker(gb, IMAGE_TEST_DOTS));
+      Truth.assertThat(io.video().diff(ref)).isEmpty();
     }
+  }
+
+  private static void doTest(String path) throws Exception {
+    String boot = bootRom(path);
     try (Io io = Boolean.getBoolean("moldy.gui") ? IoFactory.sdl() : IoFactory.none()) {
       MoldyGameBoy gb = new MoldyGameBoy(readRom(boot), readRom(path), io);
       io.eventLoop().run(new BreakpointTicker(gb));
       assertThat(gb.cpu().registers()).isMooneyeSuccess();
+    }
+  }
+
+  private static final long IMAGE_TEST_DOTS = 6L << 22; // 6 seconds
+
+  /** Runs for a fixed number of dots. */
+  private static final class DotTicker implements Ticker {
+
+    private final MoldyGameBoy gb;
+    private long dotsLeft;
+
+    DotTicker(MoldyGameBoy gb, long dots) {
+      this.gb = gb;
+      this.dotsLeft = dots;
+    }
+
+    @Override
+    public void tick() {
+      gb.tick();
+      dotsLeft--;
+    }
+
+    @Override
+    public boolean isDone() {
+      return dotsLeft == 0;
     }
   }
 
@@ -82,7 +130,6 @@ final class MooneyeTest {
   }
 
   @Test
-  @Disabled
   void test__acceptance__boot_div_dmg0() throws Exception {
     doTest("mooneye-test-suite/build/acceptance/boot_div-dmg0.gb");
   }
@@ -93,19 +140,16 @@ final class MooneyeTest {
   }
 
   @Test
-  @Disabled
   void test__acceptance__boot_div_S() throws Exception {
     doTest("mooneye-test-suite/build/acceptance/boot_div-S.gb");
   }
 
   @Test
-  @Disabled
   void test__acceptance__boot_div2_S() throws Exception {
     doTest("mooneye-test-suite/build/acceptance/boot_div2-S.gb");
   }
 
   @Test
-  @Disabled
   void test__acceptance__boot_hwio_dmg0() throws Exception {
     doTest("mooneye-test-suite/build/acceptance/boot_hwio-dmg0.gb");
   }
@@ -116,13 +160,11 @@ final class MooneyeTest {
   }
 
   @Test
-  @Disabled
   void test__acceptance__boot_hwio_S() throws Exception {
     doTest("mooneye-test-suite/build/acceptance/boot_hwio-S.gb");
   }
 
   @Test
-  @Disabled
   void test__acceptance__boot_regs_dmg0() throws Exception {
     doTest("mooneye-test-suite/build/acceptance/boot_regs-dmg0.gb");
   }
@@ -133,19 +175,16 @@ final class MooneyeTest {
   }
 
   @Test
-  @Disabled
   void test__acceptance__boot_regs_mgb() throws Exception {
     doTest("mooneye-test-suite/build/acceptance/boot_regs-mgb.gb");
   }
 
   @Test
-  @Disabled
   void test__acceptance__boot_regs_sgb() throws Exception {
     doTest("mooneye-test-suite/build/acceptance/boot_regs-sgb.gb");
   }
 
   @Test
-  @Disabled
   void test__acceptance__boot_regs_sgb2() throws Exception {
     doTest("mooneye-test-suite/build/acceptance/boot_regs-sgb2.gb");
   }
@@ -586,15 +625,19 @@ final class MooneyeTest {
   }
 
   @Test
-  @Disabled("too long")
+  // Needs the MGB-specific behaviour when the CPU halts during OAM DMA, where the PPU sees the
+  // values left on the stalled OAM bus. We don't model that (we draw what the test says a CGB
+  // shows: the background without the sprite).
+  @Disabled("needs MGB OAM DMA halt behaviour")
   void test__madness__mgb_oam_dma_halt_sprites() throws Exception {
     doTest("mooneye-test-suite/build/madness/mgb_oam_dma_halt_sprites.gb");
   }
 
   @Test
-  @Disabled("manual-only")
   void test__manual_only__sprite_priority() throws Exception {
-    doTest("mooneye-test-suite/build/manual-only/sprite_priority.gb");
+    doImageTest(
+        "mooneye-test-suite/build/manual-only/sprite_priority.gb",
+        "mooneye-test-suite/manual-only/sprite_priority-expected.png");
   }
 
   @Test

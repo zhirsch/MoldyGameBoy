@@ -28,6 +28,7 @@ public final class Pop implements Instruction {
     @Override
     public void t1(Registers registers, Bus bus) {
       bus.addressBus().set(registers.sp().get());
+      bus.idu().set(true);
     }
 
     @Override
@@ -40,6 +41,7 @@ public final class Pop implements Instruction {
 
     @Override
     public MCycle t4(Registers registers, Bus bus) {
+      bus.idu().set(false);
       register.lo().set(bus.dataBus().get());
       registers.sp().increment();
       return new M3(register);

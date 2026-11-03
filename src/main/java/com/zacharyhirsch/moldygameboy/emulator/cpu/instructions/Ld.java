@@ -127,6 +127,7 @@ public final class Ld {
       @Override
       public void t1(Registers registers, Bus bus) {
         bus.addressBus().set(registers.hl().get());
+        bus.idu().set(true);
       }
 
       @Override
@@ -143,6 +144,7 @@ public final class Ld {
       @Override
       public MCycle t4(Registers registers, Bus bus) {
         bus.rd().set(false);
+        bus.idu().set(false);
         return null;
       }
     }
@@ -160,6 +162,7 @@ public final class Ld {
       @Override
       public void t1(Registers registers, Bus bus) {
         bus.addressBus().set(registers.hl().get());
+        bus.idu().set(true);
       }
 
       @Override
@@ -176,6 +179,7 @@ public final class Ld {
       @Override
       public MCycle t4(Registers registers, Bus bus) {
         bus.rd().set(false);
+        bus.idu().set(false);
         return null;
       }
     }

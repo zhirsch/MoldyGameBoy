@@ -4,6 +4,7 @@ import com.zacharyhirsch.moldygameboy.emulator.arch.Bus;
 import com.zacharyhirsch.moldygameboy.emulator.memory.IoRegisters;
 import com.zacharyhirsch.moldygameboy.emulator.memory.Memory;
 import com.zacharyhirsch.moldygameboy.emulator.memory.VideoMemoryLock;
+import com.zacharyhirsch.moldygameboy.emulator.ppu.OamBug;
 import java.nio.ByteBuffer;
 
 public final class CpuMemoryController {
@@ -13,16 +14,22 @@ public final class CpuMemoryController {
   private final IoRegisters ioregs;
   private final Memory memory;
   private final VideoMemoryLock videoMemoryLock;
+  private final OamBug oamBug;
 
   private byte ie = 0;
 
   public CpuMemoryController(
-      ByteBuffer boot, Memory memory, IoRegisters ioregs, VideoMemoryLock videoMemoryLock) {
+      ByteBuffer boot,
+      Memory memory,
+      IoRegisters ioregs,
+      VideoMemoryLock videoMemoryLock,
+      OamBug oamBug) {
     this.boot = boot;
     this.hram = ByteBuffer.allocate(0x007f);
     this.ioregs = ioregs;
     this.memory = memory;
     this.videoMemoryLock = videoMemoryLock;
+    this.oamBug = oamBug;
   }
 
   public int getEnabledInterrupts() {
@@ -30,16 +37,26 @@ public final class CpuMemoryController {
   }
 
   public void tick(Bus bus) {
-    if (!bus.rd().get() && !bus.wr().get()) {
-      return;
-    }
-    if (bus.rd().get() && bus.wr().get()) {
+    boolean rd = bus.rd().get();
+    boolean wr = bus.wr().get();
+    boolean idu = bus.idu().get();
+    if (rd && wr) {
       throw new IllegalStateException();
     }
-    if (bus.rd().get()) {
-      bus.dataBus().set(read(bus.addressBus().get()));
-    } else {
-      write(bus.addressBus().get(), bus.dataBus().get());
+    short address = bus.addressBus().get();
+    if (rd) {
+      if (idu) {
+        oamBug.readDuringIncrementOrDecrement(address);
+      } else {
+        oamBug.read(address);
+      }
+      bus.dataBus().set(read(address));
+    } else if (wr) {
+      // A write in the same M-cycle as an increment or decrement acts like a single write.
+      oamBug.write(address);
+      write(address, bus.dataBus().get());
+    } else if (idu) {
+      oamBug.write(address);
     }
   }
 

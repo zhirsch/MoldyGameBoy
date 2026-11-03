@@ -26,7 +26,10 @@ public final class Push implements Instruction {
     }
 
     @Override
-    public void t1(Registers registers, Bus bus) {}
+    public void t1(Registers registers, Bus bus) {
+      bus.addressBus().set(registers.sp().get());
+      bus.idu().set(true);
+    }
 
     @Override
     public void t2(Registers registers, Bus bus) {
@@ -38,6 +41,7 @@ public final class Push implements Instruction {
 
     @Override
     public MCycle t4(Registers registers, Bus bus) {
+      bus.idu().set(false);
       return new M3(register);
     }
   }
